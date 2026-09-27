@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { SignOutButton } from "@/components/auth/sign-out-button";
+import { ThemeMenu } from "@/components/theme-toggle";
 import { AppNav } from "@/components/app-nav";
 import { requireWorkspace } from "@/lib/session";
 
@@ -25,6 +26,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
             <span className="hidden text-muted-foreground sm:inline">
               {workspace.name} · {session.user.email}
             </span>
+            <ThemeMenu />
             <SignOutButton />
           </div>
         </div>

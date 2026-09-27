@@ -156,6 +156,24 @@ test.describe("as the owner", () => {
     await expect(
       page.getByRole("region", { name: "Keywords" }).getByText("first users"),
     ).toBeVisible();
+
+    // Theme: pick Dark in Settings, it survives a reload; the header menu
+    // switches back to Light.
+    const html = page.locator("html");
+    await page
+      .getByRole("group", { name: "Theme" })
+      .getByText("Dark", { exact: true })
+      .click();
+    await expect(html).toHaveClass(/dark/);
+    await page.reload();
+    await expect(html).toHaveClass(/dark/);
+    await expectNoSeriousA11yViolations(page);
+    await page.getByRole("button", { name: "Theme: Dark" }).click();
+    await page.getByRole("menuitemradio", { name: "Light" }).click();
+    await expect(html).not.toHaveClass(/dark/);
+    await expect(
+      page.getByRole("button", { name: "Theme: Light" }),
+    ).toBeVisible();
   });
 
   test("owner triages threads from the keyboard, with undo", async ({

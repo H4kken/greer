@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { HnAccountForm } from "@/components/settings/hn-account-form";
+import { ThemeChoice } from "@/components/theme-toggle";
 import { KeywordSettings } from "@/components/settings/keyword-settings";
 import { LlmSettingsForm } from "@/components/settings/llm-settings-form";
 import { ProductForm } from "@/components/settings/product-form";
@@ -105,6 +106,14 @@ export default async function SettingsPage() {
             lastError: q.lastError,
           }))}
         />
+      </Section>
+
+      <Section
+        id="appearance"
+        title="Appearance"
+        description="Light or dark, or follow your device."
+      >
+        <ThemeChoice />
       </Section>
 
       <Section

@@ -1,4 +1,5 @@
 import { SignOutButton } from "@/components/auth/sign-out-button";
+import { ThemeMenu } from "@/components/theme-toggle";
 import { requireSession } from "@/lib/session";
 
 export default async function OnboardingLayout({ children }: LayoutProps<"/">) {
@@ -10,7 +11,10 @@ export default async function OnboardingLayout({ children }: LayoutProps<"/">) {
           <span className="font-heading text-2xl font-semibold tracking-tight">
             Greer
           </span>
-          <SignOutButton />
+          <div className="flex items-center gap-2">
+            <ThemeMenu />
+            <SignOutButton />
+          </div>
         </div>
       </header>
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
