@@ -36,6 +36,7 @@ export default async function SignUpPage() {
     );
   }
 
-  const firstRun = !(await hasAnyUser());
-  return <AuthForm mode="sign-up" firstRun={firstRun} />;
+  // Fresh install: the owner is created from the welcome page.
+  if (!(await hasAnyUser())) redirect("/");
+  return <AuthForm mode="sign-up" firstRun={false} />;
 }

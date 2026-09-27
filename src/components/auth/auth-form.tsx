@@ -23,13 +23,17 @@ import { authClient } from "@/lib/auth-client";
 
 const MIN_PASSWORD_LENGTH = 10;
 
-type Props = { mode: "sign-in" } | { mode: "sign-up"; firstRun: boolean };
+type Props = ({ mode: "sign-in" } | { mode: "sign-up"; firstRun: boolean }) & {
+  // h2 when the page already has its own h1 (the welcome page).
+  titleAs?: "h1" | "h2";
+};
 
 export function AuthForm(props: Props) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const signUp = props.mode === "sign-up";
+  const Title = props.titleAs ?? "h1";
 
   const copy = signUp
     ? props.firstRun
@@ -78,8 +82,8 @@ export function AuthForm(props: Props) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>
-          <h1>{copy.title}</h1>
+        <CardTitle className="text-xl">
+          <Title>{copy.title}</Title>
         </CardTitle>
         <CardDescription>{copy.description}</CardDescription>
       </CardHeader>

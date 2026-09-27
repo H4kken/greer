@@ -28,11 +28,16 @@ async function expectNoSeriousA11yViolations(page: Page) {
 test("first visitor sets up the instance and lands in onboarding", async ({
   page,
 }) => {
+  // A fresh install: the welcome page holds the owner-account form.
   await page.goto("/");
-  await page.getByRole("link", { name: "Set up Greer" }).click();
-
   await expect(
-    page.getByRole("heading", { name: "Set up Greer" }),
+    page.getByRole("heading", {
+      level: 1,
+      name: "Find the conversations where you can genuinely help.",
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { level: 2, name: "Set up Greer" }),
   ).toBeVisible();
   await expectNoSeriousA11yViolations(page);
 
@@ -295,6 +300,14 @@ test("owner signs out and back in; a wrong password is rejected", async ({
 
   await page.getByRole("button", { name: "Sign out" }).click();
   await expect(page).toHaveURL(/\/sign-in$/);
+});
+
+test("once set up, the welcome page signs people in", async ({ page }) => {
+  await page.goto("/");
+  await expect(
+    page.getByRole("heading", { level: 2, name: "Sign in" }),
+  ).toBeVisible();
+  await expect(page.getByLabel("Name")).toHaveCount(0);
 });
 
 test("registration is closed once the owner exists", async ({ page }) => {
