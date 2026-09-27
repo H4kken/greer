@@ -1,4 +1,4 @@
-import { asc, eq } from "drizzle-orm";
+import { asc, eq, sql } from "drizzle-orm";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { db } from "@/db";
@@ -17,6 +17,8 @@ export async function requireSession() {
   return session;
 }
 
+// The workspace the user is working in. Today that's their own (the one they
+// own), else the oldest they belong to; a workspace switcher would choose here.
 export async function getWorkspaceForUser(userId: string) {
   const [row] = await db
     .select({
@@ -28,7 +30,10 @@ export async function getWorkspaceForUser(userId: string) {
     .from(workspaceMember)
     .innerJoin(workspace, eq(workspace.id, workspaceMember.workspaceId))
     .where(eq(workspaceMember.userId, userId))
-    .orderBy(asc(workspace.createdAt))
+    .orderBy(
+      sql`case when ${workspaceMember.role} = 'owner' then 0 else 1 end`,
+      asc(workspace.createdAt),
+    )
     .limit(1);
   return row ?? null;
 }

@@ -40,20 +40,38 @@ describe("registration", () => {
     expect(users.map((u) => u.email)).toEqual(["owner@example.com"]);
   });
 
-  it("lets new accounts join the existing workspace when ALLOW_REGISTRATION=true", async () => {
-    const { user: owner } = await signUp("owner@example.com");
+  it("gives each new account its own workspace when ALLOW_REGISTRATION=true", async () => {
+    const { user: first } = await signUp("first@example.com");
     process.env.ALLOW_REGISTRATION = "true";
-    const { user: teammate } = await signUp("teammate@example.com");
+    const { user: second } = await signUp("second@example.com");
 
-    const ownerWs = await getWorkspaceForUser(owner.id);
-    const teammateWs = await getWorkspaceForUser(teammate.id);
-    expect(teammateWs).toMatchObject({ id: ownerWs!.id, role: "member" });
+    const firstWs = await getWorkspaceForUser(first.id);
+    const secondWs = await getWorkspaceForUser(second.id);
+    expect(secondWs).toMatchObject({ role: "owner" });
+    expect(secondWs!.id).not.toBe(firstWs!.id);
 
-    const members = await db
-      .select()
-      .from(workspaceMember)
-      .where(eq(workspaceMember.workspaceId, ownerWs!.id));
-    expect(members).toHaveLength(2);
+    // Each workspace has exactly one member: its owner.
+    for (const ws of [firstWs!, secondWs!]) {
+      const members = await db
+        .select()
+        .from(workspaceMember)
+        .where(eq(workspaceMember.workspaceId, ws.id));
+      expect(members).toHaveLength(1);
+    }
+  });
+
+  it("picks the user's own workspace over ones they only belong to", async () => {
+    const { user: first } = await signUp("first@example.com");
+    process.env.ALLOW_REGISTRATION = "true";
+    const { user: second } = await signUp("second@example.com");
+    const firstWs = await getWorkspaceForUser(first.id);
+    const ownWs = await getWorkspaceForUser(second.id);
+
+    // Also a member of the (older) first workspace, e.g. after an invite.
+    await db
+      .insert(workspaceMember)
+      .values({ workspaceId: firstWs!.id, userId: second.id, role: "member" });
+    expect((await getWorkspaceForUser(second.id))!.id).toBe(ownWs!.id);
   });
 
   it("signs in with the right password only", async () => {

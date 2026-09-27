@@ -92,17 +92,17 @@ Create a new resource from this Git repository using the **Docker Compose** buil
 
 ### Environment variables
 
-| Variable                              | Required       | Description                                                                                                     |
-| ------------------------------------- | -------------- | --------------------------------------------------------------------------------------------------------------- |
-| `POSTGRES_PASSWORD`                   | yes            | Password of the bundled Postgres. Use a URL-safe value, e.g. `openssl rand -hex 24`.                            |
-| `BETTER_AUTH_SECRET`                  | yes            | Secret that signs sessions, e.g. `openssl rand -base64 32`.                                                     |
-| `BETTER_AUTH_URL`                     | yes            | Public URL of your instance, e.g. `https://greer.example.com`.                                                  |
-| `ALLOW_REGISTRATION`                  | no             | `false` by default: the first account becomes the owner, then sign-ups close. Set to `true` to let others join. |
-| `PORT`                                | no             | Host port for the web app (default `3000`).                                                                     |
-| `ANTHROPIC_API_KEY`                   | one LLM option | Anthropic key. Default models: `claude-haiku-4-5` (scoring) and `claude-opus-5` (briefs).                       |
-| `OPENAI_API_KEY`, `OPENAI_BASE_URL`   | one LLM option | OpenAI or any OpenAI-compatible API. Also set `LLM_FAST_MODEL` and `LLM_QUALITY_MODEL`.                         |
-| `OLLAMA_BASE_URL`                     | one LLM option | A local Ollama, e.g. `http://host.docker.internal:11434/v1`. Also set both model variables.                     |
-| `LLM_FAST_MODEL`, `LLM_QUALITY_MODEL` | no             | Override the model used for scoring (fast) and for briefs (quality).                                            |
+| Variable                              | Required       | Description                                                                                                                                                                                                 |
+| ------------------------------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `POSTGRES_PASSWORD`                   | yes            | Password of the bundled Postgres. Use a URL-safe value, e.g. `openssl rand -hex 24`.                                                                                                                        |
+| `BETTER_AUTH_SECRET`                  | yes            | Secret that signs sessions, e.g. `openssl rand -base64 32`.                                                                                                                                                 |
+| `BETTER_AUTH_URL`                     | yes            | Public URL of your instance, e.g. `https://greer.example.com`.                                                                                                                                              |
+| `ALLOW_REGISTRATION`                  | no             | `false` by default: sign-ups close once the first account exists. Set to `true` to let others sign up; each gets their own workspace, and uses the server's LLM key unless they save their own in Settings. |
+| `PORT`                                | no             | Host port for the web app (default `3000`).                                                                                                                                                                 |
+| `ANTHROPIC_API_KEY`                   | one LLM option | Anthropic key. Default models: `claude-haiku-4-5` (scoring) and `claude-opus-5` (briefs).                                                                                                                   |
+| `OPENAI_API_KEY`, `OPENAI_BASE_URL`   | one LLM option | OpenAI or any OpenAI-compatible API. Also set `LLM_FAST_MODEL` and `LLM_QUALITY_MODEL`.                                                                                                                     |
+| `OLLAMA_BASE_URL`                     | one LLM option | A local Ollama, e.g. `http://host.docker.internal:11434/v1`. Also set both model variables.                                                                                                                 |
+| `LLM_FAST_MODEL`, `LLM_QUALITY_MODEL` | no             | Override the model used for scoring (fast) and for briefs (quality).                                                                                                                                        |
 
 Instead of LLM variables, you can save a key in Settings: it's stored encrypted with `BETTER_AUTH_SECRET` and takes precedence. If you change `BETTER_AUTH_SECRET`, re-enter the key.
 

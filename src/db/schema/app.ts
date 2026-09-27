@@ -22,8 +22,9 @@ const timestamps = {
     .$onUpdate(() => new Date()),
 };
 
-// Single workspace in the UI for now; every workspace-owned table references it
-// so a hosted, multi-workspace version stays possible.
+// One product being promoted. Users and workspaces are separate: membership
+// lives in workspace_member, and every workspace-owned table references this.
+// Each new account gets its own workspace today.
 export const workspace = pgTable("workspace", {
   id: text("id")
     .primaryKey()

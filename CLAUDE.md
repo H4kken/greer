@@ -12,7 +12,7 @@ Open-source, self-hostable tool for small SaaS builders. It finds conversations 
 - **Account safety is a feature.** Guardrails (pacing, product-mention advice, eligibility) take into account the user's account maturity (age, karma) and each community's requirements. They warn, never block, since the user is the one posting.
 - **Never publish the self-hosted database.** `docker-compose.yml` keeps Postgres internal and requires real secrets; only `docker-compose.dev.yml` publishes it, on 127.0.0.1.
 - **Postgres is the only infrastructure dependency.** Don't add Redis, S3, a search engine or other services without discussing it first; self-hosters on Coolify pay for every extra container.
-- **Every workspace-owned table has `workspace_id`** and every query filters by it, even though the UI is single-workspace today.
+- **Every workspace-owned table has `workspace_id`** and every query filters by it, even though each user has one workspace in the UI today (users and workspaces are separate; a user may have several later).
 - **No secrets in code or logs.** LLM keys and platform credentials come from env or the encrypted settings table.
 
 ## License

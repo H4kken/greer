@@ -146,7 +146,7 @@ The target design. For how the code is built today, see [ARCHITECTURE.md](ARCHIT
   - Queue calls go through `src/worker/queue.ts`, so the queue can be swapped later if a hosted version ever needs it.
 - **Drizzle ORM** with migrations that run automatically on container start.
 - **Vercel AI SDK** for provider-agnostic LLM calls (OpenAI, Anthropic, OpenAI-compatible/Ollama). Set via env or the settings UI. Structured output (zod) for scoring.
-- **Auth:** Better Auth, email + password. Single workspace, a few users. No multi-tenancy in v1, but put a `workspace_id` on tables so a hosted version stays possible later.
+- **Auth:** Better Auth, email + password. Users and workspaces are separate: each account gets its own workspace (a user may have several later, e.g. one per product). `workspace_id` on every table keeps workspaces isolated.
 - **Same image, two commands:** `web` and `worker` services in `docker-compose.yml`. Coolify deploys the compose file directly.
 - Monorepo is not needed yet. Use one package with `src/app`, `src/worker`, `src/sources/*` and `src/llm`.
 - **Code quality:**
@@ -225,7 +225,7 @@ The product is a daily habit tool (a 10–15 min triage session), so UX is about
 ## Coolify / self-hosting
 
 - `docker-compose.yml` with `web`, `worker` and `postgres`, plus a named volume.
-- Required env: `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`. Optional: `ALLOW_REGISTRATION` (default `false`: the first account becomes the owner, then registration closes), `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` / `OPENAI_BASE_URL`. v0.2 adds `REDDIT_CLIENT_ID/SECRET`.
+- Required env: `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`. Optional: `ALLOW_REGISTRATION` (default `false`: registration closes once the first account exists; when `true`, each new account gets its own workspace), `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` / `OPENAI_BASE_URL`. v0.2 adds `REDDIT_CLIENT_ID/SECRET`.
 - HN needs no credentials, so a fresh install works with just a database and an LLM key.
 - `/api/health` for Coolify health checks.
 - Publish the image to GHCR on tag, so users can pin versions.
@@ -258,7 +258,7 @@ The product is a daily habit tool (a 10–15 min triage session), so UX is about
 
 ## Open questions
 
-1. **Hosted version later?** This affects whether to invest in multi-tenancy now. Current plan: `workspace_id` everywhere, single workspace in the UI.
+1. **Hosted version later?** This affects whether to invest in multi-tenancy now. Current plan: `workspace_id` everywhere, one workspace per user in the UI, users and workspaces already separate.
 2. **Notifications:** email digest (needs SMTP config) vs webhook (Slack/Discord) vs in-app only for v0.1?
 3. **Name / positioning:** "greer" is the repo name. Is that the product name?
 4. **Maturity thresholds:** the defaults above are guesses. Calibrate them during dogfooding.

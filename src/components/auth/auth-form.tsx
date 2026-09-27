@@ -45,7 +45,8 @@ export function AuthForm(props: Props) {
         }
       : {
           title: "Create your account",
-          description: "You'll join this instance's workspace.",
+          description:
+            "You'll get your own workspace on this instance, with its own product, keywords and inbox.",
           submit: "Create account",
         }
     : {

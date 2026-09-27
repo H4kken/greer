@@ -4,7 +4,7 @@ import { APIError } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
 import { db } from "@/db";
 import * as schema from "@/db/schema";
-import { addUserToWorkspace, isRegistrationOpen } from "@/lib/registration";
+import { createWorkspaceForUser, isRegistrationOpen } from "@/lib/registration";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, { provider: "pg", schema }),
@@ -25,7 +25,7 @@ export const auth = betterAuth({
           return { data: user };
         },
         after: async (user) => {
-          await addUserToWorkspace(user.id);
+          await createWorkspaceForUser(user.id);
         },
       },
     },
