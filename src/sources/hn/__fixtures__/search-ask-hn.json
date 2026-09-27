@@ -1,0 +1,126 @@
+{
+  "exhaustive": {
+    "nbHits": false,
+    "typo": false
+  },
+  "exhaustiveNbHits": false,
+  "exhaustiveTypo": false,
+  "hits": [
+    {
+      "_highlightResult": {
+        "author": {
+          "matchLevel": "none",
+          "matchedWords": [],
+          "value": "hberg"
+        },
+        "story_text": {
+          "fullyHighlighted": false,
+          "matchLevel": "full",
+          "matchedWords": ["customers"],
+          "value": "My business was recently hit by a fraudulent <em>customer</em> who spent over $1200 across multiple transactions over a few days. Every payment was made through Stripe Link.<p>The problem I discovered afterward is that Link abstracts away the real payment method, without necessarily causing a liability shift against fraud.<p>Despite enabling multiple layers of protection (Chargeback Protection, extra 3DS credit card authentication, etc), with a specific intent of shifting liability away from my merchant account, these Link payments bypassed all of those settings.<p>As a former engineer at a payments company, I had assumed that Stripe would do their own authentication before storing a Link payment method, but I was wrong to assume this. Stripe approved all of the fraudulent payments, most without a liability shift, and my business was left holding the loss.<p>In conclusion:\nIf you run an online business accepting payments via Stripe, I highly recommend turning off Stripe Link until they can correct this issue or allow merchants additional controls over which types of Link payments they accept."
+        },
+        "title": {
+          "matchLevel": "none",
+          "matchedWords": [],
+          "value": "Stripe Link exposes merchants to undefendable fraud risk"
+        }
+      },
+      "_tags": ["story", "author_hberg", "story_49839721", "ask_hn"],
+      "author": "hberg",
+      "created_at": "2026-09-25T03:02:27Z",
+      "created_at_i": 1790305347,
+      "num_comments": 0,
+      "objectID": "49839721",
+      "points": 2,
+      "story_id": 49839721,
+      "story_text": "My business was recently hit by a fraudulent customer who spent over $1200 across multiple transactions over a few days. Every payment was made through Stripe Link.<p>The problem I discovered afterward is that Link abstracts away the real payment method, without necessarily causing a liability shift against fraud.<p>Despite enabling multiple layers of protection (Chargeback Protection, extra 3DS credit card authentication, etc), with a specific intent of shifting liability away from my merchant account, these Link payments bypassed all of those settings.<p>As a former engineer at a payments company, I had assumed that Stripe would do their own authentication before storing a Link payment method, but I was wrong to assume this. Stripe approved all of the fraudulent payments, most without a liability shift, and my business was left holding the loss.<p>In conclusion:\nIf you run an online business accepting payments via Stripe, I highly recommend turning off Stripe Link until they can correct this issue or allow merchants additional controls over which types of Link payments they accept.",
+      "title": "Stripe Link exposes merchants to undefendable fraud risk",
+      "updated_at": "2026-09-25T03:28:39Z"
+    },
+    {
+      "_highlightResult": {
+        "author": {
+          "matchLevel": "none",
+          "matchedWords": [],
+          "value": "tkdb"
+        },
+        "story_text": {
+          "fullyHighlighted": false,
+          "matchLevel": "full",
+          "matchedWords": ["customers"],
+          "value": "I switched from Verizon to T-Mobile, specifically because there were too many silent missed calls. Silent meaning my device never showed I had a missed call.<p>This was a pattern across more than a year, spanning multiple devices (all iphones). It happens on both wifi and cellular. It happens with wifi calling enabled and disabled. It happens with people I call every day, in my address book, as well as new contacts (say someone I met who called to follow up). I called support, searched online, reset network settings multiple times at different points months apart.<p>After being on T-Mobile for about a year, the degraded service is about the same as Verizon. Every week, more than once, people call me, my phone never rings, and I never see a missed call on my device. It happens at home, at work, on work trips in different states.<p>I still get missed calls regularly and my device shows I missed the call. It seems like a certain % of callers get my VM, but I never know the call attempt happened. The missed calls never appear later on my phone (like a late VM or text deliver, coming minutes or sometimes hours after it was sent).<p>Hypothesis: A growing number of cellular subscribers don't care enough or use voice calls as much, so (regardless of motive/feelings) cellular providers have found they can simply reduce quality without losing <em>customers</em>."
+        },
+        "title": {
+          "matchLevel": "none",
+          "matchedWords": [],
+          "value": "Ask HN: Hypothesis: Cellular providers are deprioritizing voice calls?"
+        }
+      },
+      "_tags": ["story", "author_tkdb", "story_49833212", "ask_hn"],
+      "author": "tkdb",
+      "children": [
+        49851210, 49851708, 49850736, 49833372, 49850563, 49851400, 49851003,
+        49850759, 49853457, 49851343, 49850936, 49852433
+      ],
+      "created_at": "2026-09-24T16:39:20Z",
+      "created_at_i": 1790267960,
+      "num_comments": 38,
+      "objectID": "49833212",
+      "points": 20,
+      "story_id": 49833212,
+      "story_text": "I switched from Verizon to T-Mobile, specifically because there were too many silent missed calls. Silent meaning my device never showed I had a missed call.<p>This was a pattern across more than a year, spanning multiple devices (all iphones). It happens on both wifi and cellular. It happens with wifi calling enabled and disabled. It happens with people I call every day, in my address book, as well as new contacts (say someone I met who called to follow up). I called support, searched online, reset network settings multiple times at different points months apart.<p>After being on T-Mobile for about a year, the degraded service is about the same as Verizon. Every week, more than once, people call me, my phone never rings, and I never see a missed call on my device. It happens at home, at work, on work trips in different states.<p>I still get missed calls regularly and my device shows I missed the call. It seems like a certain % of callers get my VM, but I never know the call attempt happened. The missed calls never appear later on my phone (like a late VM or text deliver, coming minutes or sometimes hours after it was sent).<p>Hypothesis: A growing number of cellular subscribers don&#x27;t care enough or use voice calls as much, so (regardless of motive&#x2F;feelings) cellular providers have found they can simply reduce quality without losing customers.",
+      "title": "Ask HN: Hypothesis: Cellular providers are deprioritizing voice calls?",
+      "updated_at": "2026-09-27T02:57:45Z"
+    },
+    {
+      "_highlightResult": {
+        "author": {
+          "matchLevel": "none",
+          "matchedWords": [],
+          "value": "thomasjeff1"
+        },
+        "story_text": {
+          "matchLevel": "none",
+          "matchedWords": [],
+          "value": "On top of Stripe\u2019s 2.9% + $0.30 how much extra to charge based on how long it takes for a payment to reach the business bank account.<p>If it takes 14 days for payment to reach from Stripe to Business Bank Account, is it fair to charge 2% APR?"
+        },
+        "title": {
+          "fullyHighlighted": false,
+          "matchLevel": "full",
+          "matchedWords": ["customers"],
+          "value": "Ask HN: Is anyone charging extra their <em>customers</em> for credit card payments?"
+        }
+      },
+      "_tags": ["story", "author_thomasjeff1", "story_49811089", "ask_hn"],
+      "author": "thomasjeff1",
+      "children": [49811155, 49811775, 49812544, 49818586, 49847645],
+      "created_at": "2026-09-23T02:56:37Z",
+      "created_at_i": 1790132197,
+      "num_comments": 9,
+      "objectID": "49811089",
+      "points": 3,
+      "story_id": 49811089,
+      "story_text": "On top of Stripe\u2019s 2.9% + $0.30 how much extra to charge based on how long it takes for a payment to reach the business bank account.<p>If it takes 14 days for payment to reach from Stripe to Business Bank Account, is it fair to charge 2% APR?",
+      "title": "Ask HN: Is anyone charging extra their customers for credit card payments?",
+      "updated_at": "2026-09-25T17:39:27Z"
+    }
+  ],
+  "hitsPerPage": 3,
+  "nbHits": 36,
+  "nbPages": 12,
+  "page": 0,
+  "params": "query=customers&tags=ask_hn&numericFilters=created_at_i%3E1787931875&hitsPerPage=3&advancedSyntax=true&analyticsTags=backend",
+  "processingTimeMS": 5,
+  "processingTimingsMS": {
+    "_request": {
+      "roundTrip": 27
+    },
+    "fetch": {
+      "query": 3,
+      "total": 4
+    },
+    "total": 5
+  },
+  "query": "customers",
+  "serverTimeMS": 5
+}

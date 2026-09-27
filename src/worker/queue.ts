@@ -5,8 +5,26 @@ import { fromDrizzle, PgBoss } from "pg-boss";
 
 export const QUEUES = {
   heartbeat: "heartbeat",
+  // Every 15 minutes: queue one ingest-poll per enabled source query.
+  ingestSchedule: "ingest-schedule",
+  // One source query: fetch, prefilter, store. Keyed by query id.
+  ingestPoll: "ingest-poll",
 } as const;
 export type QueueName = (typeof QUEUES)[keyof typeof QUEUES];
+
+// Per-queue options applied when the queue is created.
+const QUEUE_OPTIONS: Partial<
+  Record<QueueName, Parameters<PgBoss["createQueue"]>[1]>
+> = {
+  // At most one waiting and one running poll per query (singletonKey = query id),
+  // so a slow poll never piles up duplicates. Retries back off on API errors.
+  [QUEUES.ingestPoll]: {
+    policy: "stately",
+    retryLimit: 3,
+    retryDelay: 30,
+    retryBackoff: true,
+  },
+};
 
 type Role = "worker" | "client";
 
@@ -27,7 +45,9 @@ export function createQueue(role: Role, connectionString: string): PgBoss {
 
 export async function ensureQueues(boss: PgBoss): Promise<void> {
   for (const name of Object.values(QUEUES)) {
-    if (!(await boss.getQueue(name))) await boss.createQueue(name);
+    if (!(await boss.getQueue(name))) {
+      await boss.createQueue(name, QUEUE_OPTIONS[name]);
+    }
   }
 }
 

@@ -1,0 +1,247 @@
+{
+  "exhaustive": {
+    "nbHits": false,
+    "typo": false
+  },
+  "exhaustiveNbHits": false,
+  "exhaustiveTypo": false,
+  "hits": [
+    {
+      "_highlightResult": {
+        "author": {
+          "matchLevel": "none",
+          "matchedWords": [],
+          "value": "Uptrenda"
+        },
+        "comment_text": {
+          "fullyHighlighted": false,
+          "matchLevel": "full",
+          "matchedWords": ["first", "customers"],
+          "value": "Security is just one of those areas that you only ever see the importance of when it goes wrong. And that makes people live in an eternal state of denial where they convince themselves it doesn't matter. The security experts then seem like they're just worrying about the sky falling which never happens. Only if it does happen they're also simultaneously the ones who are blamed for it... Sounds like a pretty bad deal if you ask me.<p>I've seen this play out over and over. Companies that work on incredibly sensitive subjects don't put security <em>first</em>. It's like just something where you &quot;audit it&quot; at the end. All the while, you're just duct taping a bunch of half-working shit together so you can &quot;ship&quot; as fast as possible. Got to get that &quot;traction&quot; in, amiright guise? If <em>customers</em> money gets lost or a bunch of other bullshit happens that's a problem for tomorrow."
+        },
+        "story_title": {
+          "matchLevel": "none",
+          "matchedWords": [],
+          "value": "An agent used DNS to reach an external chatbot"
+        },
+        "story_url": {
+          "matchLevel": "none",
+          "matchedWords": [],
+          "value": "https://alignment.openai.com/misalignment-reports/an-agent-used-dns-to-reach-an-external-chatbot/"
+        }
+      },
+      "_tags": ["comment", "author_Uptrenda", "story_49853137"],
+      "author": "Uptrenda",
+      "comment_text": "Security is just one of those areas that you only ever see the importance of when it goes wrong. And that makes people live in an eternal state of denial where they convince themselves it doesn&#x27;t matter. The security experts then seem like they&#x27;re just worrying about the sky falling which never happens. Only if it does happen they&#x27;re also simultaneously the ones who are blamed for it... Sounds like a pretty bad deal if you ask me.<p>I&#x27;ve seen this play out over and over. Companies that work on incredibly sensitive subjects don&#x27;t put security first. It&#x27;s like just something where you &quot;audit it&quot; at the end. All the while, you&#x27;re just duct taping a bunch of half-working shit together so you can &quot;ship&quot; as fast as possible. Got to get that &quot;traction&quot; in, amiright guise? If customers money gets lost or a bunch of other bullshit happens that&#x27;s a problem for tomorrow.",
+      "created_at": "2026-09-27T15:08:23Z",
+      "created_at_i": 1790521703,
+      "objectID": "49867297",
+      "parent_id": 49853137,
+      "story_id": 49853137,
+      "story_title": "An agent used DNS to reach an external chatbot",
+      "story_url": "https://alignment.openai.com/misalignment-reports/an-agent-used-dns-to-reach-an-external-chatbot/",
+      "updated_at": "2026-09-27T15:09:32Z"
+    },
+    {
+      "_highlightResult": {
+        "author": {
+          "matchLevel": "none",
+          "matchedWords": [],
+          "value": "sergiu_spokn"
+        },
+        "comment_text": {
+          "fullyHighlighted": false,
+          "matchLevel": "full",
+          "matchedWords": ["first", "customers"],
+          "value": "Also agree with this. It's filtering work and priorities through the <em>customer's</em> lens instead of jumping right away to building. As in asking yourself <em>first</em>, why is this important, what does the customer want to accomplish, are there more of them who experience this ... feels in one way similar to the data-driven philosophy."
+        },
+        "story_title": {
+          "fullyHighlighted": false,
+          "matchLevel": "partial",
+          "matchedWords": ["first"],
+          "value": "<em>First</em> Principles Thinking"
+        },
+        "story_url": {
+          "fullyHighlighted": false,
+          "matchLevel": "partial",
+          "matchedWords": ["first"],
+          "value": "https://sunilsadasivan.com/writing/<em>first</em>-principles-thinking/"
+        }
+      },
+      "_tags": ["comment", "author_sergiu_spokn", "story_49844736"],
+      "author": "sergiu_spokn",
+      "comment_text": "Also agree with this. It&#x27;s filtering work and priorities through the customer&#x27;s lens instead of jumping right away to building. As in asking yourself first, why is this important, what does the customer want to accomplish, are there more of them who experience this ... feels in one way similar to the data-driven philosophy.",
+      "created_at": "2026-09-27T13:15:40Z",
+      "created_at_i": 1790514940,
+      "objectID": "49866428",
+      "parent_id": 49857261,
+      "story_id": 49844736,
+      "story_title": "First Principles Thinking",
+      "story_url": "https://sunilsadasivan.com/writing/first-principles-thinking/",
+      "updated_at": "2026-09-27T13:19:18Z"
+    },
+    {
+      "_highlightResult": {
+        "author": {
+          "matchLevel": "none",
+          "matchedWords": [],
+          "value": "valexi"
+        },
+        "comment_text": {
+          "fullyHighlighted": false,
+          "matchLevel": "full",
+          "matchedWords": ["first", "customers"],
+          "value": "Hi guys, I am builder of relnotely, basically here, I want people to know that, I have built a tool called relnotely, it is a very simple changelog for people that wants to have a changelog, and it is hosted by us, but you guys can attach your own domain, and in the changelog, there is no marketing from our side. so no vendor badge, I am still looking for the <em>first</em> couple of <em>customers</em>, it is very new, and there is many free tools that you can try, so try that if you want, and if you like it then consider the changelog.<p>getting very few people nowadays is hard, so I am welcome for feedback. and also one question.What did you guys do when you launch product? like how to make people know the product?"
+        },
+        "story_title": {
+          "matchLevel": "none",
+          "matchedWords": [],
+          "value": "Relnotely, hosted changelog on your own domain, no vendor badge"
+        },
+        "story_url": {
+          "matchLevel": "none",
+          "matchedWords": [],
+          "value": "https://relnotely.com"
+        }
+      },
+      "_tags": ["comment", "author_valexi", "story_49862506"],
+      "author": "valexi",
+      "comment_text": "Hi guys, I am builder of relnotely, basically here, I want people to know that, I have built a tool called relnotely, it is a very simple changelog for people that wants to have a changelog, and it is hosted by us, but you guys can attach your own domain, and in the changelog, there is no marketing from our side. so no vendor badge, I am still looking for the first couple of customers, it is very new, and there is many free tools that you can try, so try that if you want, and if you like it then consider the changelog.<p>getting very few people nowadays is hard, so I am welcome for feedback. and also one question.What did you guys do when you launch product? like how to make people know the product?",
+      "created_at": "2026-09-27T01:42:46Z",
+      "created_at_i": 1790473366,
+      "objectID": "49862507",
+      "parent_id": 49862506,
+      "story_id": 49862506,
+      "story_title": "Relnotely, hosted changelog on your own domain, no vendor badge",
+      "story_url": "https://relnotely.com",
+      "updated_at": "2026-09-27T04:08:15Z"
+    },
+    {
+      "_highlightResult": {
+        "author": {
+          "matchLevel": "none",
+          "matchedWords": [],
+          "value": "AnthonyMouse"
+        },
+        "comment_text": {
+          "fullyHighlighted": false,
+          "matchLevel": "full",
+          "matchedWords": ["first", "customers"],
+          "value": "&gt; Tap to pay can shave off a few seconds on every transaction<p>I don't really get how this can be possible. A person can definitely get their card out of their wallet in less time than it takes the cashier to finish scanning their items.<p>Obviously if the <em>customer</em> is confused then it can take arbitrarily long, but how is a phone less confusing than a card? People don't get to the register only to realize that their card's battery is run down or it's the <em>first</em> time they've used a phone for payments and then they want to stand there for 15 minutes in front of you trying to set it up."
+        },
+        "story_title": {
+          "matchLevel": "none",
+          "matchedWords": [],
+          "value": "Banks and Credit Unions to Team Up Against Apple Pay Fees"
+        },
+        "story_url": {
+          "matchLevel": "none",
+          "matchedWords": [],
+          "value": "https://www.macrumors.com/2026/09/25/apple-pay-antitrust-lawsuit-advances/"
+        }
+      },
+      "_tags": ["comment", "author_AnthonyMouse", "story_49857651"],
+      "author": "AnthonyMouse",
+      "comment_text": "&gt; Tap to pay can shave off a few seconds on every transaction<p>I don&#x27;t really get how this can be possible. A person can definitely get their card out of their wallet in less time than it takes the cashier to finish scanning their items.<p>Obviously if the customer is confused then it can take arbitrarily long, but how is a phone less confusing than a card? People don&#x27;t get to the register only to realize that their card&#x27;s battery is run down or it&#x27;s the first time they&#x27;ve used a phone for payments and then they want to stand there for 15 minutes in front of you trying to set it up.",
+      "created_at": "2026-09-26T20:53:38Z",
+      "created_at_i": 1790456018,
+      "objectID": "49860443",
+      "parent_id": 49858623,
+      "story_id": 49857651,
+      "story_title": "Banks and Credit Unions to Team Up Against Apple Pay Fees",
+      "story_url": "https://www.macrumors.com/2026/09/25/apple-pay-antitrust-lawsuit-advances/",
+      "updated_at": "2026-09-27T00:11:00Z"
+    },
+    {
+      "_highlightResult": {
+        "author": {
+          "matchLevel": "none",
+          "matchedWords": [],
+          "value": "jpage2"
+        },
+        "comment_text": {
+          "fullyHighlighted": false,
+          "matchLevel": "full",
+          "matchedWords": ["first", "customers"],
+          "value": "This is my <em>first</em> real launch. The Core is free, $3.99/mo for the sponsor feature. Gambling recovery organizations and communities are my best <em>customers</em>, but it's awkward trying to market to them/get them to buy.<p><a href=\"https://getpawl.com/\" rel=\"nofollow\">https://getpawl.com/</a>"
+        },
+        "story_title": {
+          "matchLevel": "none",
+          "matchedWords": [],
+          "value": "Show HN: Pawl \u2013 iOS gambling blocker you unlock with a physical Security Key"
+        },
+        "story_url": {
+          "matchLevel": "none",
+          "matchedWords": [],
+          "value": "https://github.com/jasonepage/Pawl"
+        }
+      },
+      "_tags": ["comment", "author_jpage2", "story_49859862"],
+      "author": "jpage2",
+      "comment_text": "This is my first real launch. The Core is free, $3.99&#x2F;mo for the sponsor feature. Gambling recovery organizations and communities are my best customers, but it&#x27;s awkward trying to market to them&#x2F;get them to buy.<p><a href=\"https:&#x2F;&#x2F;getpawl.com&#x2F;\" rel=\"nofollow\">https:&#x2F;&#x2F;getpawl.com&#x2F;</a>",
+      "created_at": "2026-09-26T19:54:35Z",
+      "created_at_i": 1790452475,
+      "objectID": "49859961",
+      "parent_id": 49859862,
+      "story_id": 49859862,
+      "story_title": "Show HN: Pawl \u2013 iOS gambling blocker you unlock with a physical Security Key",
+      "story_url": "https://github.com/jasonepage/Pawl",
+      "updated_at": "2026-09-26T20:32:48Z"
+    },
+    {
+      "_highlightResult": {
+        "author": {
+          "matchLevel": "none",
+          "matchedWords": [],
+          "value": "kotaKat"
+        },
+        "comment_text": {
+          "fullyHighlighted": false,
+          "matchLevel": "full",
+          "matchedWords": ["first", "customers"],
+          "value": "Walmart only relented because they finally broke through the final missing link of the contactless issue. They got <em>customers</em> conned into giving their phone numbers at checkout, just like it's the grocery store.<p>Cards get linked to accounts automatically behind the scenes based on <em>first6</em>/last4 card number tracking, then everyone else self-selects to punch their phone number on the screen.<p>Same reason Walmart Radio is such gruesome auditory cancer, it's part of the data collection and advertising vehicle."
+        },
+        "story_title": {
+          "matchLevel": "none",
+          "matchedWords": [],
+          "value": "Banks and Credit Unions to Team Up Against Apple Pay Fees"
+        },
+        "story_url": {
+          "matchLevel": "none",
+          "matchedWords": [],
+          "value": "https://www.macrumors.com/2026/09/25/apple-pay-antitrust-lawsuit-advances/"
+        }
+      },
+      "_tags": ["comment", "author_kotaKat", "story_49857651"],
+      "author": "kotaKat",
+      "children": [49858623],
+      "comment_text": "Walmart only relented because they finally broke through the final missing link of the contactless issue. They got customers conned into giving their phone numbers at checkout, just like it&#x27;s the grocery store.<p>Cards get linked to accounts automatically behind the scenes based on first6&#x2F;last4 card number tracking, then everyone else self-selects to punch their phone number on the screen.<p>Same reason Walmart Radio is such gruesome auditory cancer, it&#x27;s part of the data collection and advertising vehicle.",
+      "created_at": "2026-09-26T17:14:21Z",
+      "created_at_i": 1790442861,
+      "objectID": "49858549",
+      "parent_id": 49858496,
+      "story_id": 49857651,
+      "story_title": "Banks and Credit Unions to Team Up Against Apple Pay Fees",
+      "story_url": "https://www.macrumors.com/2026/09/25/apple-pay-antitrust-lawsuit-advances/",
+      "updated_at": "2026-09-27T06:03:31Z"
+    }
+  ],
+  "hitsPerPage": 6,
+  "nbHits": 82,
+  "nbPages": 14,
+  "page": 0,
+  "params": "query=first+customers&tags=%28story%2Ccomment%29&numericFilters=created_at_i%3E1789919075&hitsPerPage=6&advancedSyntax=true&analyticsTags=backend",
+  "processingTimeMS": 6,
+  "processingTimingsMS": {
+    "_request": {
+      "roundTrip": 21
+    },
+    "fetch": {
+      "query": 4,
+      "total": 5
+    },
+    "total": 6
+  },
+  "query": "first customers",
+  "serverTimeMS": 7
+}
