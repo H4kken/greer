@@ -21,7 +21,7 @@ export default defineConfig({
     // Fresh database, then the production build, like self-hosters run it.
     // (Playwright starts the web server before any globalSetup, so the reset lives here.)
     command: `node tests/e2e/reset-db.ts && pnpm build && pnpm start --port ${PORT}`,
-    url: `http://localhost:${PORT}`,
+    url: `http://localhost:${PORT}/api/health`,
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
     env: {

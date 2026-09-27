@@ -54,6 +54,7 @@ src/lib/          shared utilities
 ```bash
 pnpm db:up          # start Postgres in Docker (docker-compose.yml)
 pnpm dev            # web app on :3000 (copy .env.example to .env first)
+pnpm worker:dev     # background worker (pg-boss) with watch; run next to `pnpm dev`
 pnpm test           # vitest unit tests
 pnpm test:int       # integration tests against a real Postgres (fresh greer_test database each run)
 pnpm test:e2e       # playwright end-to-end + accessibility (fresh greer_e2e database, production build on :3100)
@@ -64,13 +65,13 @@ pnpm db:generate    # drizzle-kit generate after editing src/db/schema
 pnpm db:migrate     # apply migrations to DATABASE_URL
 ```
 
-Coming in the next Milestone 1 steps: `pnpm worker:dev` and `docker compose up --build` for the full self-host stack (migrations will then also run on container start).
+Coming in Milestone 1, step 4: `docker compose up --build` for the full self-host stack (migrations will then also run on container start).
 
 ## Conventions
 
 - Server components by default; add `"use client"` only for interactivity.
 - Mutations go through server actions that validate input with zod and check the session.
-- Job handlers must be idempotent (dedupe on platform `external_id`); pg-boss may retry them.
+- Background work goes through `src/worker/queue.ts` (never import pg-boss elsewhere). Register new queue names in `QUEUES`. Job handlers must be idempotent (dedupe on platform `external_id`); pg-boss may retry them. Enqueue with `sendInTransaction` when the job belongs to data being written.
 - Any new env var goes in `.env.example` and the README's self-hosting table in the same change.
 - Formatting is Prettier's job: don't hand-format or argue with it. Run `pnpm format` before finishing a task.
 

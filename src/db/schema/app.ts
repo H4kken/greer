@@ -47,3 +47,10 @@ export const workspaceMember = pgTable(
     index("workspace_member_user_id_idx").on(t.userId),
   ],
 );
+
+// Liveness of background processes, written by the heartbeat job.
+// One row per process kind (currently just "worker").
+export const workerStatus = pgTable("worker_status", {
+  id: text("id").primaryKey(),
+  lastSeenAt: timestamp("last_seen_at", { withTimezone: true }).notNull(),
+});
