@@ -1,12 +1,13 @@
 // Hacker News access through the official Algolia search API (free, no key).
-import type { Query } from './config.ts';
+import type { Query } from "./config.ts";
 
-const ALGOLIA = 'https://hn.algolia.com/api/v1';
-const USER_AGENT = 'greer-spike/0.1 (+https://github.com/; open-source community tool)';
+const ALGOLIA = "https://hn.algolia.com/api/v1";
+const USER_AGENT =
+  "greer-spike/0.1 (+https://github.com/; open-source community tool)";
 
 export type Item = {
   id: string;
-  type: 'story' | 'comment';
+  type: "story" | "comment";
   author: string;
   createdAt: string;
   title: string; // story title, or the parent story's title for comments
@@ -39,29 +40,33 @@ export type ThreadNode = {
 };
 
 export function toPlainText(html: string | null | undefined): string {
-  if (!html) return '';
+  if (!html) return "";
   return html
-    .replace(/<p>/gi, '\n\n')
-    .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/<[^>]+>/g, '')
+    .replace(/<p>/gi, "\n\n")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<[^>]+>/g, "")
     .replace(/&#x27;/g, "'")
-    .replace(/&#x2F;/g, '/')
+    .replace(/&#x2F;/g, "/")
     .replace(/&quot;/g, '"')
-    .replace(/&gt;/g, '>')
-    .replace(/&lt;/g, '<')
-    .replace(/&amp;/g, '&')
+    .replace(/&gt;/g, ">")
+    .replace(/&lt;/g, "<")
+    .replace(/&amp;/g, "&")
     .trim();
 }
 
 async function getJson<T>(url: string): Promise<T> {
-  const res = await fetch(url, { headers: { 'User-Agent': USER_AGENT } });
+  const res = await fetch(url, { headers: { "User-Agent": USER_AGENT } });
   if (!res.ok) throw new Error(`HN API ${res.status} for ${url}`);
   return (await res.json()) as T;
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-export async function searchQuery(q: Query, days: number, maxPerQuery: number): Promise<Item[]> {
+export async function searchQuery(
+  q: Query,
+  days: number,
+  maxPerQuery: number,
+): Promise<Item[]> {
   const since = Math.floor(Date.now() / 1000) - (q.days ?? days) * 86400;
   const items: Item[] = [];
   for (let page = 0; items.length < maxPerQuery; page++) {
@@ -71,16 +76,18 @@ export async function searchQuery(q: Query, days: number, maxPerQuery: number): 
       hitsPerPage: String(Math.min(100, maxPerQuery)),
       page: String(page),
     });
-    if (q.query) params.set('query', q.query);
-    const data = await getJson<{ hits: AlgoliaHit[]; nbPages: number }>(`${ALGOLIA}/search_by_date?${params}`);
+    if (q.query) params.set("query", q.query);
+    const data = await getJson<{ hits: AlgoliaHit[]; nbPages: number }>(
+      `${ALGOLIA}/search_by_date?${params}`,
+    );
     for (const h of data.hits) {
-      const isComment = h._tags.includes('comment');
+      const isComment = h._tags.includes("comment");
       items.push({
         id: h.objectID,
-        type: isComment ? 'comment' : 'story',
+        type: isComment ? "comment" : "story",
         author: h.author,
         createdAt: h.created_at,
-        title: (isComment ? h.story_title : h.title) ?? '',
+        title: (isComment ? h.story_title : h.title) ?? "",
         text: toPlainText(isComment ? h.comment_text : h.story_text),
         url: `https://news.ycombinator.com/item?id=${h.objectID}`,
         storyId: String(h.story_id ?? h.objectID),

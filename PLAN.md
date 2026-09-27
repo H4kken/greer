@@ -4,17 +4,17 @@
 
 ## Decisions so far
 
-| Question | Decision |
-|---|---|
-| Scope | **Listen + engage.** Find relevant conversations, score them, give you a reply brief (ideas, not text), track what you engaged with. No community hosting, no full CRM. |
-| Platforms | **v0.1: Hacker News** (free, official APIs). **v0.2: Reddit**, with the user's own approved API credentials plus a "bring a thread" fallback. Every platform sits behind a source-adapter interface. |
-| Data access | **Official APIs only.** No scraping services, proxies or logged-in sessions (see [Data access policy](#data-access-policy)). |
-| Automation | **Human-in-the-loop.** The tool finds threads and suggests ideas. You write the reply, open the thread and post it yourself. The tool never posts and never writes the reply. |
-| Account safety | **Account-aware guardrails.** Pacing, product mentions and eligibility depend on your account's age and karma and on each community's requirements. |
-| Stack | **TypeScript full-stack.** Next.js + Postgres + worker, shipped as one Docker image. |
-| Hosting | Docker Compose, deployable to Coolify in one step. |
-| License | **AGPL-3.0, no CLA.** Keeps improvements open, including in hosted forks. Contributions come in under the AGPL (inbound = outbound). A CLA can be added later if a closed or relicensed edition is ever needed; it would only cover new contributions. |
-| Design stance | Build what works for one self-hoster now. Keep scaling in mind (thin wrappers, `workspace_id`), but don't build for scale until a feature needs it. |
+| Question       | Decision                                                                                                                                                                                                                                               |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Scope          | **Listen + engage.** Find relevant conversations, score them, give you a reply brief (ideas, not text), track what you engaged with. No community hosting, no full CRM.                                                                                |
+| Platforms      | **v0.1: Hacker News** (free, official APIs). **v0.2: Reddit**, with the user's own approved API credentials plus a "bring a thread" fallback. Every platform sits behind a source-adapter interface.                                                   |
+| Data access    | **Official APIs only.** No scraping services, proxies or logged-in sessions (see [Data access policy](#data-access-policy)).                                                                                                                           |
+| Automation     | **Human-in-the-loop.** The tool finds threads and suggests ideas. You write the reply, open the thread and post it yourself. The tool never posts and never writes the reply.                                                                          |
+| Account safety | **Account-aware guardrails.** Pacing, product mentions and eligibility depend on your account's age and karma and on each community's requirements.                                                                                                    |
+| Stack          | **TypeScript full-stack.** Next.js + Postgres + worker, shipped as one Docker image.                                                                                                                                                                   |
+| Hosting        | Docker Compose, deployable to Coolify in one step.                                                                                                                                                                                                     |
+| License        | **AGPL-3.0, no CLA.** Keeps improvements open, including in hosted forks. Contributions come in under the AGPL (inbound = outbound). A CLA can be added later if a closed or relicensed edition is ever needed; it would only cover new contributions. |
+| Design stance  | Build what works for one self-hoster now. Keep scaling in mind (thin wrappers, `workspace_id`), but don't build for scale until a feature needs it.                                                                                                    |
 
 ## Product principles
 
@@ -61,6 +61,7 @@ Setup → Ingest → Filter → Score → Inbox → Brief → You write & post �
 Most bans come from behavior, not tools: too much self-promotion, a burst of replies from a new account, or breaking a community's rules. Greer knows your account and each community's requirements, so it can steer you away from all three.
 
 **Your account profile** (`platform_account`)
+
 - HN: age and karma are fetched from the official user API and refreshed daily.
 - Reddit (v0.2): read from the API when credentials exist, otherwise entered by hand.
 - **Maturity tier** (thresholds configurable per platform):
@@ -70,20 +71,21 @@ Most bans come from behavior, not tools: too much self-promotion, a burst of rep
 
 **What changes with maturity**
 
-| | New | Growing | Established |
-|---|---|---|---|
-| Product-mention suggestions | Off. Build trust first | Rare, only when clearly asked for | Normal (still help-first, disclosed) |
-| Pacing (defaults) | Max ~3 replies/day, spread out, burst warning | ~5/day | ~10/day |
-| Inbox focus | Threads where plain help fits; communities with no entry requirements | Mixed | Everything relevant |
+|                             | New                                                                   | Growing                           | Established                          |
+| --------------------------- | --------------------------------------------------------------------- | --------------------------------- | ------------------------------------ |
+| Product-mention suggestions | Off. Build trust first                                                | Rare, only when clearly asked for | Normal (still help-first, disclosed) |
+| Pacing (defaults)           | Max ~3 replies/day, spread out, burst warning                         | ~5/day                            | ~10/day                              |
+| Inbox focus                 | Threads where plain help fits; communities with no entry requirements | Mixed                             | Everything relevant                  |
 
 The limits are warnings, not locks: you're the one posting, so Greer advises.
 
 **Community requirements** (`community.requirements`)
+
 - **What's stored:** minimum account age, minimum karma, required flair or verification, and other posting restrictions.
 - **Where it comes from, with its source kept:**
-  - *stated*: the LLM extracts it from the published rules text;
-  - *user*: you enter or correct it;
-  - *learned*: after a removal, Greer asks "was your comment removed? why?" and records the answer. Many subreddits hide their karma and age thresholds in AutoModerator, so this matters for Reddit.
+  - _stated_: the LLM extracts it from the published rules text;
+  - _user_: you enter or correct it;
+  - _learned_: after a removal, Greer asks "was your comment removed? why?" and records the answer. Many subreddits hide their karma and age thresholds in AutoModerator, so this matters for Reddit.
 - **In the inbox:** threads in communities you can't post in yet are hidden, or marked "You can't comment here yet (needs 100 karma)".
 - **HN specifics:**
   - HN's guidelines and Show HN rules come bundled as the community rules.
@@ -91,6 +93,7 @@ The limits are warnings, not locks: you're the one posting, so Greer advises.
   - Downvoting unlocks at 501 karma.
 
 **Outcome signals**
+
 - If your comments get killed or removed repeatedly (HN `dead` flag, or Reddit removals you report), Greer warns that the account may be flagged and pauses product-mention suggestions.
 - The dashboard shows removal rate per community, so you can see where you're not landing well.
 
@@ -98,19 +101,21 @@ The limits are warnings, not locks: you're the one posting, so Greer advises.
 
 Greer uses **official, permitted APIs only**.
 
-| Platform | Access | Notes |
-|---|---|---|
-| **Hacker News (v0.1)** | [Algolia HN Search API](https://hn.algolia.com/api) for keyword search across stories *and* comments; [official Firebase API](https://github.com/HackerNews/API) for threads, user profiles (age, karma) and `dead`/`deleted` flags | Free, no key, generous limits. Verified working. |
-| **Reddit (v0.2)** | The user's own approved API credentials under Reddit's [Responsible Builder Policy](https://support.reddithelp.com/hc/en-us/articles/42728983564564-Responsible-Builder-Policy); Greer's docs include a template for requesting personal, non-commercial access | Approval is manual and [often denied](https://www.redditapis.com/blogs/reddit-data-api-2026). |
-| **Reddit fallback** | "Bring a thread": a bookmarklet sends the thread you're reading (from your own browser) to Greer for a brief and a reply check | No server-side requests to Reddit. Reply tracking is manual in this mode. |
+| Platform               | Access                                                                                                                                                                                                                                                          | Notes                                                                                         |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| **Hacker News (v0.1)** | [Algolia HN Search API](https://hn.algolia.com/api) for keyword search across stories _and_ comments; [official Firebase API](https://github.com/HackerNews/API) for threads, user profiles (age, karma) and `dead`/`deleted` flags                             | Free, no key, generous limits. Verified working.                                              |
+| **Reddit (v0.2)**      | The user's own approved API credentials under Reddit's [Responsible Builder Policy](https://support.reddithelp.com/hc/en-us/articles/42728983564564-Responsible-Builder-Policy); Greer's docs include a template for requesting personal, non-commercial access | Approval is manual and [often denied](https://www.redditapis.com/blogs/reddit-data-api-2026). |
+| **Reddit fallback**    | "Bring a thread": a bookmarklet sends the thread you're reading (from your own browser) to Greer for a brief and a reply check                                                                                                                                  | No server-side requests to Reddit. Reply tracking is manual in this mode.                     |
 
 **What we tested (Sep 2026):**
+
 - Reddit's `robots.txt` disallows all crawlers (`User-agent: * / Disallow: /`) and points to its Public Content Policy.
 - Unauthenticated RSS requests were rate-limited (`429`) almost immediately.
 - `.json` requests returned `403`, and a spoofed browser User-Agent was blocked outright.
 - RSS polling is therefore not a viable default.
 
 **Not allowed, even as an optional adapter:**
+
 - **Scraping services and proxy networks** (Firecrawl, Apify, SerpApi, Oxylabs, residential proxies, …). They don't grant permission; they route around the platform's access controls.
   - Reddit is suing SerpApi, Oxylabs, AWMProxy and Perplexity over exactly this, [including claims of circumventing technical protections under the DMCA](https://searchengineland.com/reddit-sues-perplexity-serpapi-scraping-google-463681).
   - The legal and ToS risk would land on each self-hoster, and on the project's reputation.
@@ -128,7 +133,7 @@ Greer uses **official, permitted APIs only**.
                Postgres 16 (+ pgvector, optional later)
 ```
 
-- **Next.js 15 (App Router)** with server components and server actions.
+- **Next.js 16 (App Router)** with server components and server actions.
 - **Tailwind CSS v4** (CSS-first config via `@theme` in `globals.css`, no `tailwind.config`) + **shadcn/ui** components (added via CLI into `src/components/ui`). Semantic tokens only, so dark mode works from day one.
 - **Postgres** is the only infrastructure dependency.
   - **pg-boss** handles the job queue and cron on Postgres, so there is no Redis: one less service on Coolify.
@@ -181,14 +186,14 @@ interface Source {
 
 Testing is in scope from Milestone 1. An open-source project lives or dies by whether contributors can change code without breaking self-hosters.
 
-| Layer | Tool | Covers |
-|---|---|---|
-| Unit | Vitest | Normalizers, prefilter and eligibility rules, maturity tiers, pacing/promo-ratio/cooldown math, prompt builders, zod schemas |
-| Integration | Vitest + real Postgres (Docker service in CI) | Queries, server actions, job handlers (idempotency, retries), workspace isolation, migrations applying from scratch |
-| End-to-end | Playwright against `docker compose` | Onboarding → first inbox, keyboard triage + undo, brief → write → "I replied" → timeline, settings errors |
-| Accessibility | `@axe-core/playwright` in the E2E suite | No serious/critical violations on every main screen |
-| LLM quality | Eval set of ~50 labelled real posts per prompt | Scoring precision/recall; briefs contain no paste-ready sentences and respect mention rules and account maturity; reply check catches missing disclosure and rule breaks; requirement extraction from rules text. Compared across `prompt_version`s |
-| Self-host | CI job: build image → compose up → health check → upgrade from the previous tag | The Coolify path never breaks |
+| Layer         | Tool                                                                            | Covers                                                                                                                                                                                                                                              |
+| ------------- | ------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Unit          | Vitest                                                                          | Normalizers, prefilter and eligibility rules, maturity tiers, pacing/promo-ratio/cooldown math, prompt builders, zod schemas                                                                                                                        |
+| Integration   | Vitest + real Postgres (Docker service in CI)                                   | Queries, server actions, job handlers (idempotency, retries), workspace isolation, migrations applying from scratch                                                                                                                                 |
+| End-to-end    | Playwright against `docker compose`                                             | Onboarding → first inbox, keyboard triage + undo, brief → write → "I replied" → timeline, settings errors                                                                                                                                           |
+| Accessibility | `@axe-core/playwright` in the E2E suite                                         | No serious/critical violations on every main screen                                                                                                                                                                                                 |
+| LLM quality   | Eval set of ~50 labelled real posts per prompt                                  | Scoring precision/recall; briefs contain no paste-ready sentences and respect mention rules and account maturity; reply check catches missing disclosure and rule breaks; requirement extraction from rules text. Compared across `prompt_version`s |
+| Self-host     | CI job: build image → compose up → health check → upgrade from the previous tag | The Coolify path never breaks                                                                                                                                                                                                                       |
 
 - **Deterministic by default:** sources replay recorded fixtures; the LLM is a mock provider (`LLM_PROVIDER=mock`) in unit, integration and E2E tests. Real-model evals run manually or on a nightly job with a repo secret.
 - **CI (GitHub Actions) on every PR:** `format:check` → `lint` → `typecheck` → unit → integration → E2E → Docker build. Self-host upgrade test runs on release tags.
@@ -231,16 +236,16 @@ The product is a daily habit tool (a 10–15 min triage session), so UX is about
 
 ## Milestones
 
-| # | Milestone | Outcome |
-|---|---|---|
-| 0 | **Spike (2–3 days)** | Script: pull the last 30 days of HN stories + comments for your SaaS keywords (Algolia), score them with an LLM, print the top 20. Is it useful for *your* product? Tune the keywords and scoring prompt. |
-| 1 | **Skeleton** | Next.js + Tailwind v4 + shadcn/ui + Drizzle + Better Auth + pg-boss, compose file, deploys on Coolify, health check. Prettier/ESLint/git hooks, Vitest + Playwright set up, mock LLM provider, CI pipeline green. Make the commands in `CLAUDE.md` real. |
-| 2 | **Ingest + inbox** | Wireframes of the 3 core screens first. Onboarding (product profile, HN username, keywords), HN source adapter, prefilter, LLM scoring, keyboard-driven ranked inbox with undo. Recorded HN fixtures, first eval set for scoring, E2E for onboarding → inbox. |
-| 3 | **Brief + engage** | Founder context notes, reply brief, editor with autosave, "Check my reply", rules panel (HN guidelines), copy + open-thread flow, "I replied" with auto-detection of your comment. Eval sets for briefs (no paste-ready text) and reply check, E2E for brief → write → replied. |
-| 4 | **Track + guardrails** | Reply tracking, dead/deleted detection, person timeline, account profile + maturity tiers, pacing/promo/cooldown warnings, account-health indicator, daily email/webhook digest. Integration tests for tracking jobs and guardrail math. |
-| 5 | **Public v0.1 (HN)** | UX polish pass (all states, a11y audit, mobile), self-host upgrade test in CI, README, Coolify guide, demo GIF, GHCR images, CONTRIBUTING.md (contributions licensed under AGPL-3.0). Launch as a Show HN (dogfood the tool for its own launch) and on r/selfhosted. |
-| 6 | **v0.2 (Reddit)** | Reddit adapter with the user's approved API credentials + access-request template, "bring a thread" bookmarklet, community requirements (stated/user/learned), removal reporting, feedback-tuned scoring. |
-| 7 | **Later** | More official-API sources based on demand (Bluesky, GitHub Discussions, Lobsters, Stack Exchange), pgvector semantic matching. |
+| #   | Milestone              | Outcome                                                                                                                                                                                                                                                                         |
+| --- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0   | **Spike (2–3 days)**   | Script: pull the last 30 days of HN stories + comments for your SaaS keywords (Algolia), score them with an LLM, print the top 20. Is it useful for _your_ product? Tune the keywords and scoring prompt.                                                                       |
+| 1   | **Skeleton**           | Next.js + Tailwind v4 + shadcn/ui + Drizzle + Better Auth + pg-boss, compose file, deploys on Coolify, health check. Prettier/ESLint/git hooks, Vitest + Playwright set up, mock LLM provider, CI pipeline green. Make the commands in `CLAUDE.md` real.                        |
+| 2   | **Ingest + inbox**     | Wireframes of the 3 core screens first. Onboarding (product profile, HN username, keywords), HN source adapter, prefilter, LLM scoring, keyboard-driven ranked inbox with undo. Recorded HN fixtures, first eval set for scoring, E2E for onboarding → inbox.                   |
+| 3   | **Brief + engage**     | Founder context notes, reply brief, editor with autosave, "Check my reply", rules panel (HN guidelines), copy + open-thread flow, "I replied" with auto-detection of your comment. Eval sets for briefs (no paste-ready text) and reply check, E2E for brief → write → replied. |
+| 4   | **Track + guardrails** | Reply tracking, dead/deleted detection, person timeline, account profile + maturity tiers, pacing/promo/cooldown warnings, account-health indicator, daily email/webhook digest. Integration tests for tracking jobs and guardrail math.                                        |
+| 5   | **Public v0.1 (HN)**   | UX polish pass (all states, a11y audit, mobile), self-host upgrade test in CI, README, Coolify guide, demo GIF, GHCR images, CONTRIBUTING.md (contributions licensed under AGPL-3.0). Launch as a Show HN (dogfood the tool for its own launch) and on r/selfhosted.            |
+| 6   | **v0.2 (Reddit)**      | Reddit adapter with the user's approved API credentials + access-request template, "bring a thread" bookmarklet, community requirements (stated/user/learned), removal reporting, feedback-tuned scoring.                                                                       |
+| 7   | **Later**              | More official-API sources based on demand (Bluesky, GitHub Discussions, Lobsters, Stack Exchange), pgvector semantic matching.                                                                                                                                                  |
 
 ## Open questions
 

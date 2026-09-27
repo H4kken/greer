@@ -1,5 +1,7 @@
 # Greer
 
+@AGENTS.md
+
 Open-source, self-hostable tool for small SaaS builders. It finds conversations (Hacker News first, Reddit next) where the builder can genuinely help, scores them, gives the builder a short reply brief (key ideas, angles, questions to ask), and tracks what they engaged with. The builder always writes the reply. See [PLAN.md](PLAN.md) for scope and milestones.
 
 ## Hard rules
@@ -24,7 +26,7 @@ Build something that works and people can use now. Keep scaling in mind when des
 
 ## Stack
 
-- Next.js 15 (App Router, server components, server actions), TypeScript strict
+- Next.js 16 (App Router, server components, server actions), TypeScript 5 strict. Next 16 has breaking changes vs older versions: read the bundled docs in `node_modules/next/dist/docs/` before writing Next-specific code (see AGENTS.md)
 - Tailwind CSS v4 (CSS-first config in `src/app/globals.css` via `@theme`; there is no `tailwind.config.*`)
 - shadcn/ui (components in `src/components/ui`, added with the CLI)
 - Postgres 16 + Drizzle ORM (`src/db`)
@@ -51,17 +53,14 @@ src/lib/          shared utilities
 
 ```bash
 pnpm dev            # web app on :3000
-pnpm worker:dev     # worker with watch
 pnpm test           # vitest unit tests
-pnpm test:int       # vitest integration tests against a real Postgres (docker)
-pnpm test:e2e       # playwright end-to-end + accessibility
+pnpm test:e2e       # playwright end-to-end + accessibility (builds the app, serves on :3100)
 pnpm format         # prettier --write .
 pnpm format:check   # what CI runs
-pnpm lint && pnpm typecheck
-pnpm db:generate    # drizzle-kit generate after editing schema.ts
-pnpm db:migrate     # apply migrations (also runs on container start)
-docker compose up --build   # full self-host stack locally
+pnpm lint && pnpm typecheck   # typecheck runs `next typegen` first
 ```
+
+Coming in the next Milestone 1 steps: `pnpm worker:dev`, `pnpm test:int` (integration tests against a real Postgres), `pnpm db:generate` / `pnpm db:migrate` (Drizzle), and `docker compose up --build` (full self-host stack).
 
 ## Conventions
 

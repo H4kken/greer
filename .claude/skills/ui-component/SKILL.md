@@ -17,31 +17,37 @@ description: Build, change or review UI with Tailwind CSS v4 and shadcn/ui, foll
 **States.** Each view designs its loading (skeletons shaped like the content, not spinners), empty (says what goes here and gives the next action, e.g. "No threads yet. Add a keyword"), error (what happened + how to fix it + retry), and partial states (e.g. one source failing while others work).
 
 **Feedback.**
+
 - Every action responds within 100 ms. Use `useOptimistic` / `useTransition` for triage actions.
 - Toasts confirm background results.
 - Buttons show a pending state and can't be double-submitted.
 
 **Forgiving.**
+
 - Dismiss, snooze and delete are undoable (toast with "Undo") rather than hidden behind confirmation dialogs.
 - Keep confirmation dialogs for actions that really can't be undone, and name the consequence ("Delete 240 items").
 
 **Speed for daily use.** The inbox is a triage tool you use every day:
+
 - keyboard-first: j/k to move, d to dismiss, s to snooze, r to open the brief + editor, `?` shows the shortcuts;
 - the next item is focused automatically after an action;
 - stays fast at 1000+ items (pagination or virtualization).
 
 **Clarity.**
-- Every surfaced thread says *why* it was surfaced (score reason, matched keyword).
+
+- Every surfaced thread says _why_ it was surfaced (score reason, matched keyword).
 - The brief and community rules sit next to the editor; the editor autosaves.
 - The brief is notes, not text: no "copy brief" or "insert into reply" buttons. Only the user's own reply can be copied.
 - Community rules are always visible while writing. Relative times ("3h ago") show the absolute time on hover.
 - Copy is plain and specific: no jargon, no "Oops!".
 
 **Trust.**
+
 - Make it obvious that Greer never posts. The primary action says "Copy & open thread", not "Reply".
 - Show LLM usage and cost estimates where the user configures models.
 
 **Progressive onboarding.**
+
 - The first run gets to a filled inbox in under 5 minutes.
 - Start from smart defaults (suggested keywords and communities) and let people edit them later, instead of requiring everything upfront.
 

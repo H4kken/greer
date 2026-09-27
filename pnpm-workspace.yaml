@@ -1,0 +1,6 @@
+packages:
+  - spike
+
+ignoredBuiltDependencies:
+  - sharp
+  - unrs-resolver

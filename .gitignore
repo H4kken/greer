@@ -1,6 +1,32 @@
+# dependencies
 node_modules/
+.pnp
+.pnp.*
+
+# next.js
+/.next/
+/out/
+/build
+next-env.d.ts
+*.tsbuildinfo
+
+# testing
+/coverage
+/test-results/
+/playwright-report/
+/blob-report/
+
+# env files (only the example is committed)
 .env
 .env.*
 !.env.example
+
+# spike output
 spike/out/
+
+# misc
 .DS_Store
+*.pem
+npm-debug.log*
+.pnpm-debug.log*
+.vercel

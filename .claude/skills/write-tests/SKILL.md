@@ -7,12 +7,12 @@ description: Write or fix tests (Vitest unit/integration, Playwright end-to-end,
 
 ## Pick the right layer
 
-| Layer | Tool | Location | What goes here |
-|---|---|---|---|
-| Unit | Vitest | next to the code, `*.test.ts` | Pure logic: normalizers, prefilters, promo-ratio math, zod schemas, prompt builders |
-| Integration | Vitest + real Postgres | `tests/integration/` | DB queries, server actions, pg-boss job handlers (idempotency, retries), workspace isolation |
-| End-to-end | Playwright | `tests/e2e/` | Critical user flows in a real browser against `docker compose` |
-| LLM evals | `pnpm eval` | `src/llm/prompts/__evals__/` | Prompt quality on labelled real posts (see the `llm-prompt` skill) |
+| Layer       | Tool                   | Location                      | What goes here                                                                               |
+| ----------- | ---------------------- | ----------------------------- | -------------------------------------------------------------------------------------------- |
+| Unit        | Vitest                 | next to the code, `*.test.ts` | Pure logic: normalizers, prefilters, promo-ratio math, zod schemas, prompt builders          |
+| Integration | Vitest + real Postgres | `tests/integration/`          | DB queries, server actions, pg-boss job handlers (idempotency, retries), workspace isolation |
+| End-to-end  | Playwright             | `tests/e2e/`                  | Critical user flows in a real browser against `docker compose`                               |
+| LLM evals   | `pnpm eval`            | `src/llm/prompts/__evals__/`  | Prompt quality on labelled real posts (see the `llm-prompt` skill)                           |
 
 Use the lowest layer that can catch the bug. Don't write end-to-end tests for logic a unit test covers.
 

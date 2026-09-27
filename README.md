@@ -21,9 +21,9 @@ Greer takes the opposite approach. **It does the tedious part (finding, filterin
 ## What Greer does
 
 - **Watches the communities you care about.** It follows the keywords and communities where your future users talk about their problems. Hacker News comes first; Reddit follows.
-- **Surfaces the threads worth your time.** An LLM scores each post for relevance and tells you *why* it was surfaced, so you're not reading hundreds of posts.
+- **Surfaces the threads worth your time.** An LLM scores each post for relevance and tells you _why_ it was surfaced, so you're not reading hundreds of posts.
 - **Gives you a fast daily inbox.** Triage in 10–15 minutes, keyboard-first: open, snooze or dismiss.
-- **Helps you think, not write.** For each thread, a short *reply brief*:
+- **Helps you think, not write.** For each thread, a short _reply brief_:
   - what the person really needs;
   - what the thread already covers;
   - a few angles you could take;
@@ -31,6 +31,7 @@ Greer takes the opposite approach. **It does the tedious part (finding, filterin
   - whether mentioning your product would be appropriate there.
 
   The brief is ideas, never text to paste.
+
 - **Checks your reply if you ask.** It flags a broken community rule, a promotional tone or a missing "I built this" disclosure. It never rewrites what you wrote.
 - **Knows your account.** A two-week-old account and a five-year-old one with 10k karma aren't the same. Greer adapts how often it suggests you reply, whether mentioning your product is wise, and which communities you can actually post in (minimum karma, account age), so you don't get flagged or banned.
 - **Remembers the relationships.** It tracks who replied to you and keeps a simple timeline of every person you've talked with, so conversations turn into relationships.
@@ -76,6 +77,7 @@ Installation docs will arrive with the first release.
 Hacker News has free, official APIs, so Greer works there out of the box.
 
 Reddit is harder:
+
 - Since late 2025, new API credentials need manual approval.
 - Reddit blocks automated access without an agreement, and it is suing scraping services over it.
 
@@ -83,12 +85,12 @@ Greer won't work around that. For Reddit (v0.2), you'll use your own approved AP
 
 ## Roadmap
 
-| Stage | Goal |
-|---|---|
-| **Spike** | Confirm that finding and scoring HN threads is useful, by dogfooding it on a real SaaS |
-| **v0.1** | Hacker News monitoring, scored inbox, reply briefs, reply check, conversation tracking, account-aware guardrails, one-step Coolify deploy |
-| **v0.2** | Reddit with your own API credentials, a "bring a thread" bookmarklet, per-community requirements (karma, account age), smarter scoring from your feedback |
-| **Later** | More official-API sources (Bluesky, GitHub Discussions, Lobsters, Stack Exchange…), based on what users ask for |
+| Stage     | Goal                                                                                                                                                      |
+| --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Spike** | Confirm that finding and scoring HN threads is useful, by dogfooding it on a real SaaS                                                                    |
+| **v0.1**  | Hacker News monitoring, scored inbox, reply briefs, reply check, conversation tracking, account-aware guardrails, one-step Coolify deploy                 |
+| **v0.2**  | Reddit with your own API credentials, a "bring a thread" bookmarklet, per-community requirements (karma, account age), smarter scoring from your feedback |
+| **Later** | More official-API sources (Bluesky, GitHub Discussions, Lobsters, Stack Exchange…), based on what users ask for                                           |
 
 ## Tech stack
 
@@ -109,6 +111,7 @@ Contribution guidelines and setup instructions will come with the first code. By
 Greer is licensed under the [GNU Affero General Public License v3.0](LICENSE) (AGPL-3.0).
 
 In plain terms:
+
 - You can use, modify and self-host Greer for free, for any purpose, including commercial use.
 - If you run a **modified** version as a service for other people, you must publish your changes under the same license.
 - Self-hosting it for yourself or your team, as-is or modified, creates no extra obligations.

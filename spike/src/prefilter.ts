@@ -1,7 +1,8 @@
 // Cheap, deterministic filtering before any LLM call.
-import type { Item } from './hn.ts';
+import type { Item } from "./hn.ts";
 
-const SKIP_THREADS = /who is hiring|who wants to be hired|freelancer\? seeking freelancer/i;
+const SKIP_THREADS =
+  /who is hiring|who wants to be hired|freelancer\? seeking freelancer/i;
 const DEAD = /^\[(dead|flagged|deleted)\]/i;
 const MIN_CHARS = 80;
 
@@ -14,14 +15,20 @@ export type FilterStats = {
   kept: number;
 };
 
-export function prefilter(batches: Item[][]): { items: Item[]; stats: FilterStats } {
+export function prefilter(batches: Item[][]): {
+  items: Item[];
+  stats: FilterStats;
+} {
   const byId = new Map<string, Item>();
   let fetched = 0;
   for (const batch of batches) {
     for (const item of batch) {
       fetched++;
       const existing = byId.get(item.id);
-      if (existing) existing.queries.push(...item.queries.filter((q) => !existing.queries.includes(q)));
+      if (existing)
+        existing.queries.push(
+          ...item.queries.filter((q) => !existing.queries.includes(q)),
+        );
       else byId.set(item.id, item);
     }
   }
@@ -31,7 +38,8 @@ export function prefilter(batches: Item[][]): { items: Item[]; stats: FilterStat
   let dead = 0;
   const kept: Item[] = [];
   for (const item of byId.values()) {
-    const content = `${item.type === 'story' ? item.title : ''} ${item.text}`.trim();
+    const content =
+      `${item.type === "story" ? item.title : ""} ${item.text}`.trim();
     if (DEAD.test(item.title) || DEAD.test(item.text)) dead++;
     else if (SKIP_THREADS.test(item.title)) skippedThread++;
     else if (content.length < MIN_CHARS) tooShort++;
@@ -40,7 +48,14 @@ export function prefilter(batches: Item[][]): { items: Item[]; stats: FilterStat
 
   return {
     items: kept,
-    stats: { fetched, unique: byId.size, tooShort, skippedThread, dead, kept: kept.length },
+    stats: {
+      fetched,
+      unique: byId.size,
+      tooShort,
+      skippedThread,
+      dead,
+      kept: kept.length,
+    },
   };
 }
 
