@@ -9,6 +9,8 @@ export const QUEUES = {
   ingestSchedule: "ingest-schedule",
   // One source query: fetch, prefilter, store. Keyed by query id.
   ingestPoll: "ingest-poll",
+  // One item: ask the model for its criteria, store the computed score.
+  scoreItem: "score-item",
 } as const;
 export type QueueName = (typeof QUEUES)[keyof typeof QUEUES];
 
@@ -22,6 +24,13 @@ const QUEUE_OPTIONS: Partial<
     policy: "stately",
     retryLimit: 3,
     retryDelay: 30,
+    retryBackoff: true,
+  },
+  // One waiting and one running job per item (singletonKey = item id).
+  [QUEUES.scoreItem]: {
+    policy: "stately",
+    retryLimit: 2,
+    retryDelay: 60,
     retryBackoff: true,
   },
 };

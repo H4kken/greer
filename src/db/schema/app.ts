@@ -29,6 +29,11 @@ export const workspace = pgTable("workspace", {
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
   name: text("name").notNull(),
+  // Product profile, filled in during onboarding. Scoring needs it.
+  productName: text("product_name"),
+  productDescription: text("product_description"),
+  audience: text("audience"),
+  problems: text("problems").array().notNull().default([]),
   ...timestamps,
 });
 
@@ -206,4 +211,30 @@ export const item = pgTable(
       t.postedAt,
     ),
   ],
+);
+
+// The latest score of an item. Criteria are the model's answers; the score is
+// computed from them in code (src/scoring/compute.ts).
+export const itemScore = pgTable(
+  "item_score",
+  {
+    itemId: text("item_id")
+      .primaryKey()
+      .references(() => item.id, { onDelete: "cascade" }),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspace.id, { onDelete: "cascade" }),
+    score: integer("score").notNull(),
+    criteriaMet: integer("criteria_met").notNull(),
+    criteriaTotal: integer("criteria_total").notNull(),
+    criteria: jsonb("criteria").notNull(),
+    intent: text("intent").notNull(),
+    reason: text("reason").notNull(),
+    promptVersion: text("prompt_version").notNull(),
+    model: text("model").notNull(),
+    scoredAt: timestamp("scored_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [index("item_score_workspace_score_idx").on(t.workspaceId, t.score)],
 );

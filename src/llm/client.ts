@@ -21,20 +21,21 @@ export async function generateStructured<Input, Output>(
   workspaceId: string,
   prompt: PromptDef<Input, Output>,
   input: Input,
-  // Tests inject a config and/or an AI SDK mock model.
-  options: { config?: LlmConfig; model?: LanguageModel } = {},
+  // Tests inject a config and/or an AI SDK mock model; evals skip recording.
+  options: { config?: LlmConfig; model?: LanguageModel; record?: boolean } = {},
 ): Promise<StructuredResult<Output>> {
   const config = options.config ?? (await getLlmConfig(workspaceId));
   const modelId = config.models[prompt.slot];
   const started = Date.now();
 
-  const record = (fields: {
+  const record = async (fields: {
     ok: boolean;
     inputTokens?: number | null;
     outputTokens?: number | null;
     error?: string;
-  }) =>
-    db.insert(llmCall).values({
+  }) => {
+    if (options.record === false) return;
+    await db.insert(llmCall).values({
       workspaceId,
       slot: prompt.slot,
       provider: config.provider,
@@ -47,6 +48,7 @@ export async function generateStructured<Input, Output>(
       ok: fields.ok,
       error: fields.error ?? null,
     });
+  };
 
   if (config.provider === "mock" && !options.model) {
     const output = prompt.schema.parse(prompt.mock(input));

@@ -11,7 +11,13 @@ export const BACKFILL_DAYS = 7;
 // Overlap with the previous poll so items indexed late aren't missed.
 const OVERLAP_MS = 60 * 60 * 1000;
 
-export type PollResult = { fetched: number; new: number; kept: number };
+export type PollResult = {
+  fetched: number;
+  new: number;
+  kept: number;
+  // New items that passed the prefilter: ready to be scored.
+  newKeptIds: string[];
+};
 
 export async function pollQuery(
   db: Db,
@@ -23,7 +29,9 @@ export async function pollQuery(
     .select()
     .from(sourceQuery)
     .where(eq(sourceQuery.id, queryId));
-  if (!query || !query.enabled) return { fetched: 0, new: 0, kept: 0 };
+  if (!query || !query.enabled) {
+    return { fetched: 0, new: 0, kept: 0, newKeptIds: [] };
+  }
 
   const since = query.lastPolledAt
     ? new Date(query.lastPolledAt.getTime() - OVERLAP_MS)
@@ -59,7 +67,7 @@ export async function pollQuery(
   // One row per external id, even if the platform returned it twice.
   const unique = [...new Map(fetched.map((i) => [i.externalId, i])).values()];
 
-  let inserted: { isNew: boolean; kept: boolean }[] = [];
+  let inserted: { id: string; isNew: boolean; kept: boolean }[] = [];
   if (unique.length) {
     inserted = await db
       .insert(item)
@@ -88,6 +96,7 @@ export async function pollQuery(
         },
       })
       .returning({
+        id: item.id,
         // xmax = 0 means the row was inserted, not updated.
         isNew: sql<boolean>`(xmax = 0)`,
         kept: sql<boolean>`(${item.filterStatus} = 'kept')`,
@@ -100,10 +109,12 @@ export async function pollQuery(
     .where(eq(sourceQuery.id, queryId));
 
   const created = inserted.filter((r) => r.isNew);
+  const newKeptIds = created.filter((r) => r.kept).map((r) => r.id);
   return {
     fetched: fetched.length,
     new: created.length,
-    kept: created.filter((r) => r.kept).length,
+    kept: newKeptIds.length,
+    newKeptIds,
   };
 }
 

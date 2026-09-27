@@ -76,15 +76,14 @@ describe("pollQuery", () => {
     const queryId = await createQuery(workspaceId);
     const { sourceFor } = fakeSource([raw("1"), raw("2"), raw("2")]);
 
-    expect(await pollQuery(db, sourceFor, queryId, now)).toEqual({
-      fetched: 3,
-      new: 2,
-      kept: 2,
-    });
+    const first = await pollQuery(db, sourceFor, queryId, now);
+    expect(first).toMatchObject({ fetched: 3, new: 2, kept: 2 });
+    expect(first.newKeptIds).toHaveLength(2);
     expect(await pollQuery(db, sourceFor, queryId, now)).toEqual({
       fetched: 3,
       new: 0,
       kept: 0,
+      newKeptIds: [],
     });
     expect(await db.select().from(item)).toHaveLength(2);
   });
@@ -182,6 +181,7 @@ describe("pollQuery", () => {
       fetched: 0,
       new: 0,
       kept: 0,
+      newKeptIds: [],
     });
     expect(calls).toHaveLength(0);
     expect(await enabledQueryIds(db)).toEqual([]);

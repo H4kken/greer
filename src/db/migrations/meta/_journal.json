@@ -29,6 +29,13 @@
       "when": 1790523983045,
       "tag": "0003_ingest",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790524297238,
+      "tag": "0004_scoring",
+      "breakpoints": true
     }
   ]
 }

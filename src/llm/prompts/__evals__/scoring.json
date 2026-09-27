@@ -1,0 +1,288 @@
+{
+  "about": "Scoring eval set: real Hacker News posts and comments from the Milestone 0 spike (Sep 2026), author names removed, text cut to 700 characters. expected = would the builder genuinely want to reply (yes/no); maybe = excluded from precision/recall.",
+  "labeledBy": "Proposed by Claude, to be reviewed by the maintainer",
+  "product": {
+    "name": "Greer",
+    "description": "Open-source, self-hostable tool that helps small or new SaaS builders create a genuine community and get feedback on their product. It finds conversations where the builder can genuinely help and gives them short reply ideas (never AI-written replies).",
+    "audience": "Indie hackers, solo founders and small teams building an early-stage SaaS who struggle with outreach and building an audience.",
+    "problems": [
+      "Finding and getting the first users or first paying customers",
+      "Doing outreach without being spammy",
+      "Getting feedback on an MVP, demo or launch",
+      "Building a community or audience from zero",
+      "Launching and getting no traction"
+    ]
+  },
+  "cases": [
+    {
+      "id": "hn-49687256",
+      "category": "help",
+      "type": "story",
+      "title": "Ask HN: One month, zero paying customers – keep it or kill it?",
+      "text": "When I created the site scanmypage.com, I genuinely believed that many business owners would use it — especially because of the price: just $1 for a website analysis.\n\nAnalytics — \nGoogle Search Console — \nStill struggling to gain good visibility on Google.\n\nI then started paying for Google Ads — \nBuilt and optimized what I believe is a solid campaign —\n\nBut now a month has passed, and the site still hasn’t generated a single paying customer.\n\nSo my question is: What would you do?\n\nWould you keep the site alive and continue improving and marketing it, or would you kill it, accept that the idea isn’t gaining traction, and move on to the next project?\n\nKeep it or kill it?",
+      "expected": "yes",
+      "note": "Zero paying customers after a month, asking what to do"
+    },
+    {
+      "id": "hn-49862507",
+      "category": "help",
+      "type": "comment",
+      "title": "Relnotely, hosted changelog on your own domain, no vendor badge",
+      "text": "Hi guys, I am builder of relnotely, basically here, I want people to know that, I have built a tool called relnotely, it is a very simple changelog for people that wants to have a changelog, and it is hosted by us, but you guys can attach your own domain, and in the changelog, there is no marketing from our side. so no vendor badge, I am still looking for the first couple of customers, it is very new, and there is many free tools that you can try, so try that if you want, and if you like it then consider the changelog.\n\ngetting very few people nowadays is hard, so I am welcome for feedback. and also one question.What did you guys do when you launch product? like how to make people know the p…",
+      "expected": "maybe",
+      "note": "Maker describing their changelog tool; unclear if asking for help"
+    },
+    {
+      "id": "hn-49556698",
+      "category": "help",
+      "type": "story",
+      "title": "Ask HN: How do we build a team? (bootstrapped B2B startup)",
+      "text": "Hi everyone, I'm 22 years old and I own a start up with my co-founder, we both just graduated college and we built a b2b SaaS that's live with 60 users and growing. We've been live since beginning of June.\n\nI wanted to post on here because we need help, real help and we don't know where to look or who to ask or how to find reliable people. We see teams like Cluely and Whop and obviously they're billion dollar companies but how do people in start ups find a team like that? Not just employees but a team, a family almost. It is just us two and we're totally boot strapped and dialed in and we've been making it work I think really really well but as we keep growing new things keep coming up and n…",
+      "expected": "maybe",
+      "note": "Team building and hiring: adjacent, not one of the problems"
+    },
+    {
+      "id": "hn-49743493",
+      "category": "help",
+      "type": "story",
+      "title": "Ask HN: Co-Founder(s). Do I need any? How would I even find them?",
+      "text": "I'm a technologist and have experience in academia, private, and now public sector work. I had an idea stewing in the back of my mind for about a year and it became 'fully-formed' enough to be a proof-of-concept such that I filed a provisional patent a few months ago. At this point, I don't want to quit my day job (federal agency, GS11, but have an in to be GS15 within 3 years). But I really want my idea to succeed (or at the very least, see the light of day). I have some savings piled up, but I'm hesitant to spend it on 'grown-up' patent papers yet. I also already have 3 other 'side gigs' (not to mention 4 kids and a blushing bride) that take up more than most of my time. How would I even f…",
+      "expected": "maybe",
+      "note": "Finding a co-founder: adjacent"
+    },
+    {
+      "id": "hn-49674396",
+      "category": "help",
+      "type": "story",
+      "title": "How SaaS startup guys get first 100 customers first, make fkn $500k ARR fast?",
+      "text": "I am running a small AI company that has been building an offline security audit app, simply a fine-tuned small language model powering an Electron app that can audit GitHub and local code repos for security stuff. I always see these LinkedIn or X guys making $500k ARR or $1m ARR within months; how the fkk do they get that many customers without spending on ads? I can't even get 5 customers; damn it, I do suck at sales",
+      "expected": "yes",
+      "note": "Asking how to get the first 100 customers"
+    },
+    {
+      "id": "hn-49741227",
+      "category": "help",
+      "type": "story",
+      "title": "Ask HN: How to start a sales and marketing engine?",
+      "text": "Outside of personal outreach and marketing, what are the best avenues for jumpstarting a bootstrapped product into the market without an existing sales and marketing engine?\n\nSelling/being acquired by a larger firm with the resources, trying to secure grants, looking for a VC/partner to invest, or some other secret sauce?",
+      "expected": "yes",
+      "note": "Bootstrapped product, no sales and marketing engine"
+    },
+    {
+      "id": "hn-49862912",
+      "category": "feedback",
+      "type": "story",
+      "title": "Show HN: All/Some – A free logic puzzle game about set relationships",
+      "text": "All/Some is a web app where you work out how sets relate using \"all,\" \"some,\" and \"none\" relationships.\n\nMy husband and I made the game together. I create the puzzles and he does the code and design.\n\nThe idea came from a puzzle I posted on Instagram (@critikid) that went viral. In the puzzle, people had to match groups of words to the correct Euler diagrams. People liked it so much that we decided to turn it into a full game.\n\nAll/Some offers a free daily challenge (ad free), and there are more puzzles for members. There are also thematic collections for members on topics like biology and history, and I'm working on adding more.\n\nWe would like feedback on whether you'd like to see variation…",
+      "expected": "no",
+      "note": "Puzzle game made by a couple: not the audience"
+    },
+    {
+      "id": "hn-49689696",
+      "category": "help",
+      "type": "story",
+      "title": "Ask HN: Would a startup for young creatives who reject AI be feasible?",
+      "text": "I am a member of my university's game development club, which puts me around lots of talented programmers as well as artists of all kinds, and I've observed that just about everyone disapproves of AI. The sentiment is especially strong among younger people coming into the club. By \"disapproves\", I mean they refuse to allow AI-generated content in games and see AI use in general as something like a moral failure.\n\nAt the same time, I scroll down the YC startup directory, sorting by launch date, and observe that every non-hardware company (and most of the hardware ones) are entirely based on AI. The demographic I described above, young creatives like the ones in this club, has zero chance of v…",
+      "expected": "maybe",
+      "note": "Idea validation for a hypothetical startup"
+    },
+    {
+      "id": "hn-49580353",
+      "category": "help",
+      "type": "story",
+      "title": "Ask HN: How do you build organic traction as an indie dev?",
+      "text": "I have recently become a fulltime indie gamedev.\n\nWhile I'm willing to trust myself on technical and creative output, the topic of getting the word out that I might release something interesting and worth people's time seems to have become increasingly daunting. Most popular technical channels like HN / specific sub-reddits  require active community participation and \"karma-farming\" just to be able to post something, which is hard for me to spend time on (I'd rather work on my stuff). Twitter(X) / Bluesky have low visibility for gamedev topics. All text-focused websites seem to have become really hard organic marketing channels especially after AI slop came in.\n\nIG / Tiktok / Twitch would be…",
+      "expected": "yes",
+      "note": "Indie dev struggling to get the word out"
+    },
+    {
+      "id": "hn-49535048",
+      "category": "feedback",
+      "type": "story",
+      "title": "Show HN: OctoLoops – automated marketing for indie devs",
+      "text": "Hi HN! This is my latest side hustle, OctoLoops: an app to help indie devs and SMEs find paying customers for their business.\n\nI first started building OctoLoops around 2 months ago because so many of my own projects, big and small, had failed or petered out from lack of users and the valuable feedback that comes with them.\n\nWhen I started seriously digging, I found that distribution is one heck of a rabbit hole. The more I read, the more I found how much I didn't know. But I wanted to learn - and I really wanted to _apply_ that learning too, to all my new projects, in a repeatable, autonomous-as-possible way.\n\nWhat better way to implement this plan than building a distribution app?\n\nThe ide…",
+      "expected": "yes",
+      "note": "Indie maker of an early marketing tool, own projects failed to find customers"
+    },
+    {
+      "id": "hn-49635776",
+      "category": "help",
+      "type": "story",
+      "title": "Ask HN: How do you decide an idea is worth building before you start coding?",
+      "text": "I’ve been thinking about the gap between having an idea and actually deciding it deserves weeks or months of work.\n\nBuilding has become much cheaper. A developer can prototype something surprisingly fast now.\n\nBut the decision before building still seems messy.\n\nWhen you’re evaluating an idea, what evidence do you actually trust?\n\nCustomer interviews?\nExisting workarounds?\nCompetitor reviews?\nSearch demand?\nPeople already paying for alternatives?\nYour own experience with the problem?\n\nAnd maybe more importantly:\n\nWhat evidence would make you decide not to build it?\n\nI often see founders collect a lot of information, but the final decision still comes down to a mix of browser tabs, notes, spr…",
+      "expected": "maybe",
+      "note": "Idea validation before building: general discussion"
+    },
+    {
+      "id": "hn-49845622",
+      "category": "feedback",
+      "type": "story",
+      "title": "Show HN: TandemCode – practice coding interviews together in one live editor",
+      "text": "Hi HN, I’m Naman, a CS student, and I built TandemCode (free and open source) because practicing coding problems with a friend usually meant juggling a call, a shared screen, and separate places to run code. I also believe that technical interviews are changing, and LeetCode is no longer the right abstraction for preparing. Although right now I only have leetcode style questions on TandemCode, looking for suggestions for more types of questions and features I can add to it.\n\nYou can create a room, invite a partner, work in the same editor, and chat while you solve a problem. When you submit, you both see the verdict from the test runner. It currently has 15 problems and supports Python.\n\ngit…",
+      "expected": "maybe",
+      "note": "Student's free open-source tool"
+    },
+    {
+      "id": "hn-49594136",
+      "category": "help",
+      "type": "story",
+      "title": "Ask HN: Resources for how to get good at sales",
+      "text": "I have a niche SaaS that's useful but will never get customers unless the target market knows about it.\n\nSo I'll spend 1 hour per day 'learning sales' (and the rest of the time actually doing sales).\n\nplease give your best recommendations (books/vids/courses/accounts to follow/direct advice/tidbits/other).\n\nOn my list so far:\n\nHow to Sell by YC alum Tyler Bosmeny: https://www.youtube.com/watch?v=xZi4kTJG-LE\n\nNever Split the Difference by Christopher Voss and Tahl Raz",
+      "expected": "yes",
+      "note": "Niche SaaS founder learning sales to find customers"
+    },
+    {
+      "id": "hn-49762267",
+      "category": "help",
+      "type": "comment",
+      "title": "Show HN: LiveWorld – Every 24/7 YouTube live camera on one globe",
+      "text": "hey HN, hari here. built this over the last 2 weeks solo. figured id share now since HN weekend crowd is a good stress test.\n\nthe idea came from wanting a way to drop into somewhere on earth and see whats happening right now. youtube has thousands of 24/7 live streams (nature, transit, airport aprons, urban corners) but theyre scattered across a million channels so nobody finds them. so i put them on a globe.\n\ncurrently 641 cams across ~60 countries. tap a marker, video plays inline, per-camera chat so you can see who else is watching the same view. free, no login needed to watch, no ads, no tracking.\n\nstack: laravel + reverb websockets + postgres, maplibre globe with osm tiles, runs on a $1…",
+      "expected": "no",
+      "note": "Maker introducing a weekend project, no struggle"
+    },
+    {
+      "id": "hn-49834823",
+      "category": "feedback",
+      "type": "story",
+      "title": "Show HN: WealthYogi – Financial Wellness App",
+      "text": "I built WealthYogi for iOS and Android around a simple idea:\n\n*Personal finance is not just about tracking money. It's about building better habits and changing how we behave with money.*\n\nThe app is built around a simple loop:\n\n*Track → Know → Control → Repeat*\n\n*Track*\nTrack your financial accounts globally, with support for 23 currencies, live FX rates, and 18 different account types.\n\n*Know*\nWealthYogi uses 10+ personal-finance metrics to help you understand your financial health — not just your net worth. It highlights what needs attention and what you're already doing well.\n\n*Control*\nBased on that guidance, you can set financial goals and track your progress. The idea is to turn finan…",
+      "expected": "maybe",
+      "note": "Consumer finance app asking for product feedback"
+    },
+    {
+      "id": "hn-49859961",
+      "category": "help",
+      "type": "comment",
+      "title": "Show HN: Pawl – iOS gambling blocker you unlock with a physical Security Key",
+      "text": "This is my first real launch. The Core is free, $3.99/mo for the sponsor feature. Gambling recovery organizations and communities are my best customers, but it's awkward trying to market to them/get them to buy.\n\nhttps://getpawl.com/",
+      "expected": "yes",
+      "note": "First launch, finds marketing to their target awkward"
+    },
+    {
+      "id": "hn-49856774",
+      "category": "feedback",
+      "type": "story",
+      "title": "Show HN: HomeAI.design – Visualize interior design ideas from a photo",
+      "text": "Hi HN,\n\nI’m an indie developer and I recently built HomeAI.design.\n\nThe original idea was simple. When people renovate a room, it's difficult to imagine what a different design would actually look like in their own space.\n\nSo I built a tool where you upload a room photo and generate different interior design ideas.\n\nI'm still figuring out what users really need, especially compared with other AI interior design tools.\n\nWould love feedback on the product and the generated results.",
+      "expected": "yes",
+      "note": "Indie developer's early product, asking for feedback"
+    },
+    {
+      "id": "hn-49759108",
+      "category": "help",
+      "type": "story",
+      "title": "I got tired of taking screenshots and explaining everything to AI agents",
+      "text": "HI HN!! First here is a demo video : https://youtu.be/A0LV28G4sXo?si=ymIQEfNGprh8yyxq\nI work in a SDE role and work in multiple windows at once like i have many apps open in my mac. I faced a problem of screenshotting everything and explaining the context and theri relations to claude code again and again like for little UI chanegs and such or any bug. I got this idea and started workign on it , made a swift app which will track cursor and when your press a hoteky it starts only then and when you hold a hoteky it will draw over the areas your point with your cursor and you can keep talking while explaining what you need like you would to a real colleague. The voice timings come form whisper …",
+      "expected": "no",
+      "note": "Demo of a dev tool, no problem stated"
+    },
+    {
+      "id": "hn-49866214",
+      "category": "help",
+      "type": "comment",
+      "title": "ASML says it sold 'absolutely nothing' in Europe in 2026",
+      "text": "Guangdong had a pre-existing agglomeration of black-market capitalists because the proximity to Hong Kong made smuggling viable. From https://andrewbatson.com/2020/10/20/the-upcoming-westad-chen...:\n\n\"One example we use is the No.3 Memory of Lenin Tractor Repair Factory in Zhuhai, which already in 1973 had started repairing tractors outside the plan. It would take tractors that needed to be repaired from other units, repair them on the side of the plan, and then get payment in kind. That payment in kind was then either bartered further within Guangdong, or smuggled downriver to Hong Kong. By 1973 this unit had a Hong Kong bank account. If this had been discovered at the central level, these …",
+      "expected": "no",
+      "note": "Off-topic: geopolitics"
+    },
+    {
+      "id": "hn-49865950",
+      "category": "help",
+      "type": "comment",
+      "title": "Show HN: Aldine. Self-hosted Overleaf alternative. Every paper = 1 Git Repo",
+      "text": "Hi HN, I'm Toby. While working on a research paper earlier this year, I got progressively frustrated with the available LaTeX editors. Most need a paid subscription service to enable proper collaboration, are clunky, and shove distracting non-features in your face.\n\nThis is why I built Aldine. It is a collaborative LaTeX editor that you can run yourself: two containers, every project as a git repo, and AGPL licensed. Documentation: https://aldine.dev\n\nYou can try it without signing up at https://demo.aldine.dev (public and wiped every night, so don't leave your thesis there). Create a project, or drop in a ZIP you downloaded from Overleaf.\n\nMy co-authors want a super simple and browser-based…",
+      "expected": "no",
+      "note": "Maker introducing a LaTeX editor, no struggle"
+    },
+    {
+      "id": "hn-49605395",
+      "category": "help",
+      "type": "story",
+      "title": "Ask HN: Anyone else feeling uneasy with the latest developments in AI?",
+      "text": "I'm feeling extremely depressed and anxious lately. After seeing Astra saturating ARC-AGI-3 and blowing through many other benchmarks, it's hard to believe we won't have a strong form of AGI by the end of this year, or the next one at the latest.\n\nI don't understand why we're not seeing a MASSIVE clamor for a pause in the further development of AI strength. Even if we don't know how to coordinate and enforce such a pause yet (at the multi-nation level), it seems we're not spending any effort in figuring how to.\n\nI see a lot of people dismissing warnings from the frontier companies themselves as nothing but \"marketing and generating hype\". I myself can't call \"marketing and hype\" the kind of …",
+      "expected": "no",
+      "note": "Off-topic: AI anxiety"
+    },
+    {
+      "id": "hn-49740437",
+      "category": "help",
+      "type": "comment",
+      "title": "Show HN: DrillFlow – a diagram editor where every node opens into a sub-diagram",
+      "text": "Hi there, I am the creator of DrillFlow,\n\nI would like to share my thoughts behind the creation of DrillFlow. \nNowadays my job shifted from implementing of solutions to planning/understanding/explaining software solutions. So i got used to create\ndiagrams on the fly while explaining or listening to others. My problem was to fit the most important abstractions and also details on the same canvas and keep it still readable. The tools i used before \nmade it hard to me to build hierarchial structures without splitting one diagram into many and keep track on how they belong together.\n\nDrillFlow is built on the idea of drill-down as the primary structure. Any node/shape on the canvas can own its o…",
+      "expected": "no",
+      "note": "Maker explaining a diagram tool"
+    },
+    {
+      "id": "hn-49865720",
+      "category": "help",
+      "type": "comment",
+      "title": "The internet discovers TLA+. Now what?",
+      "text": "I indirectly use TLA+ through https://github.com/quint-co/quint. I added instructions that \"before you implement any feature, please use Quint to model it and make sure no counterexample for the system as a whole, reiterate the design with Quint as well and make sure your documents and implementation follows the formal model and docs\".\n\nThe result, while takes much longer, is quite magical. A lot of transaction and atomic bugs were found and fixed just by having such simple instruction alone.\n\nHowever, sometimes it is not all magical especially around external resources. Cloudflare, unfortunately, sometimes have hiccups on D1 and KV with timeout, which is more or less a force majeure.\n\nFortu…",
+      "expected": "no",
+      "note": "Off-topic: formal methods"
+    },
+    {
+      "id": "hn-49866000",
+      "category": "help",
+      "type": "story",
+      "title": "Tell HN: How I would end the war with Iran",
+      "text": "I first would aim to break any claims to legitimacy that the current Iranian regime has, so as to turn their armed forces and general population against them, thereby creating conditions for a revolution, or at least a coup d'etat.\n\nTo do this, I would seek to destroy the fundamental bedrock on which the Iranian regime was built - religion, more specifically a certain interpretation of the Koran and the Muslim faith.\n\nI would first create images and videos of the leaders of the Iranian government, past and present (Khomeni, Khamenei father and son, etc.), naked, some with bodies of naked women (because nothing upsets the patriarchy like trans-sexuality), drinking alcohol, dancing and fornica…",
+      "expected": "no",
+      "note": "Off-topic: politics"
+    },
+    {
+      "id": "hn-49859733",
+      "category": "feedback",
+      "type": "story",
+      "title": "Show HN: CaughtShipping – curfew app for developers, enforced by a public wall",
+      "text": "I am always working well past the normal work hours. Sometimes even past midnight.\n\nThen one day I thought, what if I could have something to keep me accountable for doing this? So I built a small app that will call me out when I break my downtime.\n\nYou set a Curfew in the app (Curfew must start between 8:00 PM and 10:00 PM). If a dev app (editor, terminal, etc.) is used on your computer after the set curfew, a countdown starts. If you close the app before the timer runs out, you are safe.\n\nIf you keep working, you get \"caught\". Your streak is now broken, and you will be posted on the Wall, on the public blotter section.\nIf you keep your nights clean, you will rank higher and higher on the W…",
+      "expected": "maybe",
+      "note": "Small side-project launch, no feedback request"
+    },
+    {
+      "id": "hn-49864215",
+      "category": "help",
+      "type": "comment",
+      "title": "Go Concurrency Distilled",
+      "text": "I agree with everything you're saying. I think it comes down to design philosophy. Erlang's ecosystem is well tuned for building fault tolerant systems and features concurrency heavily to solve for that. Go is for general purpose programming in big organizations with massive variance in developer experience that has concurrency as a first class concept for the ability to scale (among other things).\n\nOf course, in some sense fault tolerance and scaling are two sides of the same coin. They're both measures of availability. They're just different approaches to that.\n\nWhat Go achieves that Erlang doesn't is the ability to \"pick up and play\". What Erlang achieves that Go doesn't is a pathological…",
+      "expected": "no",
+      "note": "Off-topic: programming languages"
+    },
+    {
+      "id": "hn-49834430",
+      "category": "feedback",
+      "type": "story",
+      "title": "Show HN: DrawCMS – An open-source animated diagramming tool for AI Agents",
+      "text": "Hello, I'm building DrawCMS. It's an open source animated diagram editor you can self-host. You can ask a compatible AI agent to read your repository and create an editable diagram, then walk through the flow step by step on the canvas.\n\nAI makes it easy to write code quickly. Keeping track of how that code works can be harder. You finish a feature, move on, and a week later you're trying to remember where a request goes, which service writes to the database, or why a background job runs.\n\nIt supports architecture, sequence, network and etc diagrams, infrastructure icons also . You can also draw and edit everything manually.\n\nRepo: https://github.com/drawcms/drawcms\n\nQuickstart (Claude Code,…",
+      "expected": "maybe",
+      "note": "Early open-source launch"
+    },
+    {
+      "id": "hn-49857044",
+      "category": "help",
+      "type": "comment",
+      "title": "Revealing the details of how OpenAI agents hacked Hugging Face",
+      "text": "Good point, I now see that they had previously patched the first Artifactory vulnerability, albeit before the HF incident was found.\n\nNot sure what you mean with the network isolation not being at the VM level. I'm getting a bit lost here in the details of where what network isolation was applied, and the structure of the container runtime and what the apparently compromised parent VM refers to.\n\nIn any case, I understand that after the HF incident was found and they realized the danger, they removed Artifactory and switched to two separate layers of network isolation.\n\nThat said, I believe it was compromised again last week:\n\n> OpenAI describes an internal research model that, during RL tra…",
+      "expected": "no",
+      "note": "Off-topic: security incident"
+    },
+    {
+      "id": "hn-49833867",
+      "category": "feedback",
+      "type": "story",
+      "title": "Show HN: Whiteboard (YC W26) – An open-source IDE for thoughtful software design",
+      "text": "Hello! We’re Sid, Alex, Ketan, and Milan. We’re building Whiteboard (https://whiteboard.dev.fast/), an open-source desktop app where humans and agents can architect software together in a common workspace. Here’s our repo: https://github.com/devdotfast/whiteboard.\n\nWe were missing the feeling of a “whiteboard session” with another dev where you leave with a deep understanding of a system, so we built this app for ourselves. Whiteboard plugs into the tools you already use - e.g. Claude Code, Codex, etc. – and gives your agent an SDK to draw on an in-app canvas to describe its work. We began with an MVP based on HTML artifacts and started rethinking the app as we ran into limitations:\n\n1. Buil…",
+      "expected": "no",
+      "note": "Funded YC team, not early indie"
+    },
+    {
+      "id": "hn-49568385",
+      "category": "help",
+      "type": "story",
+      "title": "Xfinity silently blocks lots of new domains",
+      "text": "We built a site for a launch and it was unreachable for anyone on an Xfinity router. We only found out because we have an Xfinity router at home. There's no notice to the site owner.\n\nXfinity's Advanced Security draws on third-party domain reputation lists and blocks at the gateway. We found out a blacklist called SURBL had flagged us. Not sure exactly what tripped it. Since then I've hit the same block on 10+ unrelated sites and told the site owner. Now sharing with everyone here.\n\nHow to check whether it's happening to you:\n\nhttps://spa.xfinity.com/check_url_status\nIf blocked, look for the upstream list: https://mxtoolbox.com/blacklists.aspx\nReport at https://spa.xfinity.com/report and cal…",
+      "expected": "no",
+      "note": "ISP blocking domains: not one of the problems"
+    }
+  ]
+}
