@@ -104,9 +104,10 @@ export function KeywordPicker({ initialKeywords, initialShowHn }: Props) {
     <div className="flex flex-col gap-8">
       <FieldSet>
         <FieldLegend>Launches</FieldLegend>
-        <Field orientation="horizontal">
+        <Field orientation="horizontal" className="items-start">
           <Switch
             id={`${id}-show-hn`}
+            className="mt-0.5"
             checked={showHn}
             onCheckedChange={setShowHn}
             aria-describedby={`${id}-show-hn-help`}

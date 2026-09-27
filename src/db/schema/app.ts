@@ -173,6 +173,14 @@ export const filterStatus = pgEnum("filter_status", [
   "own_post",
 ]);
 
+// Where an item stands in the user's triage. Snoozed items come back once
+// snoozed_until has passed.
+export const triageStatus = pgEnum("triage_status", [
+  "new",
+  "snoozed",
+  "dismissed",
+]);
+
 // A post or comment fetched from a platform, once per workspace.
 export const item = pgTable(
   "item",
@@ -200,6 +208,11 @@ export const item = pgTable(
     firstSeenAt: timestamp("first_seen_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
+    triageStatus: triageStatus("triage_status").notNull().default("new"),
+    snoozedUntil: timestamp("snoozed_until", { withTimezone: true }),
+    triagedAt: timestamp("triaged_at", { withTimezone: true }),
+    // Optional "not relevant because…" from the user, to tune scoring later.
+    dismissReason: text("dismiss_reason"),
   },
   (t) => [
     uniqueIndex("item_workspace_platform_external_idx").on(
@@ -212,6 +225,7 @@ export const item = pgTable(
       t.filterStatus,
       t.postedAt,
     ),
+    index("item_workspace_triage_idx").on(t.workspaceId, t.triageStatus),
   ],
 );
 

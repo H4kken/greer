@@ -1,0 +1,78 @@
+"use server";
+// Triage actions. The inbox updates optimistically and calls these; each one
+// checks the session and only touches items in the user's workspace.
+import { and, eq, isNotNull } from "drizzle-orm";
+import { z } from "zod";
+import { db } from "@/db";
+import { sourceQuery } from "@/db/schema";
+import { requireWorkspace } from "@/lib/session";
+import { QUEUES, trySendFromWeb } from "@/worker/queue";
+import { dismissItem, restoreItem, snoozeItem } from "./triage";
+
+type Result = { ok: true } | { ok: false; error: string };
+
+const itemId = z.uuid();
+const NOT_FOUND: Result = {
+  ok: false,
+  error: "This thread no longer exists. Reload the inbox.",
+};
+
+export async function dismissAction(
+  id: unknown,
+  reason?: unknown,
+): Promise<Result> {
+  const { workspace } = await requireWorkspace();
+  const parsed = itemId.safeParse(id);
+  const why = z.string().trim().max(500).optional().safeParse(reason);
+  if (!parsed.success || !why.success)
+    return { ok: false, error: "Invalid input." };
+  return (await dismissItem(db, workspace.id, parsed.data, why.data || null))
+    ? { ok: true }
+    : NOT_FOUND;
+}
+
+export async function snoozeAction(id: unknown): Promise<Result> {
+  const { workspace } = await requireWorkspace();
+  const parsed = itemId.safeParse(id);
+  if (!parsed.success) return { ok: false, error: "Invalid input." };
+  return (await snoozeItem(db, workspace.id, parsed.data))
+    ? { ok: true }
+    : NOT_FOUND;
+}
+
+export async function restoreAction(id: unknown): Promise<Result> {
+  const { workspace } = await requireWorkspace();
+  const parsed = itemId.safeParse(id);
+  if (!parsed.success) return { ok: false, error: "Invalid input." };
+  return (await restoreItem(db, workspace.id, parsed.data))
+    ? { ok: true }
+    : NOT_FOUND;
+}
+
+// "Retry now" on the partial-failure banner: queue the failing searches.
+export async function retryFailedSearchesAction(): Promise<Result> {
+  const { workspace } = await requireWorkspace();
+  const failing = await db
+    .select({ id: sourceQuery.id })
+    .from(sourceQuery)
+    .where(
+      and(
+        eq(sourceQuery.workspaceId, workspace.id),
+        eq(sourceQuery.enabled, true),
+        isNotNull(sourceQuery.lastError),
+      ),
+    );
+  const sent = await trySendFromWeb(
+    failing.map((q) => ({
+      name: QUEUES.ingestPoll,
+      data: { queryId: q.id },
+      singletonKey: q.id,
+    })),
+  );
+  return sent
+    ? { ok: true }
+    : {
+        ok: false,
+        error: "The background worker isn't reachable. Is it running?",
+      };
+}

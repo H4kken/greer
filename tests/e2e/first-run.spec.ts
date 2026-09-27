@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
+import { seedThreads } from "./seed";
 
 // One story, in order: a fresh install gets its owner, who goes through
 // onboarding; then registration is closed. The LLM is mocked (see
@@ -92,6 +93,9 @@ test.describe("as the owner", () => {
     // Suggestions from the mock model: the longest word of each problem.
     await expect(page.getByText("customers", { exact: true })).toBeVisible();
     await expect(page.getByText("outreach", { exact: true })).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Start the first scan" }),
+    ).toBeEnabled();
     await expectNoSeriousA11yViolations(page);
 
     await page.getByRole("button", { name: "Remove keyword outreach" }).click();
@@ -113,9 +117,15 @@ test.describe("as the owner", () => {
     await expectNoSeriousA11yViolations(page);
 
     await page.getByRole("link", { name: /Open my inbox/ }).click();
-    await expect(page).toHaveURL(/\/inbox$/);
-    await expect(page.getByRole("heading", { name: "Inbox" })).toBeVisible();
+    await expect(page).toHaveURL(/\/inbox(\?|$)/);
+    await expect(
+      page.getByRole("heading", { name: /Needs help/ }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "No threads yet" }),
+    ).toBeVisible();
     await expect(page.getByText("My workspace")).toBeVisible();
+    await expectNoSeriousA11yViolations(page);
   });
 
   test("settings show the onboarding choices and keywords can be undone", async ({
@@ -144,6 +154,106 @@ test.describe("as the owner", () => {
       page.getByRole("region", { name: "Keywords" }).getByText("first users"),
     ).toBeVisible();
   });
+
+  test("owner triages threads from the keyboard, with undo", async ({
+    page,
+  }) => {
+    await seedThreads([
+      { title: "Zero paying customers after a month", score: 92 },
+      { title: "How to do outreach without spam", score: 81 },
+      { title: "Where do I find beta testers", score: 70 },
+      { title: "A barely related thread", score: 30 },
+      { title: "Show HN: My first SaaS", score: 75, category: "feedback" },
+    ]);
+    await page.goto("/inbox");
+
+    const threads = page.getByRole("list", { name: "Threads" });
+    const panelTitle = (name: string) =>
+      page.getByRole("heading", { level: 2, name });
+    await expect(threads.getByRole("button")).toHaveCount(3);
+    await expect(
+      panelTitle("Zero paying customers after a month"),
+    ).toBeVisible();
+    await expect(
+      page.getByText("Strongly matches: Getting the first paying customers"),
+    ).toBeVisible();
+    await expectNoSeriousA11yViolations(page);
+
+    // j moves down and focuses the row; the panel follows.
+    await page.keyboard.press("j");
+    await expect(
+      threads.getByRole("button", { name: /outreach without spam/ }),
+    ).toBeFocused();
+    await expect(panelTitle("How to do outreach without spam")).toBeVisible();
+
+    // d dismisses and moves on; Undo brings it back.
+    await page.keyboard.press("d");
+    await expect(threads.getByRole("button")).toHaveCount(2);
+    await expect(panelTitle("Where do I find beta testers")).toBeVisible();
+    await page.getByRole("button", { name: "Undo" }).click();
+    await expect(threads.getByRole("button")).toHaveCount(3);
+
+    // s snoozes; the thread shows up in the Snoozed view, u moves it back.
+    await threads.getByRole("button", { name: /beta testers/ }).click();
+    await page.keyboard.press("s");
+    await expect(threads.getByRole("button")).toHaveCount(2);
+    await page.getByRole("link", { name: /^Snoozed/ }).click();
+    await expect(threads.getByRole("button")).toHaveCount(1);
+    await page.keyboard.press("u");
+    await expect(
+      page.getByRole("heading", { name: "Nothing snoozed" }),
+    ).toBeVisible();
+
+    // Lower matches are one click away; launches have their own tab.
+    await page.getByRole("link", { name: /^Needs help/ }).click();
+    await expect(threads.getByRole("button")).toHaveCount(3);
+    await page.getByRole("link", { name: "Show 1 lower matches" }).click();
+    await expect(threads.getByRole("button")).toHaveCount(4);
+    await page.getByRole("link", { name: /^Feedback · Show HN/ }).click();
+    await expect(panelTitle("Show HN: My first SaaS")).toBeVisible();
+
+    // ? lists the shortcuts.
+    await page.keyboard.press("?");
+    const dialog = page.getByRole("dialog", { name: "Keyboard shortcuts" });
+    await expect(dialog).toBeVisible();
+    // Let the open animation finish, or axe measures half-faded text.
+    await dialog.evaluate((el) =>
+      Promise.all(el.getAnimations({ subtree: true }).map((a) => a.finished)),
+    );
+    await expectNoSeriousA11yViolations(page);
+  });
+
+  test("the inbox works on a phone and in dark mode", async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 800 });
+    await page.emulateMedia({ colorScheme: "dark" });
+    await page.goto("/inbox");
+    await expect(page.locator("html")).toHaveClass(/dark/);
+
+    const threads = page.getByRole("list", { name: "Threads" });
+    await expect(threads).toBeVisible();
+    const noSideScroll = () =>
+      page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      );
+    expect(await noSideScroll()).toBe(true);
+    await expectNoSeriousA11yViolations(page);
+
+    // List and thread panel stack: opening a thread replaces the list.
+    await threads
+      .getByRole("button", { name: /outreach without spam/ })
+      .click();
+    await expect(threads).toBeHidden();
+    await expect(
+      page.getByRole("heading", {
+        level: 2,
+        name: "How to do outreach without spam",
+      }),
+    ).toBeVisible();
+    expect(await noSideScroll()).toBe(true);
+    await expectNoSeriousA11yViolations(page);
+    await page.getByRole("button", { name: "Back to the list" }).click();
+    await expect(threads).toBeVisible();
+  });
 });
 
 test("owner signs out and back in; a wrong password is rejected", async ({
@@ -160,7 +270,7 @@ test("owner signs out and back in; a wrong password is rejected", async ({
 
   await page.getByLabel("Password").fill(owner.password);
   await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(page).toHaveURL(/\/inbox$/);
+  await expect(page).toHaveURL(/\/inbox(\?|$)/);
 
   await page.getByRole("button", { name: "Sign out" }).click();
   await expect(page).toHaveURL(/\/sign-in$/);

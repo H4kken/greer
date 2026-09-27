@@ -49,6 +49,7 @@ src/sources/      one folder per platform adapter (implements Source)
 src/llm/          provider setup, prompts/, scoring + reply briefs + reply check
 src/workspace/    product profile, platform accounts, keywords + their server actions
 src/onboarding/   first scan (start + progress)
+src/inbox/        inbox queries, triage (dismiss/snooze/undo) and URL params
 src/guardrails/   account maturity tiers, pacing (pure, unit-tested)
 src/lib/          shared utilities
 ```

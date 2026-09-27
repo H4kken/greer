@@ -11,7 +11,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
   return (
     <div className="flex min-h-dvh flex-col">
       <header className="border-b">
-        <div className="mx-auto flex h-14 max-w-5xl items-center justify-between gap-4 px-4">
+        <div className="mx-auto flex h-14 max-w-screen-2xl items-center justify-between gap-4 px-4">
           <div className="flex items-center gap-6">
             <Link href="/inbox" className="font-semibold">
               Greer
@@ -26,9 +26,8 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
           </div>
         </div>
       </header>
-      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
-        {children}
-      </main>
+      {/* Pages set their own width: the inbox uses the full screen. */}
+      <main className="flex w-full flex-1 flex-col">{children}</main>
     </div>
   );
 }

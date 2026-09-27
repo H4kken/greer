@@ -60,7 +60,7 @@ export default async function SettingsPage() {
   ]);
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 py-8">
       <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
 
       <Section
