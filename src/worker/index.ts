@@ -1,6 +1,10 @@
 import "./env";
 import { db } from "@/db";
-import { HEARTBEAT_CRON, recordHeartbeat } from "./jobs/heartbeat";
+import {
+  HEARTBEAT_CRON,
+  recordHeartbeat,
+  touchHeartbeatFile,
+} from "./jobs/heartbeat";
 import { createQueue, ensureQueues, QUEUES } from "./queue";
 
 async function main() {
@@ -13,6 +17,7 @@ async function main() {
 
   await boss.work(QUEUES.heartbeat, async () => {
     await recordHeartbeat(db);
+    await touchHeartbeatFile();
   });
   await boss.schedule(QUEUES.heartbeat, HEARTBEAT_CRON);
   await boss.send(QUEUES.heartbeat, {}); // report alive right away

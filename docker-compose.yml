@@ -48,8 +48,14 @@ services:
       web:
         condition: service_healthy
     healthcheck:
-      # The worker has no HTTP server; its liveness shows up in /api/health.
-      disable: true
+      # No HTTP server: healthy while the heartbeat job keeps touching this
+      # file (every minute). Its liveness also shows up in /api/health.
+      test:
+        ["CMD-SHELL", "find /tmp/greer-worker-heartbeat -mmin -3 | grep -q ."]
+      interval: 15s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
 
 volumes:
   postgres-data:

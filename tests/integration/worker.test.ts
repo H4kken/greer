@@ -1,10 +1,13 @@
+import { mkdtemp, readFile, stat } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { sql } from "drizzle-orm";
 import type { PgBoss } from "pg-boss";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/db";
 import { workerStatus } from "@/db/schema";
 import { getWorkerHealth, WORKER_STALE_AFTER_MS } from "@/lib/health";
-import { recordHeartbeat } from "@/worker/jobs/heartbeat";
+import { recordHeartbeat, touchHeartbeatFile } from "@/worker/jobs/heartbeat";
 import {
   createQueue,
   ensureQueues,
@@ -93,5 +96,15 @@ describe("queue (real pg-boss)", () => {
       await sendInTransaction(boss, tx, QUEUES.heartbeat, {});
     });
     expect(await countJobs()).toBe(before + 1);
+  });
+});
+
+describe("heartbeat file (worker container healthcheck)", () => {
+  it("writes a fresh timestamp", async () => {
+    const file = join(await mkdtemp(join(tmpdir(), "greer-")), "heartbeat");
+    await touchHeartbeatFile(file);
+
+    expect(Date.now() - (await stat(file)).mtimeMs).toBeLessThan(5_000);
+    expect(new Date(await readFile(file, "utf8")).getTime()).not.toBeNaN();
   });
 });
