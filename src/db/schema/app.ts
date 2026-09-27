@@ -1,5 +1,7 @@
 import {
+  boolean,
   index,
+  integer,
   pgEnum,
   pgTable,
   primaryKey,
@@ -54,3 +56,53 @@ export const workerStatus = pgTable("worker_status", {
   id: text("id").primaryKey(),
   lastSeenAt: timestamp("last_seen_at", { withTimezone: true }).notNull(),
 });
+
+export const llmProvider = pgEnum("llm_provider", [
+  "anthropic",
+  "openai",
+  "ollama",
+]);
+
+// LLM configuration saved from Settings. When absent, Greer falls back to
+// environment variables (see src/llm/config.ts).
+export const llmSettings = pgTable("llm_settings", {
+  workspaceId: text("workspace_id")
+    .primaryKey()
+    .references(() => workspace.id, { onDelete: "cascade" }),
+  provider: llmProvider("provider").notNull(),
+  fastModel: text("fast_model"),
+  qualityModel: text("quality_model"),
+  baseUrl: text("base_url"),
+  // Encrypted with src/lib/crypto.ts, never stored in plain text.
+  apiKeyEncrypted: text("api_key_encrypted"),
+  ...timestamps,
+});
+
+// One row per model call: powers cost display and debugging.
+export const llmCall = pgTable(
+  "llm_call",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspace.id, { onDelete: "cascade" }),
+    slot: text("slot").notNull(),
+    provider: text("provider").notNull(),
+    model: text("model").notNull(),
+    promptName: text("prompt_name").notNull(),
+    promptVersion: text("prompt_version").notNull(),
+    inputTokens: integer("input_tokens"),
+    outputTokens: integer("output_tokens"),
+    durationMs: integer("duration_ms").notNull(),
+    ok: boolean("ok").notNull(),
+    error: text("error"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("llm_call_workspace_created_idx").on(t.workspaceId, t.createdAt),
+  ],
+);

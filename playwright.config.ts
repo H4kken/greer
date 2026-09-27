@@ -29,6 +29,8 @@ export default defineConfig({
       BETTER_AUTH_SECRET: "e2e-secret-not-for-production-0123456789",
       BETTER_AUTH_URL: `http://localhost:${PORT}`,
       ALLOW_REGISTRATION: "false",
+      // Deterministic LLM answers, no API calls.
+      LLM_PROVIDER: "mock",
       // The standalone server (what the Docker image runs) reads these.
       PORT: String(PORT),
       HOSTNAME: "127.0.0.1",

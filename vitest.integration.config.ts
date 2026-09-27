@@ -21,6 +21,8 @@ export default defineConfig({
       BETTER_AUTH_SECRET: "test-secret-not-for-production-0123456789",
       BETTER_AUTH_URL: "http://localhost:3000",
       ALLOW_REGISTRATION: "false",
+      // Never pick up a real key from the shell during tests.
+      ANTHROPIC_API_KEY: "",
     },
   },
 });

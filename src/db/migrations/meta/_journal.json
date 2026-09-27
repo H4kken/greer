@@ -15,6 +15,13 @@
       "when": 1790517588615,
       "tag": "0001_worker_status",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790523205183,
+      "tag": "0002_llm",
+      "breakpoints": true
     }
   ]
 }

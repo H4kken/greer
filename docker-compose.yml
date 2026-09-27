@@ -4,6 +4,16 @@
 
 x-app-env: &app-env
   DATABASE_URL: postgres://greer:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@postgres:5432/greer
+  # Also decrypts an LLM key saved in Settings, so the worker needs it too.
+  BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?Set BETTER_AUTH_SECRET}
+  # LLM: set one provider here, or save a key in Settings instead.
+  ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+  OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+  OPENAI_BASE_URL: ${OPENAI_BASE_URL:-}
+  OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-}
+  LLM_PROVIDER: ${LLM_PROVIDER:-}
+  LLM_FAST_MODEL: ${LLM_FAST_MODEL:-}
+  LLM_QUALITY_MODEL: ${LLM_QUALITY_MODEL:-}
 
 services:
   postgres:
@@ -27,7 +37,6 @@ services:
     restart: unless-stopped
     environment:
       <<: *app-env
-      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?Set BETTER_AUTH_SECRET}
       BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:3000}
       ALLOW_REGISTRATION: ${ALLOW_REGISTRATION:-false}
     ports:
