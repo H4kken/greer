@@ -214,7 +214,11 @@ The product is a daily habit tool (a 10–15 min triage session), so UX is about
 6. **Onboarding to value in under 5 minutes.** Describe the product → link your HN username → get suggested keywords → the first scored threads appear while you watch. Anything else can be changed later in settings.
 7. **Calm, not gamified.** No streaks or vanity metrics. The dashboard shows conversations started, replies received, and people who came back.
 8. **Accessible and responsive.** WCAG 2.2 AA, both themes, fully usable at 375 px (the inbox and reply panels stack).
-9. **Before building Milestone 2, sketch the 3 core screens** (onboarding, inbox + brief/editor panel, person timeline) and test them against a real triage session on your own product.
+9. **Wireframes of the core screens: done** ([canvas](https://claude.ai/artifact/5aniCLzP13cp88xx4pKdyc), private). Decisions from the review:
+   - onboarding stays 3 steps: product → account & keywords → first scan;
+   - the inbox keeps 3 columns: views · ranked list · thread panel;
+   - threads show both the score and the criteria behind it;
+   - Show HN launches get their own tab ("Feedback · Show HN"); if it gets neglected, add a small "3 new launches" hint in the main inbox.
 
 ## Coolify / self-hosting
 
