@@ -2,7 +2,7 @@
 
 @AGENTS.md
 
-Open-source, self-hostable tool for small SaaS builders. It finds conversations (Hacker News first, Reddit next) where the builder can genuinely help, scores them, gives the builder a short reply brief (key ideas, angles, questions to ask), and tracks what they engaged with. The builder always writes the reply. See [PLAN.md](PLAN.md) for scope and milestones.
+Open-source, self-hostable tool for small SaaS builders. It finds conversations (Hacker News first, Reddit next) where the builder can genuinely help, scores them, gives the builder a short reply brief (key ideas, angles, questions to ask), and tracks what they engaged with. The builder always writes the reply. See [PLAN.md](PLAN.md) for scope and milestones, and [ARCHITECTURE.md](ARCHITECTURE.md) for how the code fits together (keep it current when the structure changes).
 
 ## Hard rules
 

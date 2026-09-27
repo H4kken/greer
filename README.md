@@ -138,7 +138,7 @@ It's early, which is the best time to shape the project. The most useful things 
 
 - **Tell us how you find users today.** Which communities, and what's painful about it.
 - **Challenge the principles.** If something here seems wrong, open an issue.
-- **Follow the plan.** [PLAN.md](PLAN.md) has the architecture and milestones, and [CLAUDE.md](CLAUDE.md) has the coding conventions (also used by AI coding assistants).
+- **Follow the plan.** [PLAN.md](PLAN.md) has the plan and milestones, [ARCHITECTURE.md](ARCHITECTURE.md) explains how the code fits together, and [CLAUDE.md](CLAUDE.md) has the coding conventions (also used by AI coding assistants).
 
 Contribution guidelines and setup instructions will come with the first code. By contributing, you agree that your contributions are licensed under the AGPL-3.0, like the rest of the project.
 

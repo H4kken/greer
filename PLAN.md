@@ -127,6 +127,8 @@ Greer uses **official, permitted APIs only**.
 
 ## Architecture
 
+The target design. For how the code is built today, see [ARCHITECTURE.md](ARCHITECTURE.md).
+
 ```
 ┌─────────────── one Docker image ───────────────┐
 │  web     (Next.js App Router: UI + API routes) │
