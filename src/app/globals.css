@@ -9,6 +9,8 @@
   --font-sans: var(--font-geist);
   --font-heading: var(--font-newsreader);
   --font-mono: var(--font-geist-mono);
+  /* A thread arriving in a live list: slides in, green glow fades. */
+  --animate-arrive: arrive 2.4s ease-out;
   --color-primary-soft: var(--primary-soft);
   --color-primary-soft-foreground: var(--primary-soft-foreground);
   --color-sidebar-ring: var(--sidebar-ring);
@@ -127,6 +129,22 @@
   --sidebar-accent-foreground: #b9e0ca;
   --sidebar-border: #34302b;
   --sidebar-ring: #7fc4a0;
+}
+
+@keyframes arrive {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px);
+    background-color: var(--primary-soft);
+  }
+  20% {
+    opacity: 1;
+    transform: none;
+    background-color: var(--primary-soft);
+  }
+  100% {
+    background-color: var(--card);
+  }
 }
 
 @layer base {

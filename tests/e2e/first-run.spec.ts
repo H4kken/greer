@@ -19,6 +19,15 @@ const owner = {
 };
 
 async function expectNoSeriousA11yViolations(page: Page) {
+  // Let entrance animations finish, or axe measures half-faded colors.
+  await page.evaluate(() =>
+    Promise.all(
+      document
+        .getAnimations()
+        .filter((a) => a.effect?.getTiming().iterations !== Infinity)
+        .map((a) => a.finished),
+    ),
+  );
   const { violations } = await new AxeBuilder({ page }).analyze();
   expect(
     violations.filter((v) => ["serious", "critical"].includes(v.impact ?? "")),
@@ -116,7 +125,9 @@ test.describe("as the owner", () => {
     await page.getByRole("button", { name: "Start the first scan" }).click();
     await expect(page).toHaveURL(/\/onboarding\/scan$/);
     await expect(
-      page.getByRole("heading", { name: "Reading the last 7 days of HN" }),
+      page.getByRole("heading", {
+        name: "Reading the last 7 days of Hacker News",
+      }),
     ).toBeVisible();
     // No worker runs in e2e: the page says so instead of spinning forever.
     await expect(
@@ -191,6 +202,22 @@ test.describe("as the owner", () => {
       { title: "A barely related thread", score: 30 },
       { title: "Show HN: My first SaaS", score: 75, category: "feedback" },
     ]);
+
+    // The scan page counts people (all seeded threads share one author) and
+    // previews the top three worth a reply; a thread opens in the inbox.
+    await page.goto("/onboarding/scan");
+    await expect(
+      page.getByText("Found 1 person you could help so far."),
+    ).toBeVisible();
+    const best = page.getByRole("region", { name: "Best threads so far" });
+    await expect(best.getByRole("link")).toHaveCount(3);
+    await expect(
+      page.getByRole("link", { name: "Meet them in your inbox" }),
+    ).toBeVisible();
+    await expectNoSeriousA11yViolations(page);
+    await best.getByRole("link", { name: /Zero paying customers/ }).click();
+    await expect(page).toHaveURL(/\/inbox\?item=/);
+
     await page.goto("/inbox");
 
     const threads = page.getByRole("list", { name: "Threads" });

@@ -174,12 +174,11 @@ describe("onboarding", () => {
   });
 
   it("reports scan progress and the best threads", async () => {
-    const since = new Date(Date.now() - 60_000);
     const [queryId] = await startFirstScan(db, ws, {
       keywords: [{ query: "customers", section: "ask_hn" }],
       showHn: false,
     });
-    let progress = await getScanProgress(db, ws, since);
+    let progress = await getScanProgress(db, ws);
     expect(progress.queries).toEqual({ total: 1, finished: 0, failed: 0 });
     expect(scanDone(progress)).toBe(false);
 
@@ -238,29 +237,49 @@ describe("onboarding", () => {
       model: "claude-haiku-4-5",
     });
     await db.insert(itemScore).values(score(items[1]!.id, 90));
-    await db.insert(llmCall).values({
-      workspaceId: ws,
-      slot: "fast",
-      provider: "anthropic",
-      model: "claude-haiku-4-5",
-      promptName: "score-help",
-      promptVersion: "v",
-      inputTokens: 1_000_000,
-      outputTokens: 0,
-      durationMs: 1,
-      ok: true,
-    });
 
-    progress = await getScanProgress(db, ws, since);
-    expect(progress).toMatchObject({ found: 3, kept: 2, scored: 1 });
-    expect(progress.usage).toEqual({ calls: 1, costUsd: 1 });
+    progress = await getScanProgress(db, ws);
+    expect(progress).toMatchObject({ found: 3, kept: 2, scored: 1, people: 1 });
     expect(progress.top.map((t) => t.title)).toEqual(["High"]);
     expect(scanDone(progress)).toBe(false);
 
+    // Below MIN_SCORE: done, but not someone to help.
     await db.insert(itemScore).values(score(items[0]!.id, 40));
-    progress = await getScanProgress(db, ws, since);
-    expect(progress.top.map((t) => t.title)).toEqual(["High", "Low"]);
+    progress = await getScanProgress(db, ws);
+    expect(progress.top.map((t) => t.title)).toEqual(["High"]);
     expect(scanDone(progress)).toBe(true);
+
+    // People are distinct authors: "a" again doesn't count twice.
+    const more = await db
+      .insert(item)
+      .values([
+        {
+          ...base,
+          externalId: "4",
+          title: "Also a",
+          url: "u4",
+          filterStatus: "kept",
+        },
+        {
+          ...base,
+          externalId: "5",
+          author: "b",
+          title: "From b",
+          url: "u5",
+          filterStatus: "kept",
+        },
+      ])
+      .returning({ id: item.id });
+    await db
+      .insert(itemScore)
+      .values([score(more[0]!.id, 60), score(more[1]!.id, 70)]);
+    progress = await getScanProgress(db, ws);
+    expect(progress.people).toBe(2);
+    expect(progress.top.map((t) => t.title)).toEqual([
+      "High",
+      "From b",
+      "Also a",
+    ]);
   });
 
   it("keeps keywords scoped to their workspace", async () => {

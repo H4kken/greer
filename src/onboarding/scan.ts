@@ -1,7 +1,7 @@
-import { and, count, desc, eq, sql } from "drizzle-orm";
+import { and, count, countDistinct, desc, eq, gte, sql } from "drizzle-orm";
 import type { Db } from "@/db";
 import { item, itemScore, sourceQuery, workspace } from "@/db/schema";
-import { type LlmUsage, llmUsageSince } from "@/llm/usage";
+import { MIN_SCORE } from "@/inbox/queries";
 import { syncHnQueries } from "@/workspace/keywords";
 import type { FirstScanInput } from "@/workspace/schemas";
 
@@ -33,7 +33,10 @@ export type ScanProgress = {
   found: number;
   kept: number;
   scored: number;
-  usage: LlmUsage;
+  // Distinct authors of threads worth your time: one person with a post and a
+  // comment counts once.
+  people: number;
+  // The best threads worth your time (score >= MIN_SCORE), best first.
   top: {
     id: string;
     title: string;
@@ -49,7 +52,6 @@ export type ScanProgress = {
 export async function getScanProgress(
   db: Db,
   workspaceId: string,
-  since: Date,
 ): Promise<ScanProgress> {
   const [queries] = await db
     .select({
@@ -78,6 +80,16 @@ export async function getScanProgress(
     .leftJoin(itemScore, eq(itemScore.itemId, item.id))
     .where(eq(item.workspaceId, workspaceId));
 
+  const worthIt = and(
+    eq(itemScore.workspaceId, workspaceId),
+    gte(itemScore.score, MIN_SCORE),
+  );
+  const [people] = await db
+    .select({ n: countDistinct(item.author) })
+    .from(itemScore)
+    .innerJoin(item, eq(item.id, itemScore.itemId))
+    .where(worthIt);
+
   const top = await db
     .select({
       id: item.id,
@@ -91,7 +103,7 @@ export async function getScanProgress(
     })
     .from(itemScore)
     .innerJoin(item, eq(item.id, itemScore.itemId))
-    .where(eq(itemScore.workspaceId, workspaceId))
+    .where(worthIt)
     .orderBy(desc(itemScore.score), desc(item.postedAt))
     .limit(3);
 
@@ -100,7 +112,7 @@ export async function getScanProgress(
     found: items?.found ?? 0,
     kept: items?.kept ?? 0,
     scored: items?.scored ?? 0,
-    usage: await llmUsageSince(db, workspaceId, since),
+    people: people?.n ?? 0,
     top,
   };
 }
