@@ -1,0 +1,19 @@
+{
+  "name": "greer-spike",
+  "private": true,
+  "type": "module",
+  "description": "Milestone 0: does finding and scoring HN threads produce useful results?",
+  "scripts": {
+    "start": "node --env-file-if-exists=.env src/run.ts",
+    "dry": "node --env-file-if-exists=.env src/run.ts --dry-run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.128.0",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.3",
+    "typescript": "^7.0.2"
+  }
+}

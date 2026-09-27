@@ -248,3 +248,4 @@ The product is a daily habit tool (a 10–15 min triage session), so UX is about
 2. **Notifications:** email digest (needs SMTP config) vs webhook (Slack/Discord) vs in-app only for v0.1?
 3. **Name / positioning:** "greer" is the repo name. Is that the product name?
 4. **Maturity thresholds:** the defaults above are guesses. Calibrate them during dogfooding.
+5. **Jev as a pre-filter?** TypeSafe's Jev (launched Sep 2026, early access) is a "decision model": typed choice, score and yes/no answers with probabilities, no text, roughly 5–20× cheaper than Haiku on input with free output. It can't write the "why this matters" line or briefs, so at most it could be a first-pass filter before the LLM if volume grows (more sources, more users). It has a proprietary API (not OpenAI-compatible) and no published accuracy data yet. Revisit once it's out of early access and if scoring cost becomes a real problem.
