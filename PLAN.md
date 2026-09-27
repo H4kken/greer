@@ -216,7 +216,7 @@ The product is a daily habit tool (a 10–15 min triage session), so UX is about
 ## Coolify / self-hosting
 
 - `docker-compose.yml` with `web`, `worker` and `postgres`, plus a named volume.
-- Required env: `DATABASE_URL`, `AUTH_SECRET`, `APP_URL`. Optional: `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` / `OPENAI_BASE_URL`. v0.2 adds `REDDIT_CLIENT_ID/SECRET`.
+- Required env: `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`. Optional: `ALLOW_REGISTRATION` (default `false`: the first account becomes the owner, then registration closes), `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` / `OPENAI_BASE_URL`. v0.2 adds `REDDIT_CLIENT_ID/SECRET`.
 - HN needs no credentials, so a fresh install works with just a database and an LLM key.
 - `/api/health` for Coolify health checks.
 - Publish the image to GHCR on tag, so users can pin versions.

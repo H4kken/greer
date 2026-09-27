@@ -1,0 +1,14 @@
+import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { AuthForm } from "@/components/auth/auth-form";
+import { hasAnyUser } from "@/lib/registration";
+import { getSession } from "@/lib/session";
+
+export const metadata: Metadata = { title: "Sign in · Greer" };
+
+export default async function SignInPage() {
+  if (await getSession()) redirect("/inbox");
+  // Fresh install: nobody to sign in as yet, go straight to setup.
+  if (!(await hasAnyUser())) redirect("/sign-up");
+  return <AuthForm mode="sign-in" />;
+}

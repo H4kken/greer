@@ -10,7 +10,7 @@ description: Verify Greer still self-hosts cleanly (Docker image, docker-compose
    - migrations ran on startup (web logs);
    - `curl -f localhost:3000/api/health` returns 200 and reports the DB and worker as healthy;
    - the worker picked up its cron schedules (worker logs);
-   - sign-up → onboarding → first ingest works with only the required env vars (`DATABASE_URL`, `AUTH_SECRET`, `APP_URL`) plus one LLM key.
+   - sign-up → onboarding → first ingest works with only the required env vars (`DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`) plus one LLM key.
 3. Upgrade path: check out the previous release tag, bring it up, create data, switch back to this branch and `up --build`. Data must survive and migrations must apply.
 4. Every env var used in code appears in `.env.example`, `docker-compose.yml` and the README table. The same image serves both `web` and `worker`; only the command differs.
 5. Image stays reasonable: Next.js `output: "standalone"`, multi-stage build, non-root user. Report the image size.

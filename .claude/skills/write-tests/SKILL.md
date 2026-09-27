@@ -20,11 +20,13 @@ Use the lowest layer that can catch the bug. Don't write end-to-end tests for lo
 
 1. **Bug fix = regression test first.** Write a test that fails on the bug, then fix it.
 2. **No network.** Sources use recorded fixtures, and LLM calls use the mocked model from `tests/helpers/mock-llm.ts` (it returns deterministic structured output). Playwright runs with `LLM_PROVIDER=mock`.
-3. **Real Postgres, never a mocked DB,** for integration tests. Use the test helpers that create an isolated schema per test file and a factory for each table (`tests/factories/`).
+3. **Real Postgres, never a mocked DB,** for integration tests. Each run recreates the `greer_test` database and applies all migrations (`tests/integration/global-setup.ts`); files run one at a time and call `truncateAll()` from `tests/helpers/truncate.ts` in `beforeEach` (add new tables to it). End-to-end runs recreate `greer_e2e` before the web server starts.
 4. **Workspace isolation:** every new query gets a test proving that workspace A can't read workspace B's rows.
 5. **Idempotency:** every job handler gets a test that runs it twice and asserts no duplicates.
 6. **Test behavior, not implementation.** Assert on outputs, DB state and what the user sees (`getByRole`, `getByLabel`), not on internal calls or CSS classes.
 7. **No flaky waits.** Playwright uses auto-waiting locators and `expect(...).toBeVisible()`, never `waitForTimeout`.
+8. **Ordered stories use `test.describe.configure({ mode: "serial", retries: 0 })`**: a retry can't replay earlier steps against the same database.
+9. **`getByRole("alert")` also matches Next.js's empty route announcer**: filter by text.
 
 ## End-to-end flows that must always be covered
 

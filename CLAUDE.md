@@ -52,15 +52,19 @@ src/lib/          shared utilities
 ## Commands
 
 ```bash
-pnpm dev            # web app on :3000
+pnpm db:up          # start Postgres in Docker (docker-compose.yml)
+pnpm dev            # web app on :3000 (copy .env.example to .env first)
 pnpm test           # vitest unit tests
-pnpm test:e2e       # playwright end-to-end + accessibility (builds the app, serves on :3100)
+pnpm test:int       # integration tests against a real Postgres (fresh greer_test database each run)
+pnpm test:e2e       # playwright end-to-end + accessibility (fresh greer_e2e database, production build on :3100)
 pnpm format         # prettier --write .
 pnpm format:check   # what CI runs
 pnpm lint && pnpm typecheck   # typecheck runs `next typegen` first
+pnpm db:generate    # drizzle-kit generate after editing src/db/schema
+pnpm db:migrate     # apply migrations to DATABASE_URL
 ```
 
-Coming in the next Milestone 1 steps: `pnpm worker:dev`, `pnpm test:int` (integration tests against a real Postgres), `pnpm db:generate` / `pnpm db:migrate` (Drizzle), and `docker compose up --build` (full self-host stack).
+Coming in the next Milestone 1 steps: `pnpm worker:dev` and `docker compose up --build` for the full self-host stack (migrations will then also run on container start).
 
 ## Conventions
 

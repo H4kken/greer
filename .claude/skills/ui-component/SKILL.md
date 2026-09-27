@@ -9,8 +9,9 @@ description: Build, change or review UI with Tailwind CSS v4 and shadcn/ui, foll
 
 1. **Use shadcn first.** Before building a primitive, check whether shadcn has it. Add it with `pnpm dlx shadcn@latest add <component>`; it lands in `src/components/ui/`. Compose it in `src/components/<feature>/` rather than heavily editing the generated files.
 2. **Styling:** Tailwind utility classes only. There are no CSS modules or extra stylesheets. Theme tokens (colors, radius, fonts) live in `src/app/globals.css` under `@theme` / the shadcn CSS variables. Use semantic tokens (`bg-background`, `text-muted-foreground`, `border`) instead of raw colors so dark mode keeps working. Merge classes with `cn()` from `src/lib/utils.ts`. Prettier sorts class names; don't reorder by hand.
-3. **Forms:** shadcn `Form` + react-hook-form + the same zod schema the server action uses.
-4. **Data:** fetch in server components; keep client components small and interactive-only.
+3. **Links vs buttons:** anything that navigates is a link. Style it with `buttonVariants()` on `<Link>`/`<a>`. Don't wrap links in shadcn's (Base UI) `<Button render={...}>`: that gives them `role="button"` and screen readers announce them as buttons.
+4. **Forms:** shadcn `Form` + react-hook-form + the same zod schema the server action uses.
+5. **Data:** fetch in server components; keep client components small and interactive-only.
 
 ## UX standards (check every screen against these)
 
