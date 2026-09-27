@@ -1,15 +1,19 @@
-# Local development: `docker compose up -d postgres`.
-# The web and worker services are added in Milestone 1, step 4 (self-hosting).
+# Self-hosting Greer: Postgres + web + worker. Works with Coolify or plain
+# `docker compose up -d --build`. Required variables are listed in README.md.
+# (Local development uses docker-compose.dev.yml.)
+
+x-app-env: &app-env
+  DATABASE_URL: postgres://greer:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@postgres:5432/greer
+
 services:
   postgres:
     image: postgres:17-alpine
     restart: unless-stopped
     environment:
       POSTGRES_USER: greer
-      POSTGRES_PASSWORD: greer
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
       POSTGRES_DB: greer
-    ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+    # Not published: only the web and worker containers can reach the database.
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -17,6 +21,35 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+
+  web:
+    build: .
+    restart: unless-stopped
+    environment:
+      <<: *app-env
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?Set BETTER_AUTH_SECRET}
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:3000}
+      ALLOW_REGISTRATION: ${ALLOW_REGISTRATION:-false}
+    ports:
+      - "${PORT:-3000}:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # Healthcheck (GET /api/health) is defined in the Dockerfile.
+
+  worker:
+    build: .
+    restart: unless-stopped
+    command: ["node", "dist/worker.mjs"]
+    environment:
+      <<: *app-env
+    depends_on:
+      # The web container applies migrations before it reports healthy.
+      web:
+        condition: service_healthy
+    healthcheck:
+      # The worker has no HTTP server; its liveness shows up in /api/health.
+      disable: true
 
 volumes:
   postgres-data:

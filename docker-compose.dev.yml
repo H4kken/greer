@@ -1,0 +1,25 @@
+# Local development only: Postgres published on localhost for `pnpm dev`,
+# `pnpm test:int` and `pnpm test:e2e`. Start it with `pnpm db:up`.
+# For self-hosting, use docker-compose.yml instead.
+name: greer
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: greer
+      POSTGRES_PASSWORD: greer
+      POSTGRES_DB: greer
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U greer -d greer"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres-data:

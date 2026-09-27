@@ -70,7 +70,37 @@ Greer is being built to be easy to run yourself, especially on [Coolify](https:/
 - a Docker Compose file you can deploy on Coolify in one step;
 - bring your own LLM API key, or point it at a local Ollama.
 
-Installation docs will arrive with the first release.
+> Greer doesn't do anything useful yet (there's no source or inbox logic). These instructions describe how the stack runs today.
+
+### With Docker Compose
+
+```bash
+git clone https://github.com/H4kken/greer.git && cd greer
+cat > .env <<ENV
+POSTGRES_PASSWORD=$(openssl rand -hex 24)
+BETTER_AUTH_SECRET=$(openssl rand -base64 32)
+BETTER_AUTH_URL=http://localhost:3000
+ENV
+docker compose up -d --build
+```
+
+Open `http://localhost:3000` and create the owner account. Database migrations run automatically when the web container starts.
+
+### With Coolify
+
+Create a new resource from this Git repository using the **Docker Compose** build pack (`docker-compose.yml`). Set the variables below in Coolify, assign your domain to the `web` service (port 3000), and deploy.
+
+### Environment variables
+
+| Variable             | Required | Description                                                                                                     |
+| -------------------- | -------- | --------------------------------------------------------------------------------------------------------------- |
+| `POSTGRES_PASSWORD`  | yes      | Password of the bundled Postgres. Use a URL-safe value, e.g. `openssl rand -hex 24`.                            |
+| `BETTER_AUTH_SECRET` | yes      | Secret that signs sessions, e.g. `openssl rand -base64 32`.                                                     |
+| `BETTER_AUTH_URL`    | yes      | Public URL of your instance, e.g. `https://greer.example.com`.                                                  |
+| `ALLOW_REGISTRATION` | no       | `false` by default: the first account becomes the owner, then sign-ups close. Set to `true` to let others join. |
+| `PORT`               | no       | Host port for the web app (default `3000`).                                                                     |
+
+`GET /api/health` reports the database and the background worker; the web container's health check uses it.
 
 ### Why Hacker News first, and what about Reddit?
 

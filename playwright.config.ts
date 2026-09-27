@@ -20,7 +20,7 @@ export default defineConfig({
   webServer: {
     // Fresh database, then the production build, like self-hosters run it.
     // (Playwright starts the web server before any globalSetup, so the reset lives here.)
-    command: `node tests/e2e/reset-db.ts && pnpm build && pnpm start --port ${PORT}`,
+    command: `node tests/e2e/reset-db.ts && pnpm build && pnpm start`,
     url: `http://localhost:${PORT}/api/health`,
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
@@ -29,6 +29,9 @@ export default defineConfig({
       BETTER_AUTH_SECRET: "e2e-secret-not-for-production-0123456789",
       BETTER_AUTH_URL: `http://localhost:${PORT}`,
       ALLOW_REGISTRATION: "false",
+      // The standalone server (what the Docker image runs) reads these.
+      PORT: String(PORT),
+      HOSTNAME: "127.0.0.1",
     },
   },
 });

@@ -5,12 +5,19 @@ description: Verify Greer still self-hosts cleanly (Docker image, docker-compose
 
 # Self-hosting check
 
-1. `docker compose down -v && docker compose up --build -d` from a clean state (fresh volume).
+1. Start from a clean state under a separate project name so it can't touch the dev database, with generated secrets in a scratch env file:
+   ```bash
+   printf "POSTGRES_PASSWORD=%s\nBETTER_AUTH_SECRET=%s\nBETTER_AUTH_URL=http://localhost:3200\nPORT=3200\n" "$(openssl rand -hex 24)" "$(openssl rand -base64 32)" > /tmp/selfhost.env
+   docker compose -p greer-selfhost --env-file /tmp/selfhost.env down -v
+   docker compose -p greer-selfhost --env-file /tmp/selfhost.env up -d --build --wait
+   ```
 2. Confirm that:
-   - migrations ran on startup (web logs);
-   - `curl -f localhost:3000/api/health` returns 200 and reports the DB and worker as healthy;
-   - the worker picked up its cron schedules (worker logs);
-   - sign-up → onboarding → first ingest works with only the required env vars (`DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`) plus one LLM key.
+   - the web logs show `[migrate] database is up to date` before the server starts;
+   - `curl -f localhost:3200/api/health` returns 200 with `"status":"ok"` (database and worker);
+   - the worker logs show `[worker] started`;
+   - sign-up works with only the required env vars (`POSTGRES_PASSWORD`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`), later plus one LLM key;
+   - Postgres has no published port (`docker compose ps`).
+     Clean up with `down -v` afterwards. CI's `self-host` job runs a subset of this on every push.
 3. Upgrade path: check out the previous release tag, bring it up, create data, switch back to this branch and `up --build`. Data must survive and migrations must apply.
 4. Every env var used in code appears in `.env.example`, `docker-compose.yml` and the README table. The same image serves both `web` and `worker`; only the command differs.
 5. Image stays reasonable: Next.js `output: "standalone"`, multi-stage build, non-root user. Report the image size.

@@ -14,6 +14,8 @@ const eslintConfig = defineConfig([
     ".next/**",
     "out/**",
     "build/**",
+    // Bundled worker output (pnpm build:worker).
+    "dist/**",
     "next-env.d.ts",
     // The Milestone 0 spike has its own setup.
     "spike/**",
