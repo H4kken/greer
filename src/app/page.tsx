@@ -13,7 +13,7 @@ export default async function Home() {
       <p className="text-sm font-medium text-muted-foreground">
         Early development
       </p>
-      <h1 className="text-4xl font-semibold tracking-tight text-balance">
+      <h1 className="text-5xl font-medium tracking-tight text-balance">
         Find the conversations where you can genuinely help.
       </h1>
       <p className="text-lg text-pretty text-muted-foreground">

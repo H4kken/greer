@@ -15,12 +15,12 @@ export function ScoreBadge({
   return (
     <span
       className={cn(
-        "inline-flex shrink-0 items-baseline gap-1 rounded-md border px-2 py-0.5 text-sm tabular-nums",
+        "inline-flex shrink-0 items-baseline gap-1 rounded-full bg-primary-soft px-2.5 py-0.5 font-mono text-sm font-medium text-primary-soft-foreground",
         className,
       )}
     >
       <span className="font-semibold">{score}</span>
-      <span className="text-xs text-muted-foreground">
+      <span className="text-xs font-normal opacity-80">
         · {criteriaMet}/{criteriaTotal}
         <span className="sr-only"> criteria met, score out of 100</span>
       </span>

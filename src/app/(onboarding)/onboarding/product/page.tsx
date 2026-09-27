@@ -28,10 +28,10 @@ export default async function ProductStepPage() {
       {!llm.configured && (
         <section
           aria-labelledby="ai-heading"
-          className="flex flex-col gap-4 rounded-lg border p-6"
+          className="flex flex-col gap-4 rounded-2xl border bg-card p-6"
         >
           <div>
-            <h2 id="ai-heading" className="text-lg font-semibold">
+            <h2 id="ai-heading" className="text-xl font-medium">
               Connect an AI model
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">

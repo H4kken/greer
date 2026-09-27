@@ -43,7 +43,17 @@ export function ProductForm({ initial, mode, onProblemsChange }: Props) {
   const [nextKey, setNextKey] = useState(initial.problems.length);
   const id = useId();
 
+  // Editing a field clears its error: the message is about the old value.
+  function clearErrors(prefix: string) {
+    setErrors((e) =>
+      Object.fromEntries(
+        Object.entries(e).filter(([key]) => !key.startsWith(prefix)),
+      ),
+    );
+  }
+
   function setProblems(problems: string[], keys: number[]) {
+    clearErrors("problems");
     setValues((v) => ({ ...v, problems }));
     setProblemKeys(keys);
     onProblemsChange?.(problems);
@@ -76,9 +86,10 @@ export function ProductForm({ initial, mode, onProblemsChange }: Props) {
           <Input
             id={`${id}-name`}
             value={values.productName}
-            onChange={(e) =>
-              setValues((v) => ({ ...v, productName: e.target.value }))
-            }
+            onChange={(e) => {
+              clearErrors("productName");
+              setValues((v) => ({ ...v, productName: e.target.value }));
+            }}
             maxLength={PROFILE_LIMITS.name}
             aria-invalid={!!errors.productName}
             required
@@ -91,9 +102,10 @@ export function ProductForm({ initial, mode, onProblemsChange }: Props) {
           <Textarea
             id={`${id}-description`}
             value={values.productDescription}
-            onChange={(e) =>
-              setValues((v) => ({ ...v, productDescription: e.target.value }))
-            }
+            onChange={(e) => {
+              clearErrors("productDescription");
+              setValues((v) => ({ ...v, productDescription: e.target.value }));
+            }}
             maxLength={PROFILE_LIMITS.description}
             rows={3}
             aria-invalid={!!errors.productDescription}

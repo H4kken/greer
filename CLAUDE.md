@@ -99,7 +99,7 @@ Use [Conventional Commits](https://www.conventionalcommits.org): `type(scope): s
 
 ## UI/UX
 
-- Build UI with the `ui-component` skill: shadcn/ui + Tailwind v4, semantic tokens, accessible by default (WCAG 2.2 AA).
+- Follow [DESIGN.md](DESIGN.md) for the look (colors, type, shape, voice) and build UI with the `ui-component` skill: shadcn/ui + Tailwind v4, semantic tokens, accessible by default (WCAG 2.2 AA).
 - Every screen handles loading, empty, error and success states. Every action gives feedback. Destructive actions can be undone.
 
 ## Skills

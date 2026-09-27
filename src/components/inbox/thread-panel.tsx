@@ -40,7 +40,7 @@ export function ThreadPanel({
   return (
     <article
       aria-labelledby={`${id}-title`}
-      className="flex flex-col gap-6 rounded-lg border p-5"
+      className="flex flex-col gap-6 rounded-2xl border bg-card p-6"
     >
       <Button
         type="button"
@@ -58,9 +58,12 @@ export function ThreadPanel({
           <time title={row.postedTitle}>{row.postedLabel}</time>
           {row.statusNote && ` · ${row.statusNote}`}
         </p>
-        <h2 id={`${id}-title`} className="text-xl font-semibold text-balance">
+        <h2
+          id={`${id}-title`}
+          className="text-3xl leading-tight font-medium tracking-tight text-balance"
+        >
           {row.type === "comment" && (
-            <span className="block text-sm font-normal text-muted-foreground">
+            <span className="block font-sans text-sm font-normal tracking-normal text-muted-foreground">
               In the thread
             </span>
           )}
@@ -99,7 +102,7 @@ export function ThreadPanel({
 
       <section aria-labelledby={`${id}-why`} className="flex flex-col gap-2">
         <div className="flex items-center gap-2">
-          <h3 id={`${id}-why`} className="font-medium">
+          <h3 id={`${id}-why`} className="text-lg font-medium">
             Why Greer surfaced this
           </h3>
           <ScoreBadge
@@ -138,11 +141,11 @@ export function ThreadPanel({
       </section>
 
       <section aria-labelledby={`${id}-post`} className="flex flex-col gap-2">
-        <h3 id={`${id}-post`} className="font-medium">
+        <h3 id={`${id}-post`} className="text-lg font-medium">
           {row.type === "comment" ? "The comment" : "The post"}
         </h3>
         {row.text ? (
-          <div className="max-h-96 overflow-y-auto rounded-md bg-muted/40 p-3 text-sm whitespace-pre-line">
+          <div className="max-h-96 overflow-y-auto rounded-xl bg-muted p-4 text-[0.9375rem] leading-relaxed whitespace-pre-line">
             {row.text}
           </div>
         ) : (
@@ -156,7 +159,7 @@ export function ThreadPanel({
         aria-labelledby={`${id}-rules`}
         className="flex flex-col gap-1 text-sm"
       >
-        <h3 id={`${id}-rules`} className="font-medium">
+        <h3 id={`${id}-rules`} className="text-lg font-medium">
           Community rules: Hacker News
         </h3>
         <p className="text-muted-foreground">
@@ -176,7 +179,7 @@ export function ThreadPanel({
 
       <section
         aria-label="Reply brief"
-        className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground"
+        className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground"
       >
         Reply brief and your own reply come next: ideas as short notes, and an
         editor for your words. Greer never writes or posts the reply.

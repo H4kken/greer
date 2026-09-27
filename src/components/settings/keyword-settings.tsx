@@ -129,11 +129,11 @@ export function KeywordSettings({ initial }: { initial: KeywordRow[] }) {
   return (
     <div className="flex flex-col gap-4">
       {rows.length === 0 ? (
-        <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
+        <p className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
           No keywords yet. Add one below so Greer knows what to look for.
         </p>
       ) : (
-        <ul className="flex flex-col divide-y rounded-lg border">
+        <ul className="flex flex-col divide-y rounded-xl border bg-card">
           {rows.map((row) => (
             <li
               key={row.id}

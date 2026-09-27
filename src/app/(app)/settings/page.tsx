@@ -38,7 +38,7 @@ function Section({
       className="grid scroll-mt-8 gap-4 border-t pt-8 md:grid-cols-[16rem_1fr]"
     >
       <div>
-        <h2 id={`${id}-heading`} className="font-semibold">
+        <h2 id={`${id}-heading`} className="text-lg font-medium">
           {title}
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">{description}</p>
@@ -61,7 +61,7 @@ export default async function SettingsPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 py-8">
-      <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
+      <h1 className="text-3xl font-medium tracking-tight">Settings</h1>
 
       <Section
         id="product"
@@ -113,7 +113,7 @@ export default async function SettingsPage() {
         description="Reads threads and prepares briefs. Your key is stored encrypted and only used from your server."
       >
         <div className="flex flex-col gap-6">
-          <div className="rounded-lg border bg-muted/40 p-4 text-sm">
+          <div className="rounded-xl border bg-card p-4 text-sm">
             {llm.configured ? (
               <p>
                 Using {PROVIDER_NAMES[llm.provider]}

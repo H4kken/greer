@@ -16,7 +16,7 @@ export default function InboxLoading() {
       <div className="flex flex-col gap-4">
         <Skeleton className="h-7 w-48" />
         <div className="grid gap-4 lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] xl:grid-cols-[minmax(0,30rem)_minmax(0,1fr)]">
-          <div className="flex flex-col divide-y rounded-lg border">
+          <div className="flex flex-col divide-y rounded-xl border bg-card">
             {[0, 1, 2, 3, 4, 5].map((i) => (
               <div key={i} className="flex gap-3 p-3">
                 <Skeleton className="h-6 w-14" />

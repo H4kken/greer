@@ -20,9 +20,9 @@ export function ProductStep({ initial }: { initial: ProductFormValues }) {
       />
       <aside
         aria-labelledby="how-greer-reads"
-        className="h-fit rounded-lg border bg-muted/40 p-4 text-sm"
+        className="h-fit rounded-2xl border bg-card p-5 text-sm"
       >
-        <h2 id="how-greer-reads" className="font-medium">
+        <h2 id="how-greer-reads" className="text-lg font-medium">
           How Greer will read this
         </h2>
         {filled.length > 0 ? (

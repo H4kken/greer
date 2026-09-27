@@ -68,6 +68,8 @@ test.describe("as the owner", () => {
     await expect(page.getByText("Give your product a name.")).toBeVisible();
 
     await page.getByLabel("Product name").fill("Greer");
+    // Fixing a field clears its error right away.
+    await expect(page.getByText("Give your product a name.")).toHaveCount(0);
     await page
       .getByLabel("What it does")
       .fill(
@@ -93,9 +95,10 @@ test.describe("as the owner", () => {
     // Suggestions from the mock model: the longest word of each problem.
     await expect(page.getByText("customers", { exact: true })).toBeVisible();
     await expect(page.getByText("outreach", { exact: true })).toBeVisible();
-    await expect(
-      page.getByRole("button", { name: "Start the first scan" }),
-    ).toBeEnabled();
+    const start = page.getByRole("button", { name: "Start the first scan" });
+    await expect(start).toBeEnabled();
+    // Wait for its fade from the disabled style, or axe measures it half-faded.
+    await expect(start).toHaveCSS("opacity", "1");
     await expectNoSeriousA11yViolations(page);
 
     await page.getByRole("button", { name: "Remove keyword outreach" }).click();

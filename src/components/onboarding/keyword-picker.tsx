@@ -163,7 +163,7 @@ export function KeywordPicker({ initialKeywords, initialShowHn }: Props) {
                   <h3 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
                     {SECTION_LABELS[section]}
                   </h3>
-                  <ul className="flex flex-col divide-y rounded-lg border">
+                  <ul className="flex flex-col divide-y rounded-xl border bg-card">
                     {list.map((k) => (
                       <li
                         key={`${k.section}:${k.query}`}

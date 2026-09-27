@@ -29,7 +29,7 @@ export default async function AccountStepPage() {
     <div className="flex flex-col gap-8">
       <OnboardingSteps current={2} />
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">
+        <h1 className="text-3xl font-medium tracking-tight">
           Where should Greer listen?
         </h1>
         <p className="mt-1 text-muted-foreground">
@@ -41,7 +41,7 @@ export default async function AccountStepPage() {
         aria-labelledby="account-heading"
         className="flex max-w-2xl flex-col gap-4"
       >
-        <h2 id="account-heading" className="text-lg font-semibold">
+        <h2 id="account-heading" className="text-xl font-medium">
           Your HN account
         </h2>
         <HnAccountForm initial={account} />

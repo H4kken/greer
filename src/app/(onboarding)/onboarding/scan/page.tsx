@@ -103,14 +103,14 @@ export default async function ScanStepPage() {
             </Alert>
           )}
 
-          <dl className="divide-y rounded-lg border text-sm">
+          <dl className="divide-y rounded-xl border bg-card text-sm">
             {rows.map(([label, value]) => (
               <div
                 key={label}
                 className="flex items-center justify-between gap-4 px-4 py-2.5"
               >
                 <dt className="text-muted-foreground">{label}</dt>
-                <dd className="font-medium tabular-nums">{value}</dd>
+                <dd className="font-mono font-medium">{value}</dd>
               </div>
             ))}
           </dl>
@@ -125,7 +125,7 @@ export default async function ScanStepPage() {
         </section>
 
         <section aria-labelledby="top-heading" className="flex flex-col gap-3">
-          <h2 id="top-heading" className="text-lg font-semibold">
+          <h2 id="top-heading" className="text-xl font-medium">
             First threads worth your time
           </h2>
           {progress.top.length === 0 ? (
@@ -137,7 +137,10 @@ export default async function ScanStepPage() {
           ) : (
             <ol className="flex flex-col gap-3">
               {progress.top.map((t) => (
-                <li key={t.id} className="flex gap-3 rounded-lg border p-4">
+                <li
+                  key={t.id}
+                  className="flex gap-3 rounded-xl border bg-card p-4"
+                >
                   <ScoreBadge
                     score={t.score}
                     criteriaMet={t.criteriaMet}
@@ -149,7 +152,7 @@ export default async function ScanStepPage() {
                       href={t.url}
                       target="_blank"
                       rel="noreferrer"
-                      className="font-medium hover:underline"
+                      className="font-heading text-lg leading-snug hover:underline"
                     >
                       {t.title || "(untitled)"}
                       <span className="sr-only"> (opens Hacker News)</span>

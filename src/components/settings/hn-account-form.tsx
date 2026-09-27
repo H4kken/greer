@@ -90,7 +90,7 @@ export function HnAccountForm({ initial }: { initial: AccountSummary | null }) {
 
       <div aria-live="polite">
         {account && (
-          <div className="flex flex-col gap-2 rounded-lg border bg-muted/40 p-4 text-sm">
+          <div className="flex flex-col gap-2 rounded-xl border bg-card p-4 text-sm">
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant="secondary">{account.tierLabel}</Badge>
               <span className="text-muted-foreground">

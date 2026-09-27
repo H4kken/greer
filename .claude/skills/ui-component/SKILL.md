@@ -5,6 +5,8 @@ description: Build, change or review UI with Tailwind CSS v4 and shadcn/ui, foll
 
 # UI/UX with Tailwind v4 + shadcn/ui
 
+The look (palette, typography, shape, voice) is defined in [DESIGN.md](../../../DESIGN.md). Read it first and use its tokens and patterns.
+
 ## Building
 
 1. **Use shadcn first.** Before building a primitive, check whether shadcn has it. Add it with `pnpm dlx shadcn@latest add <component>`; it lands in `src/components/ui/`. Compose it in `src/components/<feature>/` rather than heavily editing the generated files.

@@ -181,14 +181,14 @@ export default async function InboxPage({ searchParams }: PageProps<"/inbox">) {
                     })}
                     aria-current={active ? "page" : undefined}
                     className={cn(
-                      "flex items-center justify-between gap-3 rounded-md px-3 py-2 text-sm",
+                      "flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm",
                       active
-                        ? "bg-muted font-medium"
-                        : "text-muted-foreground hover:bg-muted/50",
+                        ? "bg-primary-soft font-medium text-primary-soft-foreground"
+                        : "text-muted-foreground hover:bg-accent hover:text-foreground",
                     )}
                   >
                     {label}
-                    {count > 0 && <span className="tabular-nums">{count}</span>}
+                    {count > 0 && <span className="font-mono">{count}</span>}
                   </Link>
                 </li>
               );
@@ -200,7 +200,7 @@ export default async function InboxPage({ searchParams }: PageProps<"/inbox">) {
           <nav aria-labelledby="keywords-nav" className="hidden lg:block">
             <h2
               id="keywords-nav"
-              className="px-3 text-xs font-medium tracking-wide text-muted-foreground uppercase"
+              className="px-3 font-sans text-xs font-medium tracking-wider text-muted-foreground uppercase"
             >
               Keywords
             </h2>
@@ -210,10 +210,10 @@ export default async function InboxPage({ searchParams }: PageProps<"/inbox">) {
                   href={inboxHref(params, { q: undefined, item: undefined })}
                   aria-current={!params.q ? "page" : undefined}
                   className={cn(
-                    "block rounded-md px-3 py-1.5 text-sm",
+                    "block rounded-lg px-3 py-1.5 text-sm",
                     !params.q
                       ? "font-medium"
-                      : "text-muted-foreground hover:bg-muted/50",
+                      : "text-muted-foreground hover:bg-accent hover:text-foreground",
                   )}
                 >
                   All keywords
@@ -225,10 +225,10 @@ export default async function InboxPage({ searchParams }: PageProps<"/inbox">) {
                     href={inboxHref(params, { q: k.id, item: undefined })}
                     aria-current={params.q === k.id ? "page" : undefined}
                     className={cn(
-                      "block truncate rounded-md px-3 py-1.5 text-sm",
+                      "block truncate rounded-lg px-3 py-1.5 text-sm",
                       params.q === k.id
-                        ? "bg-muted font-medium"
-                        : "text-muted-foreground hover:bg-muted/50",
+                        ? "bg-primary-soft font-medium text-primary-soft-foreground"
+                        : "text-muted-foreground hover:bg-accent hover:text-foreground",
                       !k.enabled && "line-through",
                     )}
                   >
@@ -244,9 +244,9 @@ export default async function InboxPage({ searchParams }: PageProps<"/inbox">) {
 
       <div className="flex min-w-0 flex-col gap-4">
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-          <h1 className="text-xl font-semibold tracking-tight">
+          <h1 className="text-3xl font-medium tracking-tight">
             {VIEWS.find((v) => v.view === params.view)!.label}
-            <span className="ml-2 text-sm font-normal text-muted-foreground">
+            <span className="ml-2 font-sans text-sm font-normal tracking-normal text-muted-foreground">
               {total} thread{total === 1 ? "" : "s"}
               {params.q &&
                 labelOf.get(params.q) &&
@@ -273,16 +273,19 @@ export default async function InboxPage({ searchParams }: PageProps<"/inbox">) {
               </span>
             )}
             {(params.view === "help" || params.view === "feedback") && (
-              <nav aria-label="Sort" className="flex rounded-md border p-0.5">
+              <nav
+                aria-label="Sort"
+                className="flex rounded-lg border bg-card p-0.5"
+              >
                 {(["best", "newest"] as const).map((sort) => (
                   <Link
                     key={sort}
                     href={inboxHref(params, { sort, item: undefined })}
                     aria-current={params.sort === sort ? "page" : undefined}
                     className={cn(
-                      "rounded px-2 py-0.5",
+                      "rounded-md px-2.5 py-1",
                       params.sort === sort
-                        ? "bg-muted font-medium text-foreground"
+                        ? "bg-secondary font-medium text-foreground"
                         : "hover:text-foreground",
                     )}
                   >
@@ -378,8 +381,8 @@ function EmptyState({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-center rounded-lg border border-dashed px-6 py-16 text-center">
-      <h2 className="font-medium">{title}</h2>
+    <div className="flex flex-col items-center rounded-2xl border border-dashed px-6 py-16 text-center">
+      <h2 className="text-xl font-medium">{title}</h2>
       <p className="mt-1 flex max-w-md flex-col items-center text-sm text-muted-foreground">
         {children}
       </p>

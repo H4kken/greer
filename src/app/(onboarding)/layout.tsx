@@ -7,7 +7,9 @@ export default async function OnboardingLayout({ children }: LayoutProps<"/">) {
     <div className="flex min-h-dvh flex-col">
       <header className="border-b">
         <div className="mx-auto flex h-14 max-w-5xl items-center justify-between gap-4 px-4">
-          <span className="font-semibold">Greer</span>
+          <span className="font-heading text-2xl font-semibold tracking-tight">
+            Greer
+          </span>
           <SignOutButton />
         </div>
       </header>

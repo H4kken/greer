@@ -227,7 +227,7 @@ export function Inbox({
       >
         <ul
           aria-label="Threads"
-          className="flex flex-col divide-y rounded-lg border"
+          className="flex flex-col divide-y overflow-hidden rounded-xl border bg-card"
         >
           {visible.map((row) => {
             const active = row.id === selected?.id;
@@ -246,19 +246,19 @@ export function Inbox({
                   }}
                   className={cn(
                     "flex w-full gap-3 px-3 py-3 text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset",
-                    active ? "bg-muted" : "hover:bg-muted/50",
+                    active ? "bg-primary-soft/50" : "hover:bg-accent",
                   )}
                 >
                   <ScoreBadge
                     score={row.score}
                     criteriaMet={row.criteriaMet}
                     criteriaTotal={row.criteriaTotal}
-                    className="h-fit bg-background"
+                    className="h-fit"
                   />
                   <span className="flex min-w-0 flex-col gap-1">
-                    <span className="line-clamp-2 font-medium">
+                    <span className="line-clamp-2 font-heading text-[1.0625rem] leading-snug">
                       {row.type === "comment" && (
-                        <span className="text-muted-foreground">
+                        <span className="font-sans text-sm text-muted-foreground">
                           Comment in:{" "}
                         </span>
                       )}
