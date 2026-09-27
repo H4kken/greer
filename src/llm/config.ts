@@ -58,8 +58,12 @@ function models(
 // Pure: settings saved in the database win over environment variables.
 export function resolveLlmConfig(
   stored: StoredSettings | null,
-  env: Env,
+  rawEnv: Env,
 ): LlmConfig {
+  // Empty means unset (docker compose passes unset variables as "").
+  const env: Env = Object.fromEntries(
+    Object.entries(rawEnv).filter(([, v]) => v !== ""),
+  );
   if (env.LLM_PROVIDER === "mock") {
     return {
       provider: "mock",

@@ -16,6 +16,19 @@ describe("resolveLlmConfig", () => {
     });
   });
 
+  // docker compose passes unset optional variables as empty strings.
+  it("treats empty variables as unset, like docker compose sends them", () => {
+    const config = resolveLlmConfig(null, {
+      ANTHROPIC_API_KEY: "sk-ant",
+      LLM_PROVIDER: "",
+      LLM_FAST_MODEL: "",
+      OPENAI_BASE_URL: "",
+    });
+    expect(config.provider).toBe("anthropic");
+    expect(config.models.fast).toBe("claude-haiku-4-5");
+    expect(config.baseUrl).toBeUndefined();
+  });
+
   it("lets settings saved in the database win over env", () => {
     const config = resolveLlmConfig(
       {
