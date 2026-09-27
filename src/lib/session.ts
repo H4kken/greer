@@ -23,6 +23,7 @@ export async function getWorkspaceForUser(userId: string) {
       id: workspace.id,
       name: workspace.name,
       role: workspaceMember.role,
+      onboardedAt: workspace.onboardedAt,
     })
     .from(workspaceMember)
     .innerJoin(workspace, eq(workspace.id, workspaceMember.workspaceId))
@@ -30,4 +31,12 @@ export async function getWorkspaceForUser(userId: string) {
     .orderBy(asc(workspace.createdAt))
     .limit(1);
   return row ?? null;
+}
+
+// For pages and server actions that act on the user's workspace.
+export async function requireWorkspace() {
+  const session = await requireSession();
+  const ws = await getWorkspaceForUser(session.user.id);
+  if (!ws) throw new Error("This account has no workspace.");
+  return { session, workspace: ws };
 }

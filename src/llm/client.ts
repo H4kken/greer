@@ -88,3 +88,28 @@ export async function generateStructured<Input, Output>(
     throw error;
   }
 }
+
+// A tiny call per model, made before saving settings, so a wrong key or model
+// name is caught in the form rather than by the worker later.
+export async function checkConnection(
+  config: LlmConfig,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (config.provider === "mock") return { ok: true };
+  for (const slot of ["fast", "quality"] as const) {
+    try {
+      await generateText({
+        model: languageModel(config, slot),
+        prompt: "Reply with the word OK.",
+        maxOutputTokens: 5,
+        maxRetries: 0,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return {
+        ok: false,
+        error: `${config.models[slot]}: ${message.slice(0, 200)}`,
+      };
+    }
+  }
+  return { ok: true };
+}

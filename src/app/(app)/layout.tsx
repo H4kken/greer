@@ -1,21 +1,26 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { SignOutButton } from "@/components/auth/sign-out-button";
-import { getWorkspaceForUser, requireSession } from "@/lib/session";
+import { AppNav } from "@/components/app-nav";
+import { requireWorkspace } from "@/lib/session";
 
 export default async function AppLayout({ children }: LayoutProps<"/">) {
-  const { user } = await requireSession();
-  const workspace = await getWorkspaceForUser(user.id);
+  const { session, workspace } = await requireWorkspace();
+  if (!workspace.onboardedAt) redirect("/onboarding");
 
   return (
     <div className="flex min-h-dvh flex-col">
       <header className="border-b">
         <div className="mx-auto flex h-14 max-w-5xl items-center justify-between gap-4 px-4">
-          <Link href="/inbox" className="font-semibold">
-            Greer
-          </Link>
+          <div className="flex items-center gap-6">
+            <Link href="/inbox" className="font-semibold">
+              Greer
+            </Link>
+            <AppNav />
+          </div>
           <div className="flex items-center gap-2 text-sm">
             <span className="hidden text-muted-foreground sm:inline">
-              {workspace?.name} · {user.email}
+              {workspace.name} · {session.user.email}
             </span>
             <SignOutButton />
           </div>

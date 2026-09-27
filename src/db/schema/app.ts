@@ -34,6 +34,8 @@ export const workspace = pgTable("workspace", {
   productDescription: text("product_description"),
   audience: text("audience"),
   problems: text("problems").array().notNull().default([]),
+  // Set when the first scan starts; until then the app sends people to onboarding.
+  onboardedAt: timestamp("onboarded_at", { withTimezone: true }),
   ...timestamps,
 });
 

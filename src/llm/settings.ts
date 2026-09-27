@@ -67,3 +67,30 @@ export async function describeLlmSettings(workspaceId: string) {
     ? { ...stored, apiKey: stored.apiKey ? maskSecret(stored.apiKey) : null }
     : null;
 }
+
+export type LlmStatus =
+  | {
+      configured: true;
+      source: LlmConfig["source"];
+      provider: LlmConfig["provider"];
+      models: LlmConfig["models"];
+    }
+  | { configured: false; problem: string };
+
+// Whether scoring can run, and with what: for Settings and onboarding.
+export async function getLlmStatus(workspaceId: string): Promise<LlmStatus> {
+  try {
+    const config = await getLlmConfig(workspaceId);
+    return {
+      configured: true,
+      source: config.source,
+      provider: config.provider,
+      models: config.models,
+    };
+  } catch (error) {
+    return {
+      configured: false,
+      problem: error instanceof Error ? error.message : String(error),
+    };
+  }
+}

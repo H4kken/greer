@@ -36,6 +36,13 @@
       "when": 1790524297238,
       "tag": "0004_scoring",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790525748118,
+      "tag": "0005_onboarding",
+      "breakpoints": true
     }
   ]
 }

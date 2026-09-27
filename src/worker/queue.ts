@@ -73,3 +73,44 @@ export function sendInTransaction(
 ) {
   return boss.send(name, data, { ...options, db: fromDrizzle(tx, sql) });
 }
+
+// The web app's sender: one client per server process, reused across hot
+// reloads in development. Started lazily on the first send.
+const globalForQueue = globalThis as unknown as {
+  greerWebQueue?: Promise<PgBoss>;
+};
+
+function webQueue(): Promise<PgBoss> {
+  globalForQueue.greerWebQueue ??= (async () => {
+    const connectionString = process.env.DATABASE_URL;
+    if (!connectionString) throw new Error("DATABASE_URL is not set");
+    const boss = createQueue("client", connectionString);
+    await boss.start();
+    return boss;
+  })().catch((error) => {
+    globalForQueue.greerWebQueue = undefined; // try again on the next send
+    throw error;
+  });
+  return globalForQueue.greerWebQueue;
+}
+
+// Sends jobs from the web app. For work the worker's schedule would pick up
+// anyway (e.g. polling a new query): returns false instead of throwing when
+// the queue isn't reachable yet (the worker creates it on its first start).
+export async function trySendFromWeb(
+  jobs: { name: QueueName; data: object; singletonKey?: string }[],
+): Promise<boolean> {
+  try {
+    const boss = await webQueue();
+    for (const job of jobs) {
+      await boss.send(job.name, job.data, { singletonKey: job.singletonKey });
+    }
+    return true;
+  } catch (error) {
+    console.warn(
+      "[queue] could not send from the web app, the worker's schedule will catch up:",
+      error instanceof Error ? error.message : error,
+    );
+    return false;
+  }
+}
