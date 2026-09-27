@@ -123,7 +123,7 @@ Greer won't work around that. For Reddit (v0.2), you'll use your own approved AP
 
 | Stage     | Goal                                                                                                                                                      |
 | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Spike** | Confirm that finding and scoring HN threads is useful, by dogfooding it on a real SaaS                                                                    |
+| **Spike** | Done: finding and scoring HN threads is useful. The script was retired once the app replaced it; its threads became the scoring eval set                  |
 | **v0.1**  | Hacker News monitoring, scored inbox, reply briefs, reply check, conversation tracking, account-aware guardrails, one-step Coolify deploy                 |
 | **v0.2**  | Reddit with your own API credentials, a "bring a thread" bookmarklet, per-community requirements (karma, account age), smarter scoring from your feedback |
 | **Later** | More official-API sources (Bluesky, GitHub Discussions, Lobsters, Stack Exchange…), based on what users ask for                                           |

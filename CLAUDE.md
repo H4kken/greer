@@ -85,7 +85,7 @@ Self-hosting stack: `docker-compose.yml` (Postgres + web + worker, one image fro
 Use [Conventional Commits](https://www.conventionalcommits.org): `type(scope): summary`, imperative and lowercase, no trailing period, e.g. `feat(inbox): add keyboard triage with undo`.
 
 - **Types:** `feat` (user-facing feature), `fix` (bug fix), `docs` (documentation only), `chore` (maintenance, config, dependencies), `refactor` (no behavior change), `test` (tests only), `ci` (GitHub Actions), `build` (Docker, bundling), `perf` (performance), `style` (formatting only), `revert`.
-- **Scope:** the area touched, e.g. `inbox`, `hn`, `llm`, `worker`, `db`, `auth`, `ui`, `docker`, `ci`, `deps`, `spike`. Omit it when a change is truly cross-cutting.
+- **Scope:** the area touched, e.g. `inbox`, `hn`, `llm`, `worker`, `db`, `auth`, `ui`, `docker`, `ci`, `deps`. Omit it when a change is truly cross-cutting.
 - **Breaking changes:** add `!` after the scope (`feat(db)!: …`) and a `BREAKING CHANGE:` footer explaining the upgrade path for self-hosters.
 - One logical change per commit; the body explains _why_ when it isn't obvious.
 

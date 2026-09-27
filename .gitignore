@@ -21,9 +21,6 @@ next-env.d.ts
 .env.*
 !.env.example
 
-# spike output
-spike/out/
-
 # misc
 .DS_Store
 *.pem

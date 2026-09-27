@@ -7,7 +7,6 @@ coverage
 test-results
 playwright-report
 blob-report
-spike
 tests
 .env
 .env.*
