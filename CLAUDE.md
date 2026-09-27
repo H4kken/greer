@@ -76,6 +76,15 @@ Self-hosting stack: `docker-compose.yml` (Postgres + web + worker, one image fro
 - Any new env var goes in `.env.example` and the README's self-hosting table in the same change.
 - Formatting is Prettier's job: don't hand-format or argue with it. Run `pnpm format` before finishing a task.
 
+## Commits
+
+Use [Conventional Commits](https://www.conventionalcommits.org): `type(scope): summary`, imperative and lowercase, no trailing period, e.g. `feat(inbox): add keyboard triage with undo`.
+
+- **Types:** `feat` (user-facing feature), `fix` (bug fix), `docs` (documentation only), `chore` (maintenance, config, dependencies), `refactor` (no behavior change), `test` (tests only), `ci` (GitHub Actions), `build` (Docker, bundling), `perf` (performance), `style` (formatting only), `revert`.
+- **Scope:** the area touched, e.g. `inbox`, `hn`, `llm`, `worker`, `db`, `auth`, `ui`, `docker`, `ci`, `deps`, `spike`. Omit it when a change is truly cross-cutting.
+- **Breaking changes:** add `!` after the scope (`feat(db)!: …`) and a `BREAKING CHANGE:` footer explaining the upgrade path for self-hosters.
+- One logical change per commit; the body explains _why_ when it isn't obvious.
+
 ## Testing
 
 - A change isn't done until it has tests and `pnpm format:check && pnpm lint && pnpm typecheck && pnpm test` passes. Also run `pnpm test:int` / `pnpm test:e2e` when you touch the DB, jobs or UI flows.
