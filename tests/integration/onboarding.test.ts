@@ -4,7 +4,11 @@ import { db } from "@/db";
 import { item, itemScore, llmCall, sourceQuery, workspace } from "@/db/schema";
 import { llmUsageSince } from "@/llm/usage";
 import { getScanProgress, scanDone, startFirstScan } from "@/onboarding/scan";
-import { getAccountSummary, saveAccount } from "@/workspace/accounts";
+import {
+  getAccountSummary,
+  markOwnPosts,
+  saveAccount,
+} from "@/workspace/accounts";
 import {
   addHnKeyword,
   deleteQuery,
@@ -68,6 +72,36 @@ describe("onboarding", () => {
       tier: "growing",
       repliesPerDay: 5,
     });
+  });
+
+  it("hides your own posts collected before you linked the account", async () => {
+    const base = {
+      workspaceId: ws,
+      platform: "hn" as const,
+      type: "story" as const,
+      title: "t",
+      text: "x",
+      url: "u",
+      threadId: "1",
+      postedAt: new Date(),
+      category: "help" as const,
+      filterStatus: "kept" as const,
+      matchedQueryIds: [],
+      raw: {},
+    };
+    await db.insert(item).values([
+      { ...base, externalId: "1", author: "Founder" },
+      { ...base, externalId: "2", author: "someone" },
+    ]);
+    expect(await markOwnPosts(db, ws, "hn", "founder")).toBe(1);
+    const rows = await db
+      .select({ author: item.author, status: item.filterStatus })
+      .from(item)
+      .orderBy(item.externalId);
+    expect(rows).toEqual([
+      { author: "Founder", status: "own_post" },
+      { author: "someone", status: "kept" },
+    ]);
   });
 
   describe("syncHnQueries", () => {

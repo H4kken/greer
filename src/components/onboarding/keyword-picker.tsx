@@ -103,7 +103,7 @@ export function KeywordPicker({ initialKeywords, initialShowHn }: Props) {
   return (
     <div className="flex flex-col gap-8">
       <FieldSet>
-        <FieldLegend>Launches</FieldLegend>
+        <FieldLegend>Show HN launches</FieldLegend>
         <Field orientation="horizontal" className="items-start">
           <Switch
             id={`${id}-show-hn`}
@@ -114,11 +114,12 @@ export function KeywordPicker({ initialKeywords, initialShowHn }: Props) {
           />
           <div className="flex flex-col gap-1">
             <FieldLabel htmlFor={`${id}-show-hn`}>
-              Also collect Show HN launches
+              Also watch Show HN
             </FieldLabel>
             <FieldDescription id={`${id}-show-hn-help`}>
-              Shown in their own &quot;Feedback&quot; tab: founders launching
-              and asking for feedback. About 50 a day to score.
+              Founders posting what they built and asking for feedback: a good
+              way to help and meet builders in your audience. They get their own
+              tab in the inbox. Adds about 50 posts a day to score.
             </FieldDescription>
           </div>
         </Field>

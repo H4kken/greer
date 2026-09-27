@@ -1,7 +1,7 @@
 import { CheckIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const STEPS = ["Your product", "Account & keywords", "First scan"];
+const STEPS = ["Your product", "Where to listen", "First scan"];
 
 export function OnboardingSteps({ current }: { current: 1 | 2 | 3 }) {
   return (

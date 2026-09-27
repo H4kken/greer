@@ -16,6 +16,7 @@ import { getSource } from "@/sources/registry";
 import { QUEUES, trySendFromWeb } from "@/worker/queue";
 import {
   type AccountSummary,
+  markOwnPosts,
   removeAccount,
   saveAccount,
   summarizeAccount,
@@ -69,7 +70,7 @@ export async function saveProductProfileAction(
   const parsed = productProfileSchema.safeParse(input);
   if (!parsed.success) return invalid(parsed.error);
   await saveProductProfile(db, workspace.id, parsed.data);
-  if (from === "onboarding") redirect("/onboarding/account");
+  if (from === "onboarding") redirect("/onboarding/keywords");
   revalidatePath("/settings");
   return { ok: true };
 }
@@ -103,6 +104,7 @@ export async function linkHnAccountAction(
     };
   }
   await saveAccount(db, workspace.id, "hn", profile);
+  await markOwnPosts(db, workspace.id, "hn", profile.handle);
   revalidatePath("/settings");
   return {
     ok: true,

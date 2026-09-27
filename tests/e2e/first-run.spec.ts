@@ -93,7 +93,7 @@ test.describe("as the owner", () => {
     ).toBeVisible();
     await page.getByRole("button", { name: "Continue" }).click();
 
-    await expect(page).toHaveURL(/\/onboarding\/account$/);
+    await expect(page).toHaveURL(/\/onboarding\/keywords$/);
     await expect(
       page.getByRole("heading", { name: "Where should Greer listen?" }),
     ).toBeVisible();

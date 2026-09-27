@@ -2,25 +2,22 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { KeywordPicker } from "@/components/onboarding/keyword-picker";
 import { OnboardingSteps } from "@/components/onboarding/onboarding-steps";
-import { HnAccountForm } from "@/components/settings/hn-account-form";
 import { db } from "@/db";
 import { requireWorkspace } from "@/lib/session";
-import { getAccountSummary } from "@/workspace/accounts";
 import { listHnQueries, SHOW_HN_SECTION } from "@/workspace/keywords";
 import { getProductProfile } from "@/workspace/profile";
 import type { KeywordInput } from "@/workspace/schemas";
 
-export const metadata: Metadata = { title: "Account & keywords · Greer" };
+export const metadata: Metadata = { title: "Where to listen · Greer" };
 
-export default async function AccountStepPage() {
+// Step 2. The HN account isn't asked for here: it only matters once you
+// reply, and Settings links it later (see linkHnAccountAction).
+export default async function KeywordsStepPage() {
   const { workspace } = await requireWorkspace();
   if (!(await getProductProfile(db, workspace.id))) {
     redirect("/onboarding/product");
   }
-  const [account, queries] = await Promise.all([
-    getAccountSummary(db, workspace.id, "hn"),
-    listHnQueries(db, workspace.id),
-  ]);
+  const queries = await listHnQueries(db, workspace.id);
   const saved = queries.filter(
     (q) => q.section === "ask_hn" || q.section === "story_comment",
   );
@@ -37,23 +34,7 @@ export default async function AccountStepPage() {
         </p>
       </div>
 
-      <section
-        aria-labelledby="account-heading"
-        className="flex max-w-2xl flex-col gap-4"
-      >
-        <h2 id="account-heading" className="text-xl font-medium">
-          Your HN account
-        </h2>
-        <HnAccountForm initial={account} />
-      </section>
-
-      <section
-        aria-labelledby="keywords-heading"
-        className="flex max-w-2xl flex-col gap-4"
-      >
-        <h2 id="keywords-heading" className="sr-only">
-          Keywords and launches
-        </h2>
+      <section aria-label="Keywords and launches" className="max-w-2xl">
         <KeywordPicker
           // Coming back to this step: show what was saved instead of new suggestions.
           initialKeywords={
