@@ -64,7 +64,11 @@ export async function seedAnswer(
     text: string;
     tone: "question" | "thanks" | "disagreement" | "neutral";
   },
-  { n = 0, parentAuthor = null as string | null } = {},
+  {
+    n = 0,
+    parentAuthor = null as string | null,
+    topic = null as string | null,
+  } = {},
 ): Promise<void> {
   const client = new Client({ connectionString: E2E_DATABASE_URL });
   await client.connect();
@@ -87,6 +91,16 @@ export async function seedAnswer(
         `https://news.ycombinator.com/item?id=${id(1)}`,
       ],
     );
+    if (topic) {
+      await client.query(
+        `insert into topic (id, workspace_id, name) values ($1, $2, $3) on conflict do nothing`,
+        [crypto.randomUUID(), workspaceId, topic],
+      );
+      await client.query(
+        `update reply set topic_id = (select id from topic where workspace_id = $2 and lower(name) = lower($3)) where id = $1`,
+        [replyId, workspaceId, topic],
+      );
+    }
     await client.query(
       `insert into reply_answer (id, workspace_id, reply_id, platform, external_id, author, text, url, posted_at, tone)
        values ($1, $2, $3, 'hn', $4, $5, $6, $7, now() - interval '2 hours', $8)`,

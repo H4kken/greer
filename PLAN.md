@@ -29,6 +29,7 @@ These are what make it different from the "AI Reddit marketing" spam tools.
 4. **Respect each community.** Show the community's rules next to every reply you write. Track how often you mention your product per community. Enforce cooldowns.
 5. **Know your account.** A 2-week-old account and a 5-year-old account with 10k karma aren't the same. Greer adapts pacing, product-mention advice and which threads it surfaces to your account's maturity and to each community's entry requirements.
 6. **Your data, your keys.** Self-hosted, bring your own LLM key (OpenAI, Anthropic, or any OpenAI-compatible endpoint such as Ollama).
+7. **Rewarding, not a chore.** Community building should feel like meeting people, not clearing an inbox. Greer rewards only what people do back (a thanks, a follow-up question, someone coming back), never reply count, so the fun and genuine replies point the same way. Calm and warm: no guilt streaks, no leaderboards.
 
 ## Core loop
 
@@ -242,6 +243,19 @@ The product is a daily habit tool (a 10–15 min triage session), so UX is about
   - `ui-component`: Tailwind v4 + shadcn patterns, UX standards (states, feedback, undo, keyboard), WCAG 2.2 AA, done checklist
   - `write-tests`: which test layer to use, no-network/real-DB rules, required E2E flows, pre-finish checks
   - `selfhost-check`: clean Docker/Coolify install and upgrade test before releases
+
+## People and progress (added Sep 2026)
+
+Built ahead of Milestone 3, from principle 7:
+
+- **Accounts:** a page listing every platform (HN connectable; Reddit and X shown as coming later), also an optional onboarding step.
+- **Replies and answers:** Greer finds the user's own HN comments, watches the direct answers for 14 days and tags them (thanks, question, disagreement, neutral). The inbox shows "They answered you".
+- **Your people:** a map of everyone the user talked with, the person panel (open questions first), a "they tried the product" mark, and the long-game path (talked with → answered → came back → tried).
+- **Topics:** "What you help people with", named per reply and reused; each grows (planted → growing → rooted) only from what people do back.
+
+Next: a **Today** home screen built on these (Moments first, then people who could use help, with a daily goal sized to the account's safe pace).
+
+Out of scope for now: **product mentions** (searching HN for the product's name). Mentions can take months to appear, and other features matter more first.
 
 ## Milestones
 

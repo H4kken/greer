@@ -12,6 +12,7 @@ import { loadStoredSettings, saveLlmSettings } from "@/llm/settings";
 import { requireWorkspace } from "@/lib/session";
 import { startFirstScan } from "@/onboarding/scan";
 import { unclassifiedAnswerIds } from "@/replies/classify";
+import { unnamedReplyIds } from "@/replies/topics";
 import { unscoredItemIds } from "@/scoring/score";
 import { SourceHttpError } from "@/sources/http";
 import { getSource } from "@/sources/registry";
@@ -337,6 +338,7 @@ export async function saveLlmSettingsAction(
   const answers = await unclassifiedAnswerIds(db, {
     workspaceId: workspace.id,
   });
+  const replies = await unnamedReplyIds(db, { workspaceId: workspace.id });
   await trySendFromWeb([
     ...waiting.map((itemId) => ({
       name: QUEUES.scoreItem,
@@ -347,6 +349,11 @@ export async function saveLlmSettingsAction(
       name: QUEUES.classifyAnswer,
       data: { answerId },
       singletonKey: answerId,
+    })),
+    ...replies.map((replyId) => ({
+      name: QUEUES.nameTopic,
+      data: { replyId },
+      singletonKey: replyId,
     })),
   ]);
   revalidatePath("/settings");

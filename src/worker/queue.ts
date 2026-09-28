@@ -15,6 +15,8 @@ export const QUEUES = {
   repliesPoll: "replies-poll",
   // One answer to the user's reply: ask the model how they answered.
   classifyAnswer: "classify-answer",
+  // One of the user's replies: name the topic it helped with.
+  nameTopic: "name-topic",
 } as const;
 export type QueueName = (typeof QUEUES)[keyof typeof QUEUES];
 
@@ -34,6 +36,13 @@ const QUEUE_OPTIONS: Partial<
     policy: "stately",
     retryLimit: 3,
     retryDelay: 30,
+    retryBackoff: true,
+  },
+  // One waiting and one running job per reply (singletonKey = reply id).
+  [QUEUES.nameTopic]: {
+    policy: "stately",
+    retryLimit: 2,
+    retryDelay: 60,
     retryBackoff: true,
   },
   // One waiting and one running job per answer (singletonKey = answer id).

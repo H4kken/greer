@@ -127,6 +127,7 @@ describe("listPeople", () => {
     expect(await listPeople(db, ws!.id, "hn")).toEqual({
       me: null,
       people: [],
+      topics: [],
     });
   });
 

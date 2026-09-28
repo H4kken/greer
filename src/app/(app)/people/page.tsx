@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { PeopleView, type PersonView } from "@/components/people/people-view";
+import {
+  PeopleView,
+  type PersonView,
+  type TopicView,
+} from "@/components/people/people-view";
 import { buttonVariants } from "@/components/ui/button";
 import { db } from "@/db";
 import { requireWorkspace } from "@/lib/session";
@@ -36,10 +40,24 @@ function Empty({
 export default async function PeoplePage() {
   const { workspace } = await requireWorkspace();
   const now = new Date();
-  const [{ me, people }, profile] = await Promise.all([
+  const [{ me, people, topics }, profile] = await Promise.all([
     listPeople(db, workspace.id, "hn"),
     getProductProfile(db, workspace.id),
   ]);
+  const topicName = new Map(topics.map((t) => [t.id, t.name]));
+
+  const topicViews: TopicView[] = topics.map((t) => ({
+    id: t.id,
+    name: t.name,
+    stage: t.stage,
+    evidence: [
+      `You talked with ${t.people} ${t.people === 1 ? "person" : "people"} about it`,
+      t.thanks > 0 && `${t.thanks} thanked you`,
+      t.cameBack > 0 && `${t.cameBack} came back`,
+    ]
+      .filter(Boolean)
+      .join(" · "),
+  }));
 
   const views: PersonView[] = people.map((p) => ({
     handle: p.handle,
@@ -57,6 +75,10 @@ export default async function PeoplePage() {
     },
     openQuestion: p.openQuestion,
     threads: p.threads,
+    topicIds: p.topicIds,
+    topics: p.topicIds
+      .map((id) => topicName.get(id)?.toLowerCase())
+      .filter((n): n is string => !!n),
     tried: !!p.triedAt,
   }));
 
@@ -91,6 +113,7 @@ export default async function PeoplePage() {
       ) : (
         <PeopleView
           people={views}
+          topics={topicViews}
           path={pathOf(people)}
           productName={profile?.productName || "your product"}
         />

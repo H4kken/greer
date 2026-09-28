@@ -87,7 +87,7 @@ describe("pollReplies", () => {
     const ws = await setup();
     const { sourceFor, calls } = fakeSource([comment("1"), comment("2")]);
 
-    expect(await pollReplies(db, sourceFor, ws, "hn", NOW)).toEqual({
+    expect(await pollReplies(db, sourceFor, ws, "hn", NOW)).toMatchObject({
       fetched: 2,
       new: 2,
     });
@@ -99,7 +99,7 @@ describe("pollReplies", () => {
     // Running again stores nothing twice and starts from the last check,
     // with an hour of overlap.
     const later = new Date(NOW.getTime() + 15 * 60_000);
-    expect(await pollReplies(db, sourceFor, ws, "hn", later)).toEqual({
+    expect(await pollReplies(db, sourceFor, ws, "hn", later)).toMatchObject({
       fetched: 2,
       new: 0,
     });
@@ -137,7 +137,7 @@ describe("pollReplies", () => {
       .values({ name: "Test" })
       .returning({ id: workspace.id });
     const { sourceFor, calls } = fakeSource([comment("1")]);
-    expect(await pollReplies(db, sourceFor, ws!.id, "hn", NOW)).toEqual({
+    expect(await pollReplies(db, sourceFor, ws!.id, "hn", NOW)).toMatchObject({
       fetched: 0,
       new: 0,
     });

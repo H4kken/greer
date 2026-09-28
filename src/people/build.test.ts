@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { type AnswerFact, buildPeople, pathOf, type ReplyFact } from "./build";
+import {
+  type AnswerFact,
+  buildPeople,
+  buildTopics,
+  pathOf,
+  type ReplyFact,
+} from "./build";
 
 const at = (h: number) => new Date(Date.UTC(2026, 8, 20, h));
 
@@ -13,6 +19,7 @@ function reply(id: string, over: Partial<ReplyFact> = {}): ReplyFact {
     threadTitle: `Thread ${id}`,
     url: `https://news.ycombinator.com/item?id=c${id}`,
     postedAt: at(1),
+    topicId: null,
     ...over,
   };
 }
@@ -123,5 +130,62 @@ describe("buildPeople", () => {
     });
     expect(people[0]!.triedAt).toEqual(at(9));
     expect(pathOf(people).tried).toBe(1);
+  });
+});
+
+describe("buildTopics", () => {
+  const topics = [
+    { id: "pricing", name: "Pricing" },
+    { id: "users", name: "First users" },
+    { id: "sales", name: "Sales" },
+    { id: "empty", name: "Unused" },
+  ];
+  const summary = (replies: ReplyFact[], answers: AnswerFact[] = []) =>
+    Object.fromEntries(
+      buildTopics({ me: "mathisg", topics, replies, answers }).map((t) => [
+        t.id,
+        t,
+      ]),
+    );
+
+  it("grows a topic from what people do back, not from reply count", () => {
+    const t = summary(
+      [
+        // Pricing: two people thanked you.
+        reply("1", { topicId: "pricing", parentAuthor: "sarahk" }),
+        reply("2", { topicId: "pricing", parentAuthor: "ana_r" }),
+        // First users: one answer, no thanks.
+        reply("3", { topicId: "users", parentAuthor: "devon_b" }),
+        // Sales: three replies, nobody answered.
+        reply("4", { topicId: "sales", parentAuthor: "a1" }),
+        reply("5", { topicId: "sales", parentAuthor: "a2" }),
+        reply("6", { topicId: "sales", parentAuthor: "a3" }),
+      ],
+      [
+        answer("1"),
+        answer("2", { author: "ana_r" }),
+        answer("3", { author: "devon_b", tone: "question" }),
+      ],
+    );
+    expect(t.pricing).toMatchObject({ stage: "rooted", people: 2, thanks: 2 });
+    expect(t.users).toMatchObject({ stage: "growing", people: 1, thanks: 0 });
+    expect(t.sales).toMatchObject({ stage: "planted", people: 3 });
+    expect(t.empty).toBeUndefined(); // no one talked about it
+  });
+
+  it("roots a topic when someone comes back to it in another thread", () => {
+    const t = summary([
+      reply("1", { topicId: "users", parentAuthor: "devon_b" }),
+      reply("2", { topicId: "users", parentAuthor: "devon_b" }),
+    ]);
+    expect(t.users).toMatchObject({ stage: "rooted", cameBack: 1 });
+  });
+
+  it("gives each person the topics they talked about", () => {
+    const [sarah] = build([
+      reply("1", { topicId: "pricing" }),
+      reply("2", { topicId: "users" }),
+    ]);
+    expect(sarah!.topicIds.sort()).toEqual(["pricing", "users"]);
   });
 });

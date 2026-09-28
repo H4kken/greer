@@ -6,6 +6,7 @@ import { pollAnswers } from "@/replies/answers";
 import { fillParentAuthors } from "@/replies/authors";
 import { classifyReplyAnswer, unclassifiedAnswerIds } from "@/replies/classify";
 import { linkedAccounts, pollReplies } from "@/replies/poll";
+import { nameReplyTopic, unnamedReplyIds } from "@/replies/topics";
 import { scoreItem, unscoredItemIds } from "@/scoring/score";
 import { getSource } from "@/sources/registry";
 import {
@@ -31,6 +32,12 @@ async function main() {
     await touchHeartbeatFile();
   });
   await boss.schedule(QUEUES.heartbeat, HEARTBEAT_CRON);
+
+  const queueTopics = async (replyIds: string[]) => {
+    for (const replyId of replyIds) {
+      await boss.send(QUEUES.nameTopic, { replyId }, { singletonKey: replyId });
+    }
+  };
 
   const queueClassifying = async (answerIds: string[]) => {
     for (const answerId of answerIds) {
@@ -64,6 +71,7 @@ async function main() {
     // Sweep: anything left unscored (crash, outage, LLM not configured yet).
     await queueScoring(await unscoredItemIds(db));
     await queueClassifying(await unclassifiedAnswerIds(db));
+    await queueTopics(await unnamedReplyIds(db));
   });
   await boss.schedule(QUEUES.ingestSchedule, INGEST_CRON);
 
@@ -81,7 +89,13 @@ async function main() {
     QUEUES.repliesPoll,
     async ([job]) => {
       const { workspaceId, platform } = job!.data;
-      const replies = await pollReplies(db, getSource, workspaceId, platform);
+      const { newIds: newReplyIds, ...replies } = await pollReplies(
+        db,
+        getSource,
+        workspaceId,
+        platform,
+      );
+      await queueTopics(newReplyIds);
       const authors = await fillParentAuthors(
         db,
         getSource,
@@ -100,6 +114,24 @@ async function main() {
         answers,
       });
       await queueClassifying(newIds);
+    },
+  );
+
+  // One at a time, so each reply sees the topics named just before it and
+  // reuses them instead of inventing near-duplicates.
+  await boss.work<{ replyId: string }>(
+    QUEUES.nameTopic,
+    { localConcurrency: 1 },
+    async ([job]) => {
+      try {
+        await nameReplyTopic(db, job!.data.replyId);
+      } catch (error) {
+        if (error instanceof LlmNotConfiguredError) {
+          console.warn(`[topic] ${error.message}`);
+          return;
+        }
+        throw error;
+      }
     },
   );
 

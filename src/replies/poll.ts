@@ -11,7 +11,12 @@ export const REPLIES_BACKFILL_DAYS = 30;
 // Overlap with the previous look so comments indexed late aren't missed.
 const OVERLAP_MS = 60 * 60 * 1000;
 
-export type ReplyPollResult = { fetched: number; new: number };
+export type ReplyPollResult = {
+  fetched: number;
+  new: number;
+  // New replies: ready to have their topic named.
+  newIds: string[];
+};
 
 export async function pollReplies(
   db: Db,
@@ -30,14 +35,16 @@ export async function pollReplies(
       ),
     );
   const source = sourceFor(platform);
-  if (!account || !source.fetchUserComments) return { fetched: 0, new: 0 };
+  if (!account || !source.fetchUserComments) {
+    return { fetched: 0, new: 0, newIds: [] };
+  }
 
   const since = account.repliesCheckedAt
     ? new Date(account.repliesCheckedAt.getTime() - OVERLAP_MS)
     : new Date(now.getTime() - REPLIES_BACKFILL_DAYS * 24 * 60 * 60 * 1000);
   const comments = await source.fetchUserComments(account.handle, since);
 
-  let inserted = 0;
+  let newIds: string[] = [];
   if (comments.length) {
     const rows = await db
       .insert(reply)
@@ -57,7 +64,7 @@ export async function pollReplies(
       )
       .onConflictDoNothing()
       .returning({ id: reply.id });
-    inserted = rows.length;
+    newIds = rows.map((r) => r.id);
   }
   await linkRepliesToItems(db, workspaceId, platform);
 
@@ -72,7 +79,7 @@ export async function pollReplies(
         eq(platformAccount.handle, account.handle),
       ),
     );
-  return { fetched: comments.length, new: inserted };
+  return { fetched: comments.length, new: newIds.length, newIds };
 }
 
 // Points each reply at what Greer already collected: the comment or post it

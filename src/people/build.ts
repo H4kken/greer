@@ -11,6 +11,7 @@ export type ReplyFact = {
   threadTitle: string;
   url: string;
   postedAt: Date;
+  topicId: string | null;
 };
 
 export type AnswerFact = {
@@ -38,6 +39,8 @@ export type Person = {
   // Their latest question to you that you haven't answered yet.
   openQuestion: { text: string; url: string } | null;
   threads: { title: string; url: string }[];
+  // Topics of the replies you talked in.
+  topicIds: string[];
   triedAt: Date | null;
 };
 
@@ -60,6 +63,7 @@ export function buildPeople({
   type Acc = {
     threads: Map<string, { title: string; url: string; at: Date }>;
     answers: AnswerFact[];
+    topicIds: Set<string>;
     firstAt: Date;
     lastAt: Date;
   };
@@ -68,9 +72,11 @@ export function buildPeople({
     const acc: Acc = people.get(handle) ?? {
       threads: new Map(),
       answers: [],
+      topicIds: new Set(),
       firstAt: at,
       lastAt: at,
     };
+    if (r.topicId) acc.topicIds.add(r.topicId);
     const thread = acc.threads.get(r.threadExternalId);
     if (!thread || thread.at < r.postedAt) {
       acc.threads.set(r.threadExternalId, {
@@ -122,6 +128,7 @@ export function buildPeople({
           .sort((x, y) => y.at.getTime() - x.at.getTime())
           .slice(0, 5)
           .map(({ title, url }) => ({ title, url })),
+        topicIds: [...acc.topicIds],
         triedAt: tried.get(handle) ?? null,
       };
     })
@@ -142,4 +149,85 @@ export function pathOf(people: Person[]) {
     cameBack: people.filter((p) => p.conversations >= 2).length,
     tried: people.filter((p) => p.triedAt).length,
   };
+}
+
+// A topic grows only from what people do back, never from reply count:
+// planted = you replied; growing = someone answered you; rooted = two or
+// more people thanked you, or someone came back on this topic.
+export type TopicStage = "planted" | "growing" | "rooted";
+
+export type TopicSummary = {
+  id: string;
+  name: string;
+  stage: TopicStage;
+  people: number; // people you talked with on it
+  thanks: number; // distinct people who thanked you on it
+  cameBack: number; // people met in 2+ threads on it
+};
+
+export function buildTopics({
+  me,
+  topics,
+  replies,
+  answers,
+}: {
+  me: string;
+  topics: { id: string; name: string }[];
+  replies: ReplyFact[];
+  answers: AnswerFact[];
+}): TopicSummary[] {
+  const isMe = (h: string) => h.toLowerCase() === me.toLowerCase();
+  const replyById = new Map(replies.map((r) => [r.id, r]));
+  type Acc = {
+    threads: Map<string, Set<string>>; // person -> threads
+    thanks: Set<string>;
+    answered: boolean;
+  };
+  const byTopic = new Map<string, Acc>(
+    topics.map((t) => [
+      t.id,
+      { threads: new Map(), thanks: new Set(), answered: false },
+    ]),
+  );
+  const meet = (acc: Acc, handle: string, thread: string) =>
+    acc.threads.set(handle, (acc.threads.get(handle) ?? new Set()).add(thread));
+
+  for (const r of replies) {
+    const acc = r.topicId ? byTopic.get(r.topicId) : undefined;
+    if (acc && r.parentAuthor && !isMe(r.parentAuthor)) {
+      meet(acc, r.parentAuthor, r.threadExternalId);
+    }
+  }
+  for (const a of answers) {
+    const r = replyById.get(a.replyId);
+    const acc = r?.topicId ? byTopic.get(r.topicId) : undefined;
+    if (!r || !acc || isMe(a.author)) continue;
+    meet(acc, a.author, r.threadExternalId);
+    acc.answered = true;
+    if (a.tone === "thanks") acc.thanks.add(a.author);
+  }
+
+  return topics
+    .map((t): TopicSummary => {
+      const acc = byTopic.get(t.id)!;
+      const cameBack = [...acc.threads.values()].filter(
+        (threads) => threads.size >= 2,
+      ).length;
+      const thanks = acc.thanks.size;
+      return {
+        id: t.id,
+        name: t.name,
+        stage:
+          thanks >= 2 || cameBack > 0
+            ? "rooted"
+            : acc.answered
+              ? "growing"
+              : "planted",
+        people: acc.threads.size,
+        thanks,
+        cameBack,
+      };
+    })
+    .filter((t) => t.people > 0)
+    .sort((a, b) => b.people - a.people || a.name.localeCompare(b.name));
 }

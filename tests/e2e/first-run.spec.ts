@@ -369,7 +369,7 @@ test.describe("as the owner", () => {
     await seedAccount("ada_hn");
     await seedAnswer(
       { author: "sarahk", text: "Thanks, trying it tonight!", tone: "thanks" },
-      { n: 1, parentAuthor: "sarahk" },
+      { n: 1, parentAuthor: "sarahk", topic: "Pricing" },
     );
     await page.goto("/people");
 
@@ -403,6 +403,25 @@ test.describe("as the owner", () => {
         .getByRole("region", { name: "sarahk" })
         .getByRole("button", { name: "They tried Greer" }),
     ).toBeVisible();
+
+    // Topics: picking one shows its stage and the people in it.
+    const topics = page.getByRole("region", {
+      name: "What you help people with",
+    });
+    await topics.getByRole("button", { name: /Pricing/ }).click();
+    const card = page.getByRole("region", { name: "Pricing" });
+    await expect(card.getByText("Growing")).toBeVisible();
+    await expect(
+      card.getByText("You talked with 1 person about it"),
+    ).toBeVisible();
+    await expect(
+      page
+        .getByRole("region", { name: "sarahk" })
+        .getByText("You helped with pricing"),
+    ).toBeVisible();
+    await expectNoSeriousA11yViolations(page);
+    await topics.getByRole("button", { name: "Everyone" }).click();
+    await expect(card).toBeHidden();
   });
 });
 

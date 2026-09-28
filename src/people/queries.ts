@@ -1,15 +1,30 @@
 // Loads everything the People page needs for one workspace and platform.
 import { and, eq, isNotNull } from "drizzle-orm";
 import type { Db } from "@/db";
-import { personMark, platformAccount, reply, replyAnswer } from "@/db/schema";
+import {
+  personMark,
+  platformAccount,
+  reply,
+  replyAnswer,
+  topic,
+} from "@/db/schema";
 import type { Platform } from "@/sources/types";
-import { buildPeople, type Person } from "./build";
+import {
+  buildPeople,
+  buildTopics,
+  type Person,
+  type TopicSummary,
+} from "./build";
 
 export async function listPeople(
   db: Db,
   workspaceId: string,
   platform: Platform,
-): Promise<{ me: string | null; people: Person[] }> {
+): Promise<{
+  me: string | null;
+  people: Person[];
+  topics: TopicSummary[];
+}> {
   const [account] = await db
     .select({ handle: platformAccount.handle })
     .from(platformAccount)
@@ -19,14 +34,14 @@ export async function listPeople(
         eq(platformAccount.platform, platform),
       ),
     );
-  if (!account) return { me: null, people: [] };
+  if (!account) return { me: null, people: [], topics: [] };
 
   const where = <
     T extends typeof reply | typeof replyAnswer | typeof personMark,
   >(
     t: T,
   ) => and(eq(t.workspaceId, workspaceId), eq(t.platform, platform));
-  const [replies, answers, marks] = await Promise.all([
+  const [replies, answers, marks, topics] = await Promise.all([
     db
       .select({
         id: reply.id,
@@ -37,6 +52,7 @@ export async function listPeople(
         threadTitle: reply.threadTitle,
         url: reply.url,
         postedAt: reply.postedAt,
+        topicId: reply.topicId,
       })
       .from(reply)
       .where(where(reply)),
@@ -56,16 +72,22 @@ export async function listPeople(
       .select({ handle: personMark.handle, at: personMark.triedProductAt })
       .from(personMark)
       .where(and(where(personMark), isNotNull(personMark.triedProductAt))),
+    db
+      .select({ id: topic.id, name: topic.name })
+      .from(topic)
+      .where(eq(topic.workspaceId, workspaceId)),
   ]);
 
+  const me = account.handle;
   return {
-    me: account.handle,
+    me,
     people: buildPeople({
-      me: account.handle,
+      me,
       replies,
       answers,
       tried: new Map(marks.map((m) => [m.handle, m.at!])),
     }),
+    topics: buildTopics({ me, topics, replies, answers }),
   };
 }
 

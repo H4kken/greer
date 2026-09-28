@@ -1,6 +1,6 @@
 // Runs the scoring prompts on the eval set against a real model and reports
 // precision/recall and score spread. Usage: pnpm eval [--threshold 60]
-// Other prompts: pnpm eval classify-answer
+// Other prompts: pnpm eval classify-answer | topic-of-reply
 // Needs an LLM key in the environment (e.g. ANTHROPIC_API_KEY). Nothing is
 // written to the database.
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
@@ -22,6 +22,10 @@ const threshold = Number(values.threshold);
 // `pnpm eval classify-answer` runs that prompt's set instead of scoring.
 if (positionals[0] === "classify-answer") {
   await import("./eval-classify-answer");
+  process.exit(0);
+}
+if (positionals[0] === "topic-of-reply") {
+  await import("./eval-topic-of-reply");
   process.exit(0);
 }
 

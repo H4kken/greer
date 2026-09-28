@@ -10,6 +10,7 @@ import {
   timestamp,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { user } from "./auth";
 
 const timestamps = {
@@ -258,6 +259,28 @@ export const itemScore = pgTable(
   (t) => [index("item_score_workspace_score_idx").on(t.workspaceId, t.score)],
 );
 
+// What the user helps people with ("Pricing", "First users"), named by the
+// model from their replies and reused across them (src/replies/topics.ts).
+export const topic = pgTable(
+  "topic",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspace.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    ...timestamps,
+  },
+  (t) => [
+    uniqueIndex("topic_workspace_name_idx").on(
+      t.workspaceId,
+      sql`lower(${t.name})`,
+    ),
+  ],
+);
+
 // A comment the user wrote on a platform, found from their public profile.
 // The start of everything Greer shows about people: who answered, who came
 // back. item_id links it to the thread or comment Greer already knew, if any.
@@ -287,6 +310,10 @@ export const reply = pgTable(
     raw: jsonb("raw").notNull(),
     // Last look for answers to it (src/replies/answers.ts).
     answersCheckedAt: timestamp("answers_checked_at", { withTimezone: true }),
+    // Null until the model has named it.
+    topicId: text("topic_id").references(() => topic.id, {
+      onDelete: "set null",
+    }),
     ...timestamps,
   },
   (t) => [
