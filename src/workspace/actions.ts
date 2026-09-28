@@ -14,7 +14,7 @@ import { startFirstScan } from "@/onboarding/scan";
 import { unscoredItemIds } from "@/scoring/score";
 import { SourceHttpError } from "@/sources/http";
 import { getSource } from "@/sources/registry";
-import { QUEUES, trySendFromWeb } from "@/worker/queue";
+import { QUEUES, repliesKey, trySendFromWeb } from "@/worker/queue";
 import {
   type AccountSummary,
   markOwnPosts,
@@ -106,6 +106,11 @@ export async function linkHnAccountAction(
   }
   await saveAccount(db, workspace.id, "hn", profile);
   await markOwnPosts(db, workspace.id, "hn", profile.handle);
+  // Look for their replies now rather than at the next 15-minute run.
+  const key = { workspaceId: workspace.id, platform: "hn" as const };
+  await trySendFromWeb([
+    { name: QUEUES.repliesPoll, data: key, singletonKey: repliesKey(key) },
+  ]);
   revalidatePath("/accounts");
   revalidatePath("/settings");
   revalidatePath("/onboarding/accounts");

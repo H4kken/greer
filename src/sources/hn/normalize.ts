@@ -1,5 +1,11 @@
 // Pure conversions from HN API payloads to Greer's types.
-import type { AccountProfile, ItemStatus, RawItem, ThreadNode } from "../types";
+import type {
+  AccountProfile,
+  ItemStatus,
+  RawItem,
+  ThreadNode,
+  UserComment,
+} from "../types";
 
 export const HN_ITEM_URL = "https://news.ycombinator.com/item?id=";
 
@@ -13,6 +19,7 @@ export type AlgoliaHit = {
   story_text?: string | null;
   comment_text?: string | null;
   story_id?: number | null;
+  parent_id?: number | null;
 };
 
 export type AlgoliaItem = {
@@ -57,6 +64,21 @@ export function normalizeHit(hit: AlgoliaHit): RawItem {
     text: htmlToText(isComment ? hit.comment_text : hit.story_text),
     url: HN_ITEM_URL + hit.objectID,
     threadId: String(hit.story_id ?? hit.objectID),
+    createdAt: new Date(hit.created_at_i * 1000),
+    raw: hit,
+  };
+}
+
+// A comment hit from an author search (tags=comment,author_<handle>).
+export function normalizeUserComment(hit: AlgoliaHit): UserComment {
+  const threadId = String(hit.story_id ?? hit.objectID);
+  return {
+    externalId: hit.objectID,
+    parentId: String(hit.parent_id ?? threadId),
+    threadId,
+    threadTitle: hit.story_title ?? "",
+    text: htmlToText(hit.comment_text),
+    url: HN_ITEM_URL + hit.objectID,
     createdAt: new Date(hit.created_at_i * 1000),
     raw: hit,
   };

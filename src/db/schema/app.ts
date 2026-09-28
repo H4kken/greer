@@ -155,6 +155,8 @@ export const platformAccount = pgTable(
     accountCreatedAt: timestamp("account_created_at", { withTimezone: true }),
     karma: integer("karma"),
     refreshedAt: timestamp("refreshed_at", { withTimezone: true }),
+    // Last successful look for the user's replies (src/replies/poll.ts).
+    repliesCheckedAt: timestamp("replies_checked_at", { withTimezone: true }),
     ...timestamps,
   },
   (t) => [primaryKey({ columns: [t.workspaceId, t.platform] })],
@@ -254,4 +256,41 @@ export const itemScore = pgTable(
       .defaultNow(),
   },
   (t) => [index("item_score_workspace_score_idx").on(t.workspaceId, t.score)],
+);
+
+// A comment the user wrote on a platform, found from their public profile.
+// The start of everything Greer shows about people: who answered, who came
+// back. item_id links it to the thread or comment Greer already knew, if any.
+export const reply = pgTable(
+  "reply",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspace.id, { onDelete: "cascade" }),
+    platform: platform("platform").notNull(),
+    externalId: text("external_id").notNull(),
+    parentExternalId: text("parent_external_id").notNull(),
+    threadExternalId: text("thread_external_id").notNull(),
+    threadTitle: text("thread_title").notNull(),
+    itemId: text("item_id").references(() => item.id, {
+      onDelete: "set null",
+    }),
+    text: text("text").notNull(),
+    url: text("url").notNull(),
+    postedAt: timestamp("posted_at", { withTimezone: true }).notNull(),
+    raw: jsonb("raw").notNull(),
+    ...timestamps,
+  },
+  (t) => [
+    uniqueIndex("reply_workspace_platform_external_idx").on(
+      t.workspaceId,
+      t.platform,
+      t.externalId,
+    ),
+    index("reply_workspace_posted_idx").on(t.workspaceId, t.postedAt),
+    index("reply_item_idx").on(t.itemId),
+  ],
 );

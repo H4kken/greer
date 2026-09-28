@@ -1,7 +1,7 @@
 // The user's own platform accounts: read from public profiles, never logged into.
 import { and, eq, sql } from "drizzle-orm";
 import type { Db } from "@/db";
-import { item, platformAccount } from "@/db/schema";
+import { item, platformAccount, reply } from "@/db/schema";
 import {
   accountAgeDays,
   formatAccountAge,
@@ -17,19 +17,47 @@ export async function saveAccount(
   profile: AccountProfile,
   now = new Date(),
 ): Promise<void> {
-  const values = {
-    handle: profile.handle,
-    accountCreatedAt: profile.createdAt,
-    karma: profile.karma,
-    refreshedAt: now,
-  };
-  await db
-    .insert(platformAccount)
-    .values({ workspaceId, platform, ...values })
-    .onConflictDoUpdate({
-      target: [platformAccount.workspaceId, platformAccount.platform],
-      set: values,
-    });
+  await db.transaction(async (tx) => {
+    const [current] = await tx
+      .select({ handle: platformAccount.handle })
+      .from(platformAccount)
+      .where(
+        and(
+          eq(platformAccount.workspaceId, workspaceId),
+          eq(platformAccount.platform, platform),
+        ),
+      );
+    // Another handle: the replies found so far belong to someone else.
+    const switched = current && current.handle !== profile.handle;
+    if (switched) await deleteReplies(tx, workspaceId, platform);
+
+    const values = {
+      handle: profile.handle,
+      accountCreatedAt: profile.createdAt,
+      karma: profile.karma,
+      refreshedAt: now,
+      ...(switched && { repliesCheckedAt: null }),
+    };
+    await tx
+      .insert(platformAccount)
+      .values({ workspaceId, platform, ...values })
+      .onConflictDoUpdate({
+        target: [platformAccount.workspaceId, platformAccount.platform],
+        set: values,
+      });
+  });
+}
+
+function deleteReplies(
+  db: Pick<Db, "delete">,
+  workspaceId: string,
+  platform: Platform,
+) {
+  return db
+    .delete(reply)
+    .where(
+      and(eq(reply.workspaceId, workspaceId), eq(reply.platform, platform)),
+    );
 }
 
 // The prefilter skips your own posts, but only once it knows your handle.
@@ -60,14 +88,17 @@ export async function removeAccount(
   workspaceId: string,
   platform: Platform,
 ): Promise<void> {
-  await db
-    .delete(platformAccount)
-    .where(
-      and(
-        eq(platformAccount.workspaceId, workspaceId),
-        eq(platformAccount.platform, platform),
-      ),
-    );
+  await db.transaction(async (tx) => {
+    await deleteReplies(tx, workspaceId, platform);
+    await tx
+      .delete(platformAccount)
+      .where(
+        and(
+          eq(platformAccount.workspaceId, workspaceId),
+          eq(platformAccount.platform, platform),
+        ),
+      );
+  });
 }
 
 export type AccountSummary = {

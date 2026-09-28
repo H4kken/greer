@@ -3,6 +3,7 @@ import askHn from "./__fixtures__/search-ask-hn.json";
 import storyComment from "./__fixtures__/search-story-comment.json";
 import thread from "./__fixtures__/thread.json";
 import user from "./__fixtures__/firebase-user.json";
+import userComments from "./__fixtures__/search-user-comments.json";
 import {
   type AlgoliaHit,
   type AlgoliaItem,
@@ -11,9 +12,27 @@ import {
   normalizeHit,
   normalizeThreadNode,
   normalizeUser,
+  normalizeUserComment,
 } from "./normalize";
 
 describe("HN normalization (recorded responses)", () => {
+  it("normalizes the user's own comments with what they answer", () => {
+    const hit = userComments.hits[0] as AlgoliaHit;
+    expect(normalizeUserComment(hit)).toMatchObject({
+      externalId: "49875167",
+      parentId: "49875023",
+      threadId: "49843909",
+      threadTitle: hit.story_title,
+      text: "Not sure what happened there! Fixed now.",
+      url: "https://news.ycombinator.com/item?id=49875167",
+      createdAt: new Date(1790584655 * 1000),
+    });
+    // HTML becomes plain text.
+    expect(
+      normalizeUserComment(userComments.hits[1] as AlgoliaHit).text,
+    ).toMatch(/^Could you please stop posting unsubstantive comments/);
+  });
+
   it("normalizes comments with their thread's title and id", () => {
     const hit = storyComment.hits[0] as AlgoliaHit;
     const item = normalizeHit(hit);

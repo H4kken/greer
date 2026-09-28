@@ -1,0 +1,35 @@
+{
+  "hits": [
+    {
+      "objectID": "49875167",
+      "_tags": ["comment", "author_dang", "story_49843909"],
+      "author": "dang",
+      "created_at_i": 1790584655,
+      "comment_text": "Not sure what happened there! Fixed now.",
+      "story_id": 49843909,
+      "story_title": "Show HN: Hamilton \u2013 a no-internet Android health dashboard, named after my dog",
+      "parent_id": 49875023
+    },
+    {
+      "objectID": "49874294",
+      "_tags": ["comment", "author_dang", "story_49872723"],
+      "author": "dang",
+      "created_at_i": 1790576470,
+      "comment_text": "Could you please stop posting unsubstantive comments and flamebait? You&#x27;ve unfortunately been doing it repeatedly. It&#x27;s not what this site is for, and destroys what it is for.<p>If you wouldn&#x27;t mind reviewing <a href=\"https:&#x2F;&#x2F;news.ycombinator.com&#x2F;newsguidelines.html\">https:&#x2F;&#x2F;news.ycombinator.com&#x2F;newsguidelines.html</a> and taking the intended spirit of the site more to heart, we&#x27;d be grateful.<p>We don&#x27;t need you to love capitalism (or billionaires), we just need you to stop posting low-effort flamebait comments like this one (or <a href=\"https:&#x2F;&#x2F;news.ycombinator.com&#x2F;item?id=49840585\">https:&#x2F;&#x2F;news.ycombinator.com&#x2F;item?id=49840585</a>). You may not owe capitalism or billionaires better, but you owe this community better if you&#x27;re participating in it.",
+      "story_id": 49872723,
+      "story_title": "Owed a billion dollars in Nvidia stock",
+      "parent_id": 49873677
+    },
+    {
+      "objectID": "49871896",
+      "_tags": ["comment", "author_dang", "story_49870070"],
+      "author": "dang",
+      "created_at_i": 1790552092,
+      "comment_text": "He&#x27;s been doing that for years. I wish he&#x27;d come back to HN!<p><a href=\"https:&#x2F;&#x2F;news.ycombinator.com&#x2F;posts?id=alankay\">https:&#x2F;&#x2F;news.ycombinator.com&#x2F;posts?id=alankay</a>",
+      "story_id": 49870070,
+      "story_title": "Alan Kay's answer to \u201cDid the ENIAC have a BIOS\u201d?",
+      "parent_id": 49870867
+    }
+  ],
+  "nbPages": 1
+}

@@ -47,6 +47,19 @@ export type AccountProfile = {
 
 export type ItemStatus = "live" | "dead" | "deleted" | "missing";
 
+// A comment the user wrote, and where it sits: what it answers and in which
+// thread. Found from the user's public profile, never by logging in.
+export type UserComment = {
+  externalId: string;
+  parentId: string; // the post or comment it replies to
+  threadId: string; // external id of the root story
+  threadTitle: string;
+  text: string; // plain text
+  url: string;
+  createdAt: Date; // UTC
+  raw: unknown;
+};
+
 export interface Source {
   platform: Platform;
   fetchNew(query: SourceQuery, since: Date): Promise<RawItem[]>;
@@ -54,4 +67,6 @@ export interface Source {
   permalink(externalId: string): string;
   fetchAccount?(handle: string): Promise<AccountProfile | null>;
   itemStatus?(externalId: string): Promise<ItemStatus>;
+  // The user's own comments since a date, newest first.
+  fetchUserComments?(handle: string, since: Date): Promise<UserComment[]>;
 }

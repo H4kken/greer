@@ -16,11 +16,16 @@ import { PLATFORMS } from "@/workspace/platforms";
 
 // Every platform as a card: the ones Greer supports can be connected, the
 // others say they're coming. Used by onboarding and the Accounts page.
+// What Greer found from the account so far, as text ready to show.
+export type ReplyStatus = string | null;
+
 export function PlatformList({
   hn,
+  hnReplies = null,
   onChange,
 }: {
   hn: AccountSummary | null;
+  hnReplies?: ReplyStatus;
   onChange?: (platform: "hn", account: AccountSummary | null) => void;
 }) {
   return (
@@ -32,6 +37,7 @@ export function PlatformList({
               name={p.name}
               about={p.about}
               initial={hn}
+              replies={hnReplies}
               onChange={(account) => onChange?.("hn", account)}
             />
           ) : (
@@ -76,15 +82,19 @@ function HnCard({
   name,
   about,
   initial,
+  replies,
   onChange,
 }: {
   name: string;
   about: string;
   initial: AccountSummary | null;
+  replies: ReplyStatus;
   onChange: (account: AccountSummary | null) => void;
 }) {
   const id = useId();
   const [account, setAccount] = useState(initial);
+  // Connected during this visit: the first look for replies is still running.
+  const [fresh, setFresh] = useState(false);
   const [handle, setHandle] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -104,6 +114,7 @@ function HnCard({
         return;
       }
       update(result.data);
+      setFresh(true);
       setHandle("");
     });
   }
@@ -148,6 +159,11 @@ function HnCard({
             <p>
               {account.tierLabel}. Greer will suggest about{" "}
               {account.repliesPerDay} replies a day.
+            </p>
+            <p>
+              {fresh || !replies
+                ? "Looking for your replies from the last 30 days…"
+                : replies}
             </p>
             <div>
               <Button

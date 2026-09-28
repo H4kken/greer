@@ -2,6 +2,7 @@ import "./env";
 import { db } from "@/db";
 import { enabledQueryIds, pollQuery } from "@/ingest/poll";
 import { LlmNotConfiguredError } from "@/llm/config";
+import { linkedAccounts, pollReplies } from "@/replies/poll";
 import { scoreItem, unscoredItemIds } from "@/scoring/score";
 import { getSource } from "@/sources/registry";
 import {
@@ -9,7 +10,8 @@ import {
   recordHeartbeat,
   touchHeartbeatFile,
 } from "./jobs/heartbeat";
-import { createQueue, ensureQueues, QUEUES } from "./queue";
+import { createQueue, ensureQueues, QUEUES, repliesKey } from "./queue";
+import type { Platform } from "@/sources/types";
 
 const INGEST_CRON = "*/15 * * * *"; // every 15 minutes
 
@@ -41,6 +43,11 @@ async function main() {
         { singletonKey: queryId },
       );
     }
+    for (const account of await linkedAccounts(db)) {
+      await boss.send(QUEUES.repliesPoll, account, {
+        singletonKey: repliesKey(account),
+      });
+    }
     // Sweep: anything left unscored (crash, outage, LLM not configured yet).
     await queueScoring(await unscoredItemIds(db));
   });
@@ -55,6 +62,15 @@ async function main() {
     console.log(`[ingest] query ${job!.data.queryId}:`, counts);
     await queueScoring(newKeptIds);
   });
+
+  await boss.work<{ workspaceId: string; platform: Platform }>(
+    QUEUES.repliesPoll,
+    async ([job]) => {
+      const { workspaceId, platform } = job!.data;
+      const counts = await pollReplies(db, getSource, workspaceId, platform);
+      console.log(`[replies] ${repliesKey(job!.data)}:`, counts);
+    },
+  );
 
   await boss.work<{ itemId: string }>(
     QUEUES.scoreItem,

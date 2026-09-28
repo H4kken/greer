@@ -11,6 +11,8 @@ export const QUEUES = {
   ingestPoll: "ingest-poll",
   // One item: ask the model for its criteria, store the computed score.
   scoreItem: "score-item",
+  // One linked account: find the user's new comments. Keyed by workspace + platform.
+  repliesPoll: "replies-poll",
 } as const;
 export type QueueName = (typeof QUEUES)[keyof typeof QUEUES];
 
@@ -26,6 +28,12 @@ const QUEUE_OPTIONS: Partial<
     retryDelay: 30,
     retryBackoff: true,
   },
+  [QUEUES.repliesPoll]: {
+    policy: "stately",
+    retryLimit: 3,
+    retryDelay: 30,
+    retryBackoff: true,
+  },
   // One waiting and one running job per item (singletonKey = item id).
   [QUEUES.scoreItem]: {
     policy: "stately",
@@ -34,6 +42,10 @@ const QUEUE_OPTIONS: Partial<
     retryBackoff: true,
   },
 };
+
+// One replies poll per linked account at a time.
+export const repliesKey = (a: { workspaceId: string; platform: string }) =>
+  `${a.workspaceId}:${a.platform}`;
 
 type Role = "worker" | "client";
 

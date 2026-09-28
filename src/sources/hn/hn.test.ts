@@ -59,4 +59,34 @@ describe("HN adapter", () => {
     const { source } = fakeFetch({});
     expect(await source.fetchAccount!("nobody-here")).toBeNull();
   });
+
+  it("finds a user's comments with an author search", async () => {
+    const { source, calls } = fakeFetch({
+      "0": {
+        hits: [
+          {
+            objectID: "10",
+            _tags: ["comment", "author_mathisg"],
+            author: "mathisg",
+            created_at_i: 1_790_000_000,
+            comment_text: "Try annual plans",
+            story_id: 1,
+            story_title: "Ask HN: Pricing?",
+            parent_id: 5,
+          },
+        ],
+        nbPages: 1,
+      },
+    });
+    const since = new Date("2026-09-01T00:00:00Z");
+    const comments = await source.fetchUserComments!("mathisg", since);
+
+    expect(comments).toMatchObject([
+      { externalId: "10", parentId: "5", threadId: "1" },
+    ]);
+    expect(calls[0]!.searchParams.get("tags")).toBe("comment,author_mathisg");
+    expect(calls[0]!.searchParams.get("numericFilters")).toBe(
+      `created_at_i>${since.getTime() / 1000}`,
+    );
+  });
 });
