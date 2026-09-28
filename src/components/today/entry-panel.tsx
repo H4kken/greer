@@ -40,6 +40,7 @@ export function EntryPanel({
 }) {
   const id = useId();
   const { thread, answer, launch } = entry;
+  const feedback = thread?.category === "feedback";
 
   return (
     <article
@@ -87,7 +88,7 @@ export function EntryPanel({
         <>
           <div className="flex flex-wrap items-center gap-2">
             <a href={thread.url} {...external} className={buttonVariants()}>
-              Open on HN to reply
+              {feedback ? "Open on HN to give feedback" : "Open on HN to reply"}
               <NewTab />
               <Kbd className="bg-primary-foreground/20 text-primary-foreground">
                 o
@@ -103,7 +104,11 @@ export function EntryPanel({
             className="flex flex-col gap-2"
           >
             <h3 id={`${id}-post`} className="text-lg font-medium">
-              {thread.type === "comment" ? "Their comment" : "Their post"}
+              {feedback
+                ? "Their launch"
+                : thread.type === "comment"
+                  ? "Their comment"
+                  : "Their post"}
             </h3>
             {thread.text ? (
               <div className="max-h-80 overflow-y-auto rounded-xl bg-muted p-4 text-[0.9375rem] leading-relaxed whitespace-pre-line lg:max-h-none lg:overflow-visible">
@@ -151,9 +156,9 @@ export function EntryPanel({
             aria-label="Ideas for your reply"
             className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground"
           >
-            Ideas for your reply come next: short notes to think with (what they
-            need, angles, questions to ask back). You write the reply; Greer
-            never does.
+            {feedback
+              ? "Ideas for your feedback come next: short notes to think with (what to try, what to ask the maker). You write it; Greer never does."
+              : "Ideas for your reply come next: short notes to think with (what they need, angles, questions to ask back). You write the reply; Greer never does."}
           </section>
 
           <p className="text-sm text-muted-foreground">

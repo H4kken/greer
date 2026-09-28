@@ -29,7 +29,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
           </div>
         </div>
       </header>
-      {/* Pages set their own width; Today starts with a full-width strip. */}
+      {/* Pages set their own width. */}
       <main className="flex w-full flex-1 flex-col">{children}</main>
     </div>
   );

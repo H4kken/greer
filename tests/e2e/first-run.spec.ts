@@ -265,19 +265,17 @@ test.describe("as the owner", () => {
       page.getByText("Greer's background worker isn't running"),
     ).toBeVisible();
 
-    // No account yet, so the pace is a new account's: three new people, the
-    // weak match left out. Nobody picked: your people fill the space.
+    // No account yet, so the pace is a new account's: the three best new
+    // people, a launch among them, the weak match left out. Nobody picked:
+    // your people fill the space.
     const feed = page.getByRole("list", { name: "Today's people" });
     await expect(feed.getByRole("button")).toHaveCount(3);
     await expect(page.getByText("3 people could use your help.")).toBeVisible();
     await expect(
-      page.getByRole("heading", { level: 2, name: "Your people" }),
-    ).toBeVisible();
-    const launches = page.getByRole("region", {
-      name: "Meanwhile, people are building",
-    });
+      feed.getByRole("button", { name: /Show HN: My first SaaS/ }),
+    ).toContainText("launched something and asks for feedback");
     await expect(
-      launches.getByRole("link", { name: /Show HN: My first SaaS/ }),
+      page.getByRole("heading", { level: 2, name: "Your people" }),
     ).toBeVisible();
     await expectNoSeriousA11yViolations(page);
 
@@ -299,7 +297,10 @@ test.describe("as the owner", () => {
     // d says "not for me" and moves on; Undo brings it back.
     await page.keyboard.press("d");
     await expect(feed.getByRole("button")).toHaveCount(2);
-    await expect(panelTitle("Where do I find beta testers")).toBeVisible();
+    await expect(panelTitle("Show HN: My first SaaS")).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: /Open on HN to give feedback/ }),
+    ).toBeVisible();
     await page.getByRole("button", { name: "Undo" }).click();
     await expect(feed.getByRole("button")).toHaveCount(3);
 
@@ -310,18 +311,17 @@ test.describe("as the owner", () => {
     ).toBeVisible();
 
     // Past the pace is one click away, with a gentle note.
-    await page.getByRole("button", { name: "Show 2 more new people" }).click();
+    await page.getByRole("button", { name: "Show 3 more new people" }).click();
     await expect(
       page.getByText("You're past today's pace of 3."),
     ).toBeVisible();
-    await expect(
-      page.getByRole("list", { name: "More people" }).getByRole("button"),
-    ).toHaveCount(2);
+    const more = page.getByRole("list", { name: "More people" });
+    await expect(more.getByRole("button")).toHaveCount(3);
 
     // Hidden threads bring one back for good.
-    await feed.getByRole("button", { name: /beta testers/ }).click();
+    await more.getByRole("button", { name: /beta testers/ }).click();
     await page.getByRole("button", { name: /^Not for me/ }).click();
-    await expect(feed.getByRole("button")).toHaveCount(2);
+    await expect(more.getByRole("button")).toHaveCount(2);
     await page.getByRole("link", { name: "Hidden threads" }).click();
     await expect(
       page.getByRole("heading", { level: 1, name: "Hidden threads" }),
@@ -336,7 +336,10 @@ test.describe("as the owner", () => {
       page.getByRole("heading", { name: "Nothing hidden" }),
     ).toBeVisible();
     await page.goto("/today");
-    await expect(feed.getByRole("button")).toHaveCount(3);
+    await page.getByRole("button", { name: "Show 3 more new people" }).click();
+    await expect(
+      more.getByRole("button", { name: /beta testers/ }),
+    ).toBeVisible();
   });
 
   test("today works on a phone and in dark mode", async ({ page }) => {
@@ -395,9 +398,10 @@ test.describe("as the owner", () => {
     const first = feed.getByRole("button").first();
     await expect(first).toContainText("Someone you know");
     await expect(first).toContainText("devon_b asked you a follow-up");
-    // The linked account is established, so its pace allows all 5 threads.
+    // The linked account is established, so its pace allows all 6 new
+    // people (5 stuck, 1 launch).
     await expect(
-      page.getByText("1 person you know has news, and 5 new people"),
+      page.getByText("1 person you know has news, and 6 new people"),
     ).toBeVisible();
     await expectNoSeriousA11yViolations(page);
 

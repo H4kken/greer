@@ -8,6 +8,7 @@ import {
   isNotNull,
   max,
   ne,
+  or,
   type SQL,
   sql,
 } from "drizzle-orm";
@@ -53,6 +54,7 @@ export async function loadToday(
       .select({
         id: item.id,
         type: item.type,
+        category: item.category,
         author: item.author,
         title: item.title,
         // Enough for the panel; the full thread is on HN.
@@ -69,15 +71,15 @@ export async function loadToday(
       .where(
         and(
           mine,
-          eq(item.category, "help"),
+          // Help threads, and launches themselves (not comments under them).
+          or(eq(item.category, "help"), eq(item.type, "story")),
           active(now),
           gte(itemScore.score, MIN_SCORE),
         ),
       )
       .orderBy(desc(itemScore.score), desc(item.postedAt), item.id)
       .limit(THREAD_LIMIT),
-    // Launches drift by at the bottom whatever their score: they're there
-    // to enjoy, not to triage.
+    // Launches, whatever their score: a launch by someone you know is news.
     db
       .select({
         id: item.id,

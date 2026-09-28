@@ -1,18 +1,13 @@
 import { AlertTriangleIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { LaunchStrip } from "@/components/today/launch-strip";
 import { PeopleNetwork } from "@/components/today/people-network";
 import { DayProgress } from "@/components/today/day-progress";
 import { Greeting } from "@/components/today/greeting";
 import { NextCheck } from "@/components/today/next-check";
 import { RetrySearchesButton } from "@/components/today/retry-searches-button";
 import { TodayView } from "@/components/today/today-view";
-import type {
-  EntryView,
-  LaunchView,
-  NetworkPerson,
-} from "@/components/today/types";
+import type { EntryView, NetworkPerson } from "@/components/today/types";
 import {
   Alert,
   AlertAction,
@@ -60,10 +55,10 @@ export default async function TodayPage({ searchParams }: PageProps<"/today">) {
   const problems = profile?.problems ?? [];
   const view = (e: TodayEntry): EntryView => {
     const thread =
-      e.kind === "asks" || e.kind === "stuck"
+      e.kind === "asks" || e.kind === "stuck" || e.kind === "launched"
         ? today.threads.get(e.threadId)!
         : null;
-    const person = e.kind === "stuck" ? null : e.person;
+    const person = "person" in e ? e.person : null;
     const launch =
       e.kind === "launch" ? e.launch : e.kind === "answer" ? e.launch : null;
     return {
@@ -93,11 +88,12 @@ export default async function TodayPage({ searchParams }: PageProps<"/today">) {
       thread: thread && {
         id: thread.id,
         type: thread.type,
+        category: thread.category,
         title: thread.title || "(untitled)",
         text: thread.text,
         url: thread.url,
         reason: thread.reason,
-        criteria: explainCriteria("help", thread.criteria, problems),
+        criteria: explainCriteria(thread.category, thread.criteria, problems),
       },
       answer: e.kind === "answer" ? e.answer : null,
       launch: launch && {
@@ -138,20 +134,9 @@ export default async function TodayPage({ searchParams }: PageProps<"/today">) {
     .filter(Boolean)
     .join(" ");
 
-  const known = new Set(today.people.map((p) => p.handle.toLowerCase()));
-  const launches: LaunchView[] = today.launches.map((l) => ({
-    id: l.id,
-    title: l.title,
-    url: l.url,
-    author: l.author,
-    when: formatRelative(l.postedAt, now),
-    helped: known.has(l.author.toLowerCase()),
-  }));
-
   const knownCount = newsFrom.size;
-  const freshCount = entries.filter((e) => e.kind === "stuck").length;
-  const nothingYet =
-    !entries.length && !more.length && !today.people.length && !launches.length;
+  const freshCount = entries.filter((e) => !e.known).length;
+  const nothingYet = !entries.length && !more.length && !today.people.length;
 
   const empty = nothingYet ? (
     <EmptyState title="Nobody here yet">
@@ -170,7 +155,6 @@ export default async function TodayPage({ searchParams }: PageProps<"/today">) {
 
   return (
     <div className="flex flex-1 flex-col">
-      <LaunchStrip launches={launches} />
       <div className="mx-auto flex w-full max-w-screen-xl flex-col gap-6 px-4 py-8">
         <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-3">
           <div className="flex flex-col gap-2">

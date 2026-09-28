@@ -6,7 +6,7 @@ import type { CriterionLine } from "@/scoring/explain";
 // turned into text on the server, so server and client render the same.
 export type EntryView = {
   key: string;
-  kind: "answer" | "asks" | "launch" | "stuck";
+  kind: "answer" | "asks" | "launch" | "stuck" | "launched";
   known: boolean;
   handle: string;
   when: string; // "5h ago"
@@ -16,10 +16,12 @@ export type EntryView = {
   quote: boolean; // headline is their words
   history: string | null; // "Talked twice · pricing"
   match: string | null; // "Strong match"
-  // Stuck and asks: the thread, with why Greer picked it.
+  // Stuck, asks and launched: the thread, with why Greer picked it.
   thread: {
     id: string;
     type: "story" | "comment";
+    // A launch asks for feedback rather than help.
+    category: "help" | "feedback";
     title: string;
     text: string;
     url: string;
@@ -44,13 +46,4 @@ export type NetworkPerson = {
   kind: PersonKind | "new";
   conversations: number;
   news: boolean;
-};
-
-export type LaunchView = {
-  id: string;
-  title: string;
-  url: string;
-  author: string;
-  when: string;
-  helped: boolean; // by someone you know
 };

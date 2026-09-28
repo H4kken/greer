@@ -38,6 +38,8 @@ export function eventLine(entry: TodayEntry): string {
       return "launched something";
     case "stuck":
       return "is stuck";
+    case "launched":
+      return "launched something and asks for feedback";
   }
 }
 

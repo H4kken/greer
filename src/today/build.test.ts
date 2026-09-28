@@ -33,8 +33,14 @@ function answer(replyId: string, over: Partial<AnswerFact> = {}): AnswerFact {
   };
 }
 
-const thread = (id: string, author: string, score = 80): HelpThread => ({
+const thread = (
+  id: string,
+  author: string,
+  score = 80,
+  category: HelpThread["category"] = "help",
+): HelpThread => ({
   id,
+  category,
   author,
   threadId: `h${id}`,
   postedAt: hoursAgo(2),
@@ -185,6 +191,22 @@ describe("buildToday", () => {
     });
     expect(summary(entries)).toEqual(["answer:sarahk", "launch:rhea"]);
     expect(entries[0]).toMatchObject({ launch: { id: "l-sarahk" } });
+  });
+
+  it("brings launches by new people into the same pool and pace", () => {
+    const { entries, more } = today({
+      replies: [reply("1", { parentAuthor: "sarahk" })],
+      threads: [
+        thread("a", "kvn", 92),
+        thread("b", "maker", 85, "feedback"),
+        // sarahk's launch is her news, not a new person's.
+        thread("c", "sarahk", 84, "feedback"),
+        thread("d", "lena", 70),
+      ],
+      pace: 2,
+    });
+    expect(summary(entries)).toEqual(["stuck:kvn", "launched:maker"]);
+    expect(summary(more)).toEqual(["stuck:lena"]);
   });
 
   it("skips the user's own threads and threads they already replied in", () => {

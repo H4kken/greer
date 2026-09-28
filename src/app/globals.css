@@ -140,18 +140,12 @@
   --sidebar-ring: #7fc4a0;
 }
 
-/* Today's slow motion: launches drifting by, your people breathing. Always
+/* Today's slow motion: your people breathing, news glowing. Always
  * paired with motion-reduce:animate-none where used. */
 @theme {
-  --animate-drift: drift 90s linear infinite;
   --animate-halo: halo 3.2s ease-out infinite;
   --animate-breathe: breathe 6s ease-in-out infinite;
 
-  @keyframes drift {
-    to {
-      transform: translateX(-50%);
-    }
-  }
   @keyframes halo {
     0% {
       box-shadow: 0 0 0 0 color-mix(in oklab, var(--primary) 45%, transparent);

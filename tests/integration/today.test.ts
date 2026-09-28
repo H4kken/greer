@@ -100,13 +100,17 @@ describe("Today", () => {
     await addItem({ score: MIN_SCORE - 1 }); // not worth a reply
     await addItem({ score: null }); // not read yet
     await addItem({ filterStatus: "too_short" });
-    await addItem({ category: "feedback" }); // a launch, not a person stuck
+    // A launch by someone new, scored like the rest.
+    const launch = await addItem({ category: "feedback" });
 
     const today = await load();
     expect(today.entries.map((e) => e.key)).toEqual(
       [top, newer, older].map(key),
     );
-    expect(today.more.map((e) => e.key)).toEqual([key(fourth)]);
+    expect(today.more.map((e) => `${e.kind}:${e.key}`)).toEqual([
+      `launched:${key(launch)}`,
+      `stuck:${key(fourth)}`,
+    ]);
     expect(today.me).toBeNull();
     expect(await unscoredCount(db, ws)).toBe(1);
   });

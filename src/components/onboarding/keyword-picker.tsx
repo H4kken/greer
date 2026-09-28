@@ -118,8 +118,9 @@ export function KeywordPicker({ initialKeywords, initialShowHn }: Props) {
             </FieldLabel>
             <FieldDescription id={`${id}-show-hn-help`}>
               Founders posting what they built and asking for feedback: a good
-              way to help and meet builders in your audience. They drift by on
-              Today. Adds about 50 posts a day to score.
+              way to help and meet builders in your audience. The best ones join
+              Today as people asking for feedback. Adds about 50 posts a day to
+              score.
             </FieldDescription>
           </div>
         </Field>

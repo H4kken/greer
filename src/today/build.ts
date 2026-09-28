@@ -10,8 +10,11 @@ export const NEWS_DAYS = 3;
 export const QUESTION_DAYS = 14;
 const WEEK_DAYS = 7;
 
+// A scored thread worth a reply: someone asking for help, or a maker
+// launching and asking for feedback.
 export type HelpThread = {
   id: string;
+  category: "help" | "feedback";
   author: string;
   threadId: string;
   postedAt: Date;
@@ -61,10 +64,11 @@ export type TodayEntry =
       at: Date;
       launch: Launch;
     })
-  // Someone new is stuck on something you know about.
+  // Someone new is stuck on something you know about, or launched and asks
+  // for feedback.
   | {
       key: string;
-      kind: "stuck";
+      kind: "stuck" | "launched";
       handle: string;
       at: Date;
       threadId: string;
@@ -95,7 +99,7 @@ export function buildToday({
   people: Person[];
   replies: ReplyFact[];
   answers: AnswerFact[];
-  // Scored help threads worth a reply, best first.
+  // Scored threads worth a reply (help and launches), best first.
   threads: HelpThread[];
   // Recent Show HN posts, newest first.
   launches: Launch[];
@@ -165,10 +169,13 @@ export function buildToday({
   }
 
   const asks: TodayEntry[] = [];
-  const stuck: TodayEntry[] = [];
+  // New people, stuck or launching, share one pool and one pace.
+  const fresh: TodayEntry[] = [];
   for (const t of threads) {
     if (isMe(t.author) || repliedIn.has(t.threadId)) continue;
     const person = known.get(lower(t.author));
+    // A launch by someone you know is already their news (see above).
+    if (person && t.category === "feedback") continue;
     const base = {
       key: entryKey.thread(t.id),
       handle: person?.handle ?? t.author,
@@ -176,7 +183,11 @@ export function buildToday({
       threadId: t.id,
     };
     if (person) asks.push({ ...base, kind: "asks", person });
-    else stuck.push({ ...base, kind: "stuck" });
+    else
+      fresh.push({
+        ...base,
+        kind: t.category === "feedback" ? "launched" : "stuck",
+      });
   }
 
   const news = [...newsFrom.values()];
@@ -189,7 +200,7 @@ export function buildToday({
       (a, b) => b.at.getTime() - a.at.getTime(),
     ),
   ];
-  const picks = stuck.slice(0, Math.max(0, pace));
+  const picks = fresh.slice(0, Math.max(0, pace));
 
   const recentAnswers = answers.filter(
     (a) => !isMe(a.author) && a.postedAt.getTime() >= since(WEEK_DAYS),
@@ -197,7 +208,7 @@ export function buildToday({
   const distinct = (xs: string[]) => new Set(xs.map(lower)).size;
   return {
     entries: [...questions, ...alternate(picks, others)],
-    more: stuck.slice(picks.length),
+    more: fresh.slice(picks.length),
     week: {
       thanked: distinct(
         recentAnswers.filter((a) => a.tone === "thanks").map((a) => a.author),

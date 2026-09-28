@@ -48,6 +48,9 @@ describe("Today's words", () => {
       "thanked you, and launched something",
     );
     expect(eventLine({ kind: "stuck" } as TodayEntry)).toBe("is stuck");
+    expect(eventLine({ kind: "launched" } as TodayEntry)).toBe(
+      "launched something and asks for feedback",
+    );
     expect(eventLine({ kind: "asks" } as TodayEntry)).toBe(
       "asked something new",
     );
