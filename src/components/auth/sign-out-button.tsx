@@ -1,5 +1,6 @@
 "use client";
 
+import { LogOutIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ export function SignOutButton() {
     <Button
       variant="ghost"
       size="sm"
+      aria-label="Sign out"
       disabled={pending}
       onClick={() =>
         startTransition(async () => {
@@ -22,7 +24,9 @@ export function SignOutButton() {
         })
       }
     >
-      Sign out
+      {/* Just the icon on phones, where the header is tight. */}
+      <LogOutIcon aria-hidden className="sm:hidden" />
+      <span className="hidden sm:inline">Sign out</span>
     </Button>
   );
 }

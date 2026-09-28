@@ -71,7 +71,7 @@ export async function saveProductProfileAction(
   const parsed = productProfileSchema.safeParse(input);
   if (!parsed.success) return invalid(parsed.error);
   await saveProductProfile(db, workspace.id, parsed.data);
-  if (from === "onboarding") redirect("/onboarding/keywords");
+  if (from === "onboarding") redirect("/onboarding/accounts");
   revalidatePath("/settings");
   return { ok: true };
 }
@@ -106,7 +106,9 @@ export async function linkHnAccountAction(
   }
   await saveAccount(db, workspace.id, "hn", profile);
   await markOwnPosts(db, workspace.id, "hn", profile.handle);
+  revalidatePath("/accounts");
   revalidatePath("/settings");
+  revalidatePath("/onboarding/accounts");
   return {
     ok: true,
     data: summarizeAccount("hn", {
@@ -120,6 +122,7 @@ export async function linkHnAccountAction(
 export async function unlinkHnAccountAction(): Promise<ActionResult> {
   const { workspace } = await requireWorkspace();
   await removeAccount(db, workspace.id, "hn");
+  revalidatePath("/accounts");
   revalidatePath("/settings");
   return { ok: true };
 }

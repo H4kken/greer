@@ -1,0 +1,217 @@
+"use client";
+
+import { useId, useState, useTransition } from "react";
+import { toast } from "sonner";
+import { HnLogo } from "@/components/logos/hn-logo";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import type { AccountSummary } from "@/workspace/accounts";
+import {
+  linkHnAccountAction,
+  unlinkHnAccountAction,
+} from "@/workspace/actions";
+import { PLATFORMS } from "@/workspace/platforms";
+
+// Every platform as a card: the ones Greer supports can be connected, the
+// others say they're coming. Used by onboarding and the Accounts page.
+export function PlatformList({
+  hn,
+  onChange,
+}: {
+  hn: AccountSummary | null;
+  onChange?: (platform: "hn", account: AccountSummary | null) => void;
+}) {
+  return (
+    <ul className="flex flex-col gap-3">
+      {PLATFORMS.map((p) => (
+        <li key={p.id}>
+          {p.id === "hn" ? (
+            <HnCard
+              name={p.name}
+              about={p.about}
+              initial={hn}
+              onChange={(account) => onChange?.("hn", account)}
+            />
+          ) : (
+            <LaterCard name={p.name} about={p.about} />
+          )}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function CardHeader({
+  id,
+  logo,
+  name,
+  about,
+  badge,
+}: {
+  id: string;
+  logo: React.ReactNode;
+  name: string;
+  about: string;
+  badge?: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-start gap-4">
+      {logo}
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <h2 id={id} className="font-sans text-lg font-medium">
+            {name}
+          </h2>
+          {badge}
+        </div>
+        <p className="text-sm text-muted-foreground">{about}</p>
+      </div>
+    </div>
+  );
+}
+
+function HnCard({
+  name,
+  about,
+  initial,
+  onChange,
+}: {
+  name: string;
+  about: string;
+  initial: AccountSummary | null;
+  onChange: (account: AccountSummary | null) => void;
+}) {
+  const id = useId();
+  const [account, setAccount] = useState(initial);
+  const [handle, setHandle] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  function update(next: AccountSummary | null) {
+    setAccount(next);
+    onChange(next);
+  }
+
+  function connect(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError(null);
+    startTransition(async () => {
+      const result = await linkHnAccountAction(handle);
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      update(result.data);
+      setHandle("");
+    });
+  }
+
+  function disconnect() {
+    const previous = account;
+    startTransition(async () => {
+      const result = await unlinkHnAccountAction();
+      if (!result.ok) {
+        toast.error(result.error);
+        return;
+      }
+      setHandle(previous?.handle ?? "");
+      update(null);
+      toast.success("Hacker News account disconnected.");
+    });
+  }
+
+  return (
+    <section
+      aria-labelledby={`${id}-name`}
+      className="flex flex-col gap-5 rounded-2xl border bg-card p-6"
+    >
+      <CardHeader
+        id={`${id}-name`}
+        logo={<HnLogo className="size-10" />}
+        name={name}
+        about={about}
+        badge={account && <Badge variant="secondary">Connected</Badge>}
+      />
+
+      <div aria-live="polite">
+        {account ? (
+          <div className="flex flex-col gap-3 rounded-xl bg-primary-soft p-4 text-sm text-primary-soft-foreground">
+            <p className="font-medium">
+              {account.handle}
+              <span className="font-normal">
+                {account.age && ` · account ${account.age}`}
+                {account.karma !== null && ` · ${account.karma} karma`}
+              </span>
+            </p>
+            <p>
+              {account.tierLabel}. Greer will suggest about{" "}
+              {account.repliesPerDay} replies a day.
+            </p>
+            <div>
+              <Button
+                type="button"
+                variant="link"
+                size="sm"
+                className="h-auto px-0 text-primary-soft-foreground"
+                disabled={pending}
+                onClick={disconnect}
+              >
+                Disconnect or use another username
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={connect} noValidate>
+            <Field data-invalid={!!error}>
+              <FieldLabel htmlFor={`${id}-handle`}>
+                Your Hacker News username
+              </FieldLabel>
+              <div className="flex flex-wrap gap-2">
+                <Input
+                  id={`${id}-handle`}
+                  value={handle}
+                  onChange={(e) => setHandle(e.target.value)}
+                  autoComplete="username"
+                  spellCheck={false}
+                  className="max-w-64"
+                  aria-invalid={!!error}
+                />
+                <Button type="submit" disabled={pending || !handle.trim()}>
+                  {pending ? "Connecting…" : "Connect"}
+                </Button>
+              </div>
+              <FieldError>{error}</FieldError>
+            </Field>
+          </form>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function LaterCard({ name, about }: { name: string; about: string }) {
+  const id = useId();
+  return (
+    <section
+      aria-labelledby={`${id}-name`}
+      className="rounded-2xl border border-dashed p-6"
+    >
+      <CardHeader
+        id={`${id}-name`}
+        logo={
+          <span
+            aria-hidden
+            className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted font-medium text-muted-foreground"
+          >
+            {name.charAt(0)}
+          </span>
+        }
+        name={name}
+        about={about}
+        badge={<Badge variant="outline">Coming later</Badge>}
+      />
+    </section>
+  );
+}

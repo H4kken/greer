@@ -39,7 +39,7 @@ export default async function ScanStepPage() {
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 py-4">
       {/* Slower while waiting on the worker or a key, so a fix shows up without a reload. */}
       <AutoRefresh active={!done} intervalMs={waiting ? 10_000 : 3000} />
-      <OnboardingSteps current={3} />
+      <OnboardingSteps current={4} />
 
       <section aria-labelledby="scan-heading" className="flex flex-col gap-3">
         <h1

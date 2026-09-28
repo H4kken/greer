@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { HnAccountForm } from "@/components/settings/hn-account-form";
+import Link from "next/link";
 import { ThemeChoice } from "@/components/theme-toggle";
 import { KeywordSettings } from "@/components/settings/keyword-settings";
 import { LlmSettingsForm } from "@/components/settings/llm-settings-form";
@@ -83,11 +83,16 @@ export default async function SettingsPage() {
       </Section>
 
       <Section
-        id="account"
-        title="Hacker News account"
-        description="Its age and karma set your pacing and when product mentions are suggested."
+        id="accounts"
+        title="Accounts"
+        description="The platforms Greer follows your replies on."
       >
-        <HnAccountForm initial={account} />
+        <p className="text-sm">
+          {account
+            ? `Hacker News: ${account.handle}. `
+            : "No account connected yet. "}
+          <Link href="/accounts">Manage accounts</Link>
+        </p>
       </Section>
 
       <Section

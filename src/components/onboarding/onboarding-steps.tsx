@@ -1,9 +1,14 @@
 import { CheckIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const STEPS = ["Your product", "Where to listen", "First scan"];
+const STEPS = [
+  "Your product",
+  "Your accounts",
+  "Where to listen",
+  "First scan",
+];
 
-export function OnboardingSteps({ current }: { current: 1 | 2 | 3 }) {
+export function OnboardingSteps({ current }: { current: 1 | 2 | 3 | 4 }) {
   return (
     <nav aria-label="Setup progress">
       <ol className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">

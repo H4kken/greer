@@ -10,8 +10,7 @@ import type { KeywordInput } from "@/workspace/schemas";
 
 export const metadata: Metadata = { title: "Where to listen · Greer" };
 
-// Step 2. The HN account isn't asked for here: it only matters once you
-// reply, and Settings links it later (see linkHnAccountAction).
+// Step 3: what to search for. The HN account is step 2 (optional).
 export default async function KeywordsStepPage() {
   const { workspace } = await requireWorkspace();
   if (!(await getProductProfile(db, workspace.id))) {
@@ -24,7 +23,7 @@ export default async function KeywordsStepPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <OnboardingSteps current={2} />
+      <OnboardingSteps current={3} />
       <div>
         <h1 className="text-3xl font-medium tracking-tight">
           Where should Greer listen?

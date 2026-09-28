@@ -260,7 +260,7 @@ export default async function InboxPage({ searchParams }: PageProps<"/inbox">) {
               {!account && (
                 <>
                   {" "}
-                  (<Link href="/settings#account">add your account</Link>)
+                  (<Link href="/accounts">connect your account</Link>)
                 </>
               )}
             </span>

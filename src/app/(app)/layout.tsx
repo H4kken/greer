@@ -13,7 +13,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
     <div className="flex min-h-dvh flex-col">
       <header className="border-b">
         <div className="mx-auto flex h-14 max-w-screen-2xl items-center justify-between gap-4 px-4">
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4 sm:gap-6">
             <Link
               href="/inbox"
               className="font-heading text-2xl font-semibold tracking-tight"

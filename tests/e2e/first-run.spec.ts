@@ -102,6 +102,23 @@ test.describe("as the owner", () => {
     ).toBeVisible();
     await page.getByRole("button", { name: "Continue" }).click();
 
+    // Step 2 is optional. Connecting reads HN's public API, which tests never
+    // call, so only the validation and the skip path are covered here.
+    await expect(page).toHaveURL(/\/onboarding\/accounts$/);
+    await expect(
+      page.getByRole("heading", { name: "Connect your accounts" }),
+    ).toBeVisible();
+    await page.getByLabel("Your Hacker News username").fill("not a name!");
+    const connect = page.getByRole("button", { name: "Connect" });
+    await connect.click();
+    await expect(
+      page.getByText("That doesn't look like an HN username."),
+    ).toBeVisible();
+    // Wait for its fade back from the pending style.
+    await expect(connect).toHaveCSS("opacity", "1");
+    await expectNoSeriousA11yViolations(page);
+    await page.getByRole("link", { name: "Skip for now" }).click();
+
     await expect(page).toHaveURL(/\/onboarding\/keywords$/);
     await expect(
       page.getByRole("heading", { name: "Where should Greer listen?" }),
@@ -144,6 +161,18 @@ test.describe("as the owner", () => {
       page.getByRole("heading", { name: "No threads yet" }),
     ).toBeVisible();
     await expect(page.getByText("My workspace")).toBeVisible();
+    await expectNoSeriousA11yViolations(page);
+  });
+
+  test("accounts list every platform, with Hacker News ready to connect", async ({
+    page,
+  }) => {
+    await page.goto("/inbox");
+    await page.getByRole("link", { name: "Accounts" }).click();
+    await expect(page.getByRole("heading", { name: "Accounts" })).toBeVisible();
+    await expect(page.getByLabel("Your Hacker News username")).toBeVisible();
+    const reddit = page.getByRole("region", { name: "Reddit" });
+    await expect(reddit.getByText("Coming later")).toBeVisible();
     await expectNoSeriousA11yViolations(page);
   });
 
