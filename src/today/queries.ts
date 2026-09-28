@@ -4,16 +4,25 @@ import {
   and,
   desc,
   eq,
+  gt,
   gte,
   isNotNull,
+  lte,
   max,
   ne,
+  notExists,
   or,
   type SQL,
   sql,
 } from "drizzle-orm";
 import type { Db } from "@/db";
-import { item, itemScore, sourceQuery } from "@/db/schema";
+import {
+  item,
+  itemScore,
+  platformAccount,
+  reply,
+  sourceQuery,
+} from "@/db/schema";
 import { buildPeople } from "@/people/build";
 import { loadPeopleFacts } from "@/people/queries";
 import type { Platform } from "@/sources/types";
@@ -240,4 +249,66 @@ export async function sourceHealth(db: Db, workspaceId: string) {
     .from(sourceQuery)
     .where(and(mine, isNotNull(sourceQuery.lastError)));
   return { lastCheckAt: last?.at ?? null, failing };
+}
+
+// A reply the user marked but Greer hasn't found after this long, with a
+// check run since, is worth asking about. Older marks are left alone.
+export const MISSING_AFTER_HOURS = 2;
+const MISSING_FOR_DAYS = 7;
+
+// "I replied" marks with no reply found in that thread: posted from another
+// account, killed on HN, or not posted after all. Only once a reply check
+// has run after the mark, so a stopped worker never looks like a miss.
+export async function missingReplies(
+  db: Db,
+  workspaceId: string,
+  platform: Platform,
+  now = new Date(),
+) {
+  const HOUR = 60 * 60 * 1000;
+  return db
+    .select({
+      id: item.id,
+      author: item.author,
+      title: item.title,
+      url: item.url,
+      markedAt: item.triagedAt,
+    })
+    .from(item)
+    .innerJoin(
+      platformAccount,
+      and(
+        eq(platformAccount.workspaceId, item.workspaceId),
+        eq(platformAccount.platform, item.platform),
+      ),
+    )
+    .where(
+      and(
+        eq(item.workspaceId, workspaceId),
+        eq(item.platform, platform),
+        eq(item.triageStatus, "replied"),
+        lte(
+          item.triagedAt,
+          new Date(now.getTime() - MISSING_AFTER_HOURS * HOUR),
+        ),
+        gte(
+          item.triagedAt,
+          new Date(now.getTime() - MISSING_FOR_DAYS * 24 * HOUR),
+        ),
+        gt(platformAccount.repliesCheckedAt, item.triagedAt),
+        notExists(
+          db
+            .select({ one: sql`1` })
+            .from(reply)
+            .where(
+              and(
+                eq(reply.workspaceId, item.workspaceId),
+                eq(reply.platform, item.platform),
+                eq(reply.threadExternalId, item.threadId),
+              ),
+            ),
+        ),
+      ),
+    )
+    .orderBy(desc(item.triagedAt), item.id);
 }

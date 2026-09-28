@@ -6,7 +6,7 @@ import { z } from "zod";
 import { db } from "@/db";
 import { sourceQuery } from "@/db/schema";
 import { requireWorkspace } from "@/lib/session";
-import { QUEUES, trySendFromWeb } from "@/worker/queue";
+import { QUEUES, repliesKey, trySendFromWeb } from "@/worker/queue";
 import { dismissItem, markReplied, restoreItem } from "./triage";
 
 type Result = { ok: true } | { ok: false; error: string };
@@ -35,9 +35,29 @@ export async function repliedAction(id: unknown): Promise<Result> {
   const { workspace } = await requireWorkspace();
   const parsed = itemId.safeParse(id);
   if (!parsed.success) return { ok: false, error: "Invalid input." };
-  return (await markReplied(db, workspace.id, parsed.data))
+  if (!(await markReplied(db, workspace.id, parsed.data))) return NOT_FOUND;
+  // Look for the reply now rather than at the next 15-minute check. If the
+  // worker isn't reachable, the next check still finds it.
+  await checkRepliesNow(workspace.id);
+  return { ok: true };
+}
+
+function checkRepliesNow(workspaceId: string) {
+  const key = { workspaceId, platform: "hn" as const };
+  return trySendFromWeb([
+    { name: QUEUES.repliesPoll, data: key, singletonKey: repliesKey(key) },
+  ]);
+}
+
+// "It's there, look again": one more reply check, right now.
+export async function lookAgainAction(): Promise<Result> {
+  const { workspace } = await requireWorkspace();
+  return (await checkRepliesNow(workspace.id))
     ? { ok: true }
-    : NOT_FOUND;
+    : {
+        ok: false,
+        error: "The background worker isn't reachable. Is it running?",
+      };
 }
 
 export async function restoreAction(id: unknown): Promise<Result> {

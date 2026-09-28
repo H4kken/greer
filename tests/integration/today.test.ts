@@ -4,6 +4,7 @@ import { db } from "@/db";
 import {
   item,
   itemScore,
+  platformAccount,
   reply,
   replyAnswer,
   sourceQuery,
@@ -14,6 +15,7 @@ import {
   hiddenThreads,
   loadToday,
   MIN_SCORE,
+  missingReplies,
   sourceHealth,
   unscoredCount,
 } from "@/today/queries";
@@ -172,6 +174,56 @@ describe("Today", () => {
 
     // Undo makes it new again.
     expect(await restoreItem(db, ws, a)).toBe(true);
+  });
+
+  it("asks about marked replies Greer still hasn't found", async () => {
+    await saveAccount(db, ws, "hn", {
+      handle: "mathisg",
+      createdAt: new Date("2020-01-01T00:00:00Z"),
+      karma: 212,
+    });
+    const checked = (at: Date) =>
+      db
+        .update(platformAccount)
+        .set({ repliesCheckedAt: at })
+        .where(eq(platformAccount.workspaceId, ws));
+    const missing = async () =>
+      (await missingReplies(db, ws, "hn", now)).map((m) => m.id);
+
+    const lost = await addItem({ author: "kvn" });
+    const found = await addItem({ author: "lena" });
+    const recent = await addItem({ author: "pjt" });
+    await markReplied(db, ws, lost, hoursAgo(3));
+    await markReplied(db, ws, found, hoursAgo(3));
+    await markReplied(db, ws, recent, hoursAgo(1)); // too soon to ask
+    const [f] = await db
+      .select({ threadId: item.threadId })
+      .from(item)
+      .where(eq(item.id, found));
+    await db.insert(reply).values({
+      workspaceId: ws,
+      platform: "hn",
+      externalId: "c7",
+      parentExternalId: "p7",
+      parentAuthor: "lena",
+      threadExternalId: f!.threadId,
+      threadTitle: "t",
+      text: "x",
+      url: "u",
+      postedAt: hoursAgo(3),
+      raw: {},
+    });
+
+    // No check since the marks (worker down): not a miss yet.
+    await checked(hoursAgo(4));
+    expect(await missing()).toEqual([]);
+
+    await checked(hoursAgo(0.25));
+    expect(await missing()).toEqual([lost]);
+
+    // "Forget it" removes the mark.
+    await restoreItem(db, ws, lost);
+    expect(await missing()).toEqual([]);
   });
 
   it("brings back threads the old inbox snoozed once the snooze ends", async () => {

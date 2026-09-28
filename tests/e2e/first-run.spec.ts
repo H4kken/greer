@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
-import { seedAccount, seedAnswer, seedThreads } from "./seed";
+import { seedAccount, seedAnswer, seedMissingReply, seedThreads } from "./seed";
 
 // One story, in order: a fresh install gets its owner, who goes through
 // onboarding; then registration is closed. The LLM is mocked (see
@@ -424,6 +424,22 @@ test.describe("as the owner", () => {
       page.getByRole("link", { name: /Answer on HN/ }),
     ).toHaveAttribute("href", "https://news.ycombinator.com/item?id=80002");
     await expectNoSeriousA11yViolations(page);
+
+    // A reply marked by hand that Greer never found: Today asks, quietly.
+    await seedMissingReply("Is my pricing page confusing?");
+    await page.goto("/today");
+    const missing = page.getByRole("region", {
+      name: "Replies Greer didn't find",
+    });
+    await expect(missing).toContainText(
+      "Greer didn't find your reply to quiet_maker",
+    );
+    await expectNoSeriousA11yViolations(page);
+    await missing.getByRole("button", { name: "Forget it" }).click();
+    await expect(
+      page.getByText("Forgot your reply to quiet_maker."),
+    ).toBeVisible();
+    await expect(missing).toBeHidden();
   });
 
   test("people shows who the owner talked with, and takes a 'tried it' mark", async ({

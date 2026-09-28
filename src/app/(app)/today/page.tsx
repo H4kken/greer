@@ -4,6 +4,7 @@ import Link from "next/link";
 import { PeopleNetwork } from "@/components/today/people-network";
 import { DayProgress } from "@/components/today/day-progress";
 import { Greeting } from "@/components/today/greeting";
+import { MissingReplies } from "@/components/today/missing-replies";
 import { NextCheck } from "@/components/today/next-check";
 import { RetrySearchesButton } from "@/components/today/retry-searches-button";
 import { TodayView } from "@/components/today/today-view";
@@ -28,7 +29,12 @@ import {
   matchLabel,
   summaryLine,
 } from "@/today/present";
-import { loadToday, sourceHealth, unscoredCount } from "@/today/queries";
+import {
+  loadToday,
+  missingReplies,
+  sourceHealth,
+  unscoredCount,
+} from "@/today/queries";
 import { getAccountSummary } from "@/workspace/accounts";
 import { getProductProfile } from "@/workspace/profile";
 
@@ -42,14 +48,16 @@ export default async function TodayPage({ searchParams }: PageProps<"/today">) {
   const account = await getAccountSummary(db, workspace.id, "hn");
   const tier = account?.tier ?? "new";
   const pace = MATURITY_ADVICE[tier].repliesPerDay;
-  const [today, profile, health, unscored, llm, worker] = await Promise.all([
-    loadToday(db, workspace.id, { platform: "hn", pace, now }),
-    getProductProfile(db, workspace.id),
-    sourceHealth(db, workspace.id),
-    unscoredCount(db, workspace.id),
-    getLlmStatus(workspace.id),
-    getWorkerHealth(now),
-  ]);
+  const [today, profile, health, unscored, llm, worker, missing] =
+    await Promise.all([
+      loadToday(db, workspace.id, { platform: "hn", pace, now }),
+      getProductProfile(db, workspace.id),
+      sourceHealth(db, workspace.id),
+      unscoredCount(db, workspace.id),
+      getLlmStatus(workspace.id),
+      getWorkerHealth(now),
+      missingReplies(db, workspace.id, "hn", now),
+    ]);
 
   const topicName = new Map(today.topics.map((t) => [t.id, t.name]));
   const problems = profile?.problems ?? [];
@@ -221,6 +229,15 @@ export default async function TodayPage({ searchParams }: PageProps<"/today">) {
             />
           </div>
         )}
+
+        <MissingReplies
+          rows={missing.map((m) => ({
+            id: m.id,
+            handle: m.author,
+            title: m.title || "(untitled)",
+            url: m.url,
+          }))}
+        />
 
         {health.failing.length > 0 && (
           <Alert>

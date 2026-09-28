@@ -138,3 +138,27 @@ export async function seedAccount(handle: string): Promise<void> {
     await client.end();
   }
 }
+
+// A thread the owner marked "I replied" 3 hours ago, with a reply check run
+// since that found nothing: Today asks about it.
+export async function seedMissingReply(title: string): Promise<void> {
+  const client = new Client({ connectionString: E2E_DATABASE_URL });
+  await client.connect();
+  try {
+    const { rows } = await client.query<{ id: string }>(
+      "select id from workspace order by created_at limit 1",
+    );
+    const workspaceId = rows[0]!.id;
+    await client.query(
+      `insert into item (id, workspace_id, platform, external_id, type, author, title, text, url, thread_id, posted_at, category, filter_status, matched_query_ids, raw, triage_status, triaged_at)
+       values ($1, $2, 'hn', '70001', 'story', 'quiet_maker', $3, 'text', 'https://news.ycombinator.com/item?id=70001', '70001', now() - interval '5 hours', 'help', 'kept', '{}', '{}', 'replied', now() - interval '3 hours')`,
+      [crypto.randomUUID(), workspaceId, title],
+    );
+    await client.query(
+      "update platform_account set replies_checked_at = now() where workspace_id = $1",
+      [workspaceId],
+    );
+  } finally {
+    await client.end();
+  }
+}
