@@ -57,13 +57,18 @@ export async function seedThreads(threads: SeedThread[]): Promise<void> {
 }
 
 // One of the owner's replies with an answer, as the worker would store it.
-export async function seedAnswer(answer: {
-  author: string;
-  text: string;
-  tone: "question" | "thanks" | "disagreement" | "neutral";
-}): Promise<void> {
+// `n` keeps several seeded conversations apart: ids 80000 + 10n onwards.
+export async function seedAnswer(
+  answer: {
+    author: string;
+    text: string;
+    tone: "question" | "thanks" | "disagreement" | "neutral";
+  },
+  { n = 0, parentAuthor = null as string | null } = {},
+): Promise<void> {
   const client = new Client({ connectionString: E2E_DATABASE_URL });
   await client.connect();
+  const id = (k: number) => String(80000 + 10 * n + k);
   try {
     const { rows } = await client.query<{ id: string }>(
       "select id from workspace order by created_at limit 1",
@@ -71,21 +76,46 @@ export async function seedAnswer(answer: {
     const workspaceId = rows[0]!.id;
     const replyId = crypto.randomUUID();
     await client.query(
-      `insert into reply (id, workspace_id, platform, external_id, parent_external_id, thread_external_id, thread_title, text, url, posted_at, raw)
-       values ($1, $2, 'hn', '80001', '80000', '80000', 'Ask HN: How do you get your first users?', 'I answered questions where they hang out.', 'https://news.ycombinator.com/item?id=80001', now() - interval '5 hours', '{}')`,
-      [replyId, workspaceId],
+      `insert into reply (id, workspace_id, platform, external_id, parent_external_id, parent_author, thread_external_id, thread_title, text, url, posted_at, raw)
+       values ($1, $2, 'hn', $3, $4, $5, $4, 'Ask HN: How do you get your first users?', 'I answered questions where they hang out.', $6, now() - interval '5 hours', '{}')`,
+      [
+        replyId,
+        workspaceId,
+        id(1),
+        id(0),
+        parentAuthor,
+        `https://news.ycombinator.com/item?id=${id(1)}`,
+      ],
     );
     await client.query(
       `insert into reply_answer (id, workspace_id, reply_id, platform, external_id, author, text, url, posted_at, tone)
-       values ($1, $2, $3, 'hn', '80002', $4, $5, 'https://news.ycombinator.com/item?id=80002', now() - interval '2 hours', $6)`,
+       values ($1, $2, $3, 'hn', $4, $5, $6, $7, now() - interval '2 hours', $8)`,
       [
         crypto.randomUUID(),
         workspaceId,
         replyId,
+        id(2),
         answer.author,
         answer.text,
+        `https://news.ycombinator.com/item?id=${id(2)}`,
         answer.tone,
       ],
+    );
+  } finally {
+    await client.end();
+  }
+}
+
+// Links an HN account without calling HN, as the Accounts page would.
+export async function seedAccount(handle: string): Promise<void> {
+  const client = new Client({ connectionString: E2E_DATABASE_URL });
+  await client.connect();
+  try {
+    await client.query(
+      `insert into platform_account (workspace_id, platform, handle, account_created_at, karma, refreshed_at)
+       select id, 'hn', $1, now() - interval '3 years', 1200, now() from workspace order by created_at limit 1
+       on conflict do nothing`,
+      [handle],
     );
   } finally {
     await client.end();

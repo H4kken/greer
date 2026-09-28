@@ -34,7 +34,12 @@ export type AlgoliaItem = {
 };
 
 export type FirebaseUser = { id: string; created: number; karma: number };
-export type FirebaseItem = { id: number; dead?: boolean; deleted?: boolean };
+export type FirebaseItem = {
+  id: number;
+  by?: string;
+  dead?: boolean;
+  deleted?: boolean;
+};
 
 // HN text is HTML with a small set of tags and entities.
 export function htmlToText(html: string | null | undefined): string {

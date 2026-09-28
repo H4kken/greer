@@ -39,6 +39,8 @@
   --color-primary-foreground: var(--primary-foreground);
   --color-primary: var(--primary);
   --color-primary-hover: var(--primary-hover);
+  --color-tried: var(--tried);
+  --color-tried-foreground: var(--tried-foreground);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
@@ -69,6 +71,8 @@
   --primary: #2f6b4f; /* forest: primary actions, focus, selection */
   --primary-foreground: #ffffff;
   --primary-hover: #23513c; /* darker, so white text keeps its contrast */
+  --tried: #b7791f; /* amber: someone tried the user's product */
+  --tried-foreground: #7a4f0f; /* amber text on paper and cards */
   --primary-soft: #e6efe9; /* selected rows and views, score chips */
   --primary-soft-foreground: #1f4a37;
   --secondary: #f0ede6;
@@ -107,6 +111,8 @@
   --primary: #7fc4a0; /* lighter forest so it reads on dark */
   --primary-foreground: #10241a;
   --primary-hover: #9dd3b6;
+  --tried: #e0a64a;
+  --tried-foreground: #f0c27a;
   --primary-soft: #1f3329;
   --primary-soft-foreground: #b9e0ca;
   --secondary: #262320;

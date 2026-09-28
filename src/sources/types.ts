@@ -69,4 +69,6 @@ export interface Source {
   itemStatus?(externalId: string): Promise<ItemStatus>;
   // The user's own comments since a date, newest first.
   fetchUserComments?(handle: string, since: Date): Promise<UserComment[]>;
+  // Who wrote a post or comment; null when it's gone (deleted or missing).
+  fetchAuthor?(externalId: string): Promise<string | null>;
 }

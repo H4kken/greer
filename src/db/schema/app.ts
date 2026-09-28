@@ -273,6 +273,9 @@ export const reply = pgTable(
     platform: platform("platform").notNull(),
     externalId: text("external_id").notNull(),
     parentExternalId: text("parent_external_id").notNull(),
+    // Who the user replied to. Null until looked up; "" when unknown
+    // (deleted), so it isn't looked up again.
+    parentAuthor: text("parent_author"),
     threadExternalId: text("thread_external_id").notNull(),
     threadTitle: text("thread_title").notNull(),
     itemId: text("item_id").references(() => item.id, {
@@ -345,4 +348,21 @@ export const replyAnswer = pgTable(
     index("reply_answer_workspace_posted_idx").on(t.workspaceId, t.postedAt),
     index("reply_answer_reply_idx").on(t.replyId),
   ],
+);
+
+// What only the user knows about someone they talked with: for now, whether
+// that person tried their product. People themselves are derived from
+// replies and answers (src/people), not stored.
+export const personMark = pgTable(
+  "person_mark",
+  {
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspace.id, { onDelete: "cascade" }),
+    platform: platform("platform").notNull(),
+    handle: text("handle").notNull(),
+    triedProductAt: timestamp("tried_product_at", { withTimezone: true }),
+    ...timestamps,
+  },
+  (t) => [primaryKey({ columns: [t.workspaceId, t.platform, t.handle] })],
 );

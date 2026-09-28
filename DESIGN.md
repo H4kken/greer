@@ -15,19 +15,20 @@ Greer is a daily 10–15 minute triage of real conversations. The design stays q
 
 Use the semantic tokens (Tailwind classes such as `bg-card` or `text-muted-foreground`), never raw hex values in components. Every token has a light and a dark value, so dark mode works automatically.
 
-| Token                                      | Light                 | Dark                  | Use for                                                               |
-| ------------------------------------------ | --------------------- | --------------------- | --------------------------------------------------------------------- |
-| `background`                               | `#f7f5f0`             | `#151311`             | the page ("paper")                                                    |
-| `card`                                     | `#fffdf9`             | `#1c1a17`             | surfaces on the page: lists, the thread panel, info boxes             |
-| `foreground`                               | `#1c1917`             | `#f3f0ea`             | body text and headings ("ink")                                        |
-| `muted-foreground`                         | `#57534e`             | `#a8a29e`             | meta lines, help text, secondary labels                               |
-| `muted`                                    | `#f0ede6`             | `#262320`             | quoted content (the post), quiet panels                               |
-| `accent`                                   | `#efeae1`             | `#2a2723`             | hover backgrounds                                                     |
-| `border` / `input`                         | `#e7e3da` / `#d9d4c9` | `#34302b` / `#3d3832` | dividers, card outlines / form fields                                 |
-| `primary`                                  | `#2f6b4f`             | `#7fc4a0`             | primary buttons, links, focus rings, check marks                      |
-| `primary-hover`                            | `#23513c`             | `#9dd3b6`             | primary button hover (never a see-through primary: it fails contrast) |
-| `primary-soft` + `primary-soft-foreground` | `#e6efe9` + `#1f4a37` | `#1f3329` + `#b9e0ca` | the selected view, the selected thread (at 50%), score chips          |
-| `destructive`                              | `#b42318`             | `#f97066`             | errors and destructive actions only                                   |
+| Token                                      | Light                 | Dark                  | Use for                                                                                             |
+| ------------------------------------------ | --------------------- | --------------------- | --------------------------------------------------------------------------------------------------- |
+| `background`                               | `#f7f5f0`             | `#151311`             | the page ("paper")                                                                                  |
+| `card`                                     | `#fffdf9`             | `#1c1a17`             | surfaces on the page: lists, the thread panel, info boxes                                           |
+| `foreground`                               | `#1c1917`             | `#f3f0ea`             | body text and headings ("ink")                                                                      |
+| `muted-foreground`                         | `#57534e`             | `#a8a29e`             | meta lines, help text, secondary labels                                                             |
+| `muted`                                    | `#f0ede6`             | `#262320`             | quoted content (the post), quiet panels                                                             |
+| `accent`                                   | `#efeae1`             | `#2a2723`             | hover backgrounds                                                                                   |
+| `border` / `input`                         | `#e7e3da` / `#d9d4c9` | `#34302b` / `#3d3832` | dividers, card outlines / form fields                                                               |
+| `primary`                                  | `#2f6b4f`             | `#7fc4a0`             | primary buttons, links, focus rings, check marks                                                    |
+| `primary-hover`                            | `#23513c`             | `#9dd3b6`             | primary button hover (never a see-through primary: it fails contrast)                               |
+| `tried` / `tried-foreground`               | `#b7791f` / `#7a4f0f` | `#e0a64a` / `#f0c27a` | someone tried the user's product: the ring on People, its label; the only warm accent, keep it rare |
+| `primary-soft` + `primary-soft-foreground` | `#e6efe9` + `#1f4a37` | `#1f3329` + `#b9e0ca` | the selected view, the selected thread (at 50%), score chips                                        |
+| `destructive`                              | `#b42318`             | `#f97066`             | errors and destructive actions only                                                                 |
 
 Rules:
 

@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 
 const LINKS = [
   { href: "/inbox", label: "Inbox" },
+  { href: "/people", label: "People" },
   { href: "/accounts", label: "Accounts" },
   { href: "/settings", label: "Settings" },
 ] as const;
@@ -13,8 +14,9 @@ const LINKS = [
 export function AppNav() {
   const pathname = usePathname();
   return (
-    <nav aria-label="Main">
-      <ul className="flex items-center gap-3 text-sm sm:gap-4">
+    // On phones the links scroll sideways rather than widen the page.
+    <nav aria-label="Main" className="min-w-0 overflow-x-auto">
+      <ul className="flex items-center gap-3 py-1 text-sm whitespace-nowrap sm:gap-4">
         {LINKS.map(({ href, label }) => {
           const active = pathname.startsWith(href);
           return (

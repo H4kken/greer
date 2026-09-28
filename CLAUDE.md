@@ -50,6 +50,7 @@ src/llm/          provider setup, prompts/, scoring + reply briefs + reply check
 src/workspace/    product profile, platform accounts, keywords + their server actions
 src/onboarding/   first scan (start + progress)
 src/replies/      the user's own replies (found from linked accounts) and the answers to them
+src/people/       people the user talked with, derived from replies and answers
 src/inbox/        inbox queries, triage (dismiss/snooze/undo) and URL params
 src/guardrails/   account maturity tiers, pacing (pure, unit-tested)
 src/lib/          shared utilities

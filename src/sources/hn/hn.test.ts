@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createHttpClient } from "../http";
+import item from "./__fixtures__/firebase-item.json";
 import { createHnSource } from "./index";
 
 function fakeFetch(pages: Record<string, unknown>) {
@@ -88,5 +89,16 @@ describe("HN adapter", () => {
     expect(calls[0]!.searchParams.get("numericFilters")).toBe(
       `created_at_i>${since.getTime() / 1000}`,
     );
+  });
+
+  it("reads who wrote an item, or null when it's gone", async () => {
+    const { source, calls } = fakeFetch({
+      "/v0/item/49875023.json": item,
+      "/v0/item/2.json": { id: 2, deleted: true },
+    });
+    expect(await source.fetchAuthor!("49875023")).toBe("hamilton_app");
+    expect(calls[0]!.pathname).toBe("/v0/item/49875023.json");
+    expect(await source.fetchAuthor!("2")).toBeNull();
+    expect(await source.fetchAuthor!("3")).toBeNull(); // missing
   });
 });

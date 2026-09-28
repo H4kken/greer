@@ -96,5 +96,12 @@ export function createHnSource(http: HttpClient = createHttpClient()): Source {
         ),
       );
     },
+
+    async fetchAuthor(externalId: string) {
+      const item = await http.getJson<FirebaseItem | null>(
+        `${FIREBASE}/item/${externalId}.json`,
+      );
+      return item && !item.deleted ? (item.by ?? null) : null;
+    },
   };
 }

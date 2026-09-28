@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { enabledQueryIds, pollQuery } from "@/ingest/poll";
 import { LlmNotConfiguredError } from "@/llm/config";
 import { pollAnswers } from "@/replies/answers";
+import { fillParentAuthors } from "@/replies/authors";
 import { classifyReplyAnswer, unclassifiedAnswerIds } from "@/replies/classify";
 import { linkedAccounts, pollReplies } from "@/replies/poll";
 import { scoreItem, unscoredItemIds } from "@/scoring/score";
@@ -81,13 +82,23 @@ async function main() {
     async ([job]) => {
       const { workspaceId, platform } = job!.data;
       const replies = await pollReplies(db, getSource, workspaceId, platform);
+      const authors = await fillParentAuthors(
+        db,
+        getSource,
+        workspaceId,
+        platform,
+      );
       const { newIds, ...answers } = await pollAnswers(
         db,
         getSource,
         workspaceId,
         platform,
       );
-      console.log(`[replies] ${repliesKey(job!.data)}:`, { replies, answers });
+      console.log(`[replies] ${repliesKey(job!.data)}:`, {
+        replies,
+        authors,
+        answers,
+      });
       await queueClassifying(newIds);
     },
   );

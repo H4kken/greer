@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
-import { seedAnswer, seedThreads } from "./seed";
+import { seedAccount, seedAnswer, seedThreads } from "./seed";
 
 // One story, in order: a fresh install gets its owner, who goes through
 // onboarding; then registration is closed. The LLM is mocked (see
@@ -354,6 +354,55 @@ test.describe("as the owner", () => {
       answers.getByRole("link", { name: /Answer on HN/ }),
     ).toHaveAttribute("href", "https://news.ycombinator.com/item?id=80002");
     await expectNoSeriousA11yViolations(page);
+  });
+
+  test("people shows who the owner talked with, and takes a 'tried it' mark", async ({
+    page,
+  }) => {
+    // Without a linked account, the page says how to get started.
+    await page.goto("/people");
+    await expect(
+      page.getByRole("heading", { name: "Connect your account first" }),
+    ).toBeVisible();
+
+    // devon_b (question) is already there from the inbox test.
+    await seedAccount("ada_hn");
+    await seedAnswer(
+      { author: "sarahk", text: "Thanks, trying it tonight!", tone: "thanks" },
+      { n: 1, parentAuthor: "sarahk" },
+    );
+    await page.goto("/people");
+
+    // The open question comes first.
+    const panel = page.getByRole("region", { name: "devon_b" });
+    await expect(panel.getByText("Asked you something")).toBeVisible();
+    await expect(
+      panel.getByRole("link", { name: /Answer on HN/ }),
+    ).toHaveAttribute("href", "https://news.ycombinator.com/item?id=80002");
+    await expectNoSeriousA11yViolations(page);
+
+    await page.getByRole("button", { name: /^sarahk,/ }).click();
+    const sarah = page.getByRole("region", { name: "sarahk" });
+    await expect(sarah.getByText("Thanks, trying it tonight!")).toBeVisible();
+    await sarah.getByRole("button", { name: "They tried Greer" }).click();
+    await expect(
+      sarah.getByText("Tried Greer · you marked this"),
+    ).toBeVisible();
+
+    // The mark is saved (Undo is enabled once the server confirmed), and can
+    // be taken back.
+    await expect(sarah.getByRole("button", { name: "Undo" })).toBeEnabled();
+    await page.reload();
+    await page.getByRole("button", { name: /^sarahk,.*tried Greer/ }).click();
+    await page
+      .getByRole("region", { name: "sarahk" })
+      .getByRole("button", { name: "Undo" })
+      .click();
+    await expect(
+      page
+        .getByRole("region", { name: "sarahk" })
+        .getByRole("button", { name: "They tried Greer" }),
+    ).toBeVisible();
   });
 });
 
