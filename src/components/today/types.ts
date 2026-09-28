@@ -37,6 +37,8 @@ export type EntryView = {
     open: boolean;
   } | null;
   launch: { title: string; url: string; when: string } | null;
+  // Their other threads today, best first (one card per person).
+  also: { id: string; title: string; url: string; when: string }[];
   // Known people: where you talked before.
   threads: { title: string; url: string }[];
 };

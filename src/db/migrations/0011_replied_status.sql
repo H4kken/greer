@@ -1,0 +1,1 @@
+ALTER TYPE "public"."triage_status" ADD VALUE 'replied';

@@ -259,8 +259,10 @@ Built ahead of Milestone 3, from principle 7:
   - Order: open questions first, then new and known people alternate.
   - **Beside the feed:** nothing picked shows your people as a slowly moving network (who has news today glows, today's new people wait at the edge). Picking someone shows their thread and, later, the reply brief (Milestone 3), or your history with them.
   - **Launches are people too:** a well-scored Show HN (the maker asks for feedback you can give) joins the feed as a new person, "launched something and asks for feedback", within the same pace. A "Meanwhile, people are building" strip was tried first and dropped: nice to look at, but nothing to act on.
-  - "Not for me" hides a thread, with undo; **Hidden threads** lists them to bring one back. Snooze, tabs, keyword filters and the lower-matches toggle are gone. `/inbox` redirects to Today.
-  - Deferred: watching known people's own new posts beyond what keyword searches find (one Algolia call per person), and "since you last looked" (a seen marker).
+  - **One card per person:** someone's best thread leads, their other threads come along ("+2 more threads"); the pace counts people. Only threads from the last 72 hours show (not 48, so a weekend away doesn't hide Friday's threads).
+  - **"I replied"** (or `r`) takes a card off and counts it in the day's progress at once; Greer's own reply check confirms it later, and the reply counts once.
+  - "Not for me" hides a person's threads, with undo; **Hidden threads** lists them to bring one back. Snooze, tabs, keyword filters and the lower-matches toggle are gone. `/inbox` redirects to Today.
+  - Deferred: watching known people's own new posts beyond what keyword searches find (one Algolia call per person), and a "seen" marker so news from people you know leaves once read.
 
 Out of scope for now: **product mentions** (searching HN for the product's name). Mentions can take months to appear, and other features matter more first.
 

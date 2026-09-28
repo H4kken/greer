@@ -7,6 +7,8 @@ export type SeedThread = {
   title: string;
   score: number;
   category?: "help" | "feedback";
+  // Each thread has its own author unless two share one.
+  author?: string;
 };
 
 export async function seedThreads(threads: SeedThread[]): Promise<void> {
@@ -21,7 +23,7 @@ export async function seedThreads(threads: SeedThread[]): Promise<void> {
       const id = crypto.randomUUID();
       await client.query(
         `insert into item (id, workspace_id, platform, external_id, type, author, title, text, url, thread_id, posted_at, category, filter_status, matched_query_ids, raw)
-         values ($1, $2, 'hn', $3, 'story', 'founder', $4, 'I launched a month ago and have no paying customers. What would you try next?', $5, $3, now() - ($6 || ' hours')::interval, $7, 'kept', '{}', '{}')`,
+         values ($1, $2, 'hn', $3, 'story', $8, $4, 'I launched a month ago and have no paying customers. What would you try next?', $5, $3, now() - ($6 || ' hours')::interval, $7, 'kept', '{}', '{}')`,
         [
           id,
           workspaceId,
@@ -30,6 +32,7 @@ export async function seedThreads(threads: SeedThread[]): Promise<void> {
           `https://news.ycombinator.com/item?id=${90000 + i}`,
           String(i + 1),
           t.category ?? "help",
+          t.author ?? `maker${i}`,
         ],
       );
       await client.query(

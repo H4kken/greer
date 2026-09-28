@@ -55,6 +55,8 @@ export type TodayEntry =
       handle: string;
       at: Date;
       threadId: string;
+      // Their other threads, best first: one card per person.
+      otherThreadIds: string[];
     })
   // Someone you know launched something, with nothing else new from them.
   | (Known & {
@@ -72,6 +74,7 @@ export type TodayEntry =
       handle: string;
       at: Date;
       threadId: string;
+      otherThreadIds: string[];
     };
 
 export const entryKey = {
@@ -171,17 +174,26 @@ export function buildToday({
   const asks: TodayEntry[] = [];
   // New people, stuck or launching, share one pool and one pace.
   const fresh: TodayEntry[] = [];
+  // One card per person: their best thread leads, the others come along.
+  const cardOf = new Map<string, { otherThreadIds: string[] }>();
   for (const t of threads) {
     if (isMe(t.author) || repliedIn.has(t.threadId)) continue;
     const person = known.get(lower(t.author));
     // A launch by someone you know is already their news (see above).
     if (person && t.category === "feedback") continue;
+    const card = cardOf.get(lower(t.author));
+    if (card) {
+      card.otherThreadIds.push(t.id);
+      continue;
+    }
     const base = {
       key: entryKey.thread(t.id),
       handle: person?.handle ?? t.author,
       at: t.postedAt,
       threadId: t.id,
+      otherThreadIds: [] as string[],
     };
+    cardOf.set(lower(t.author), base);
     if (person) asks.push({ ...base, kind: "asks", person });
     else
       fresh.push({

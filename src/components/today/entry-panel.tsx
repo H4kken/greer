@@ -31,11 +31,13 @@ export function EntryPanel({
   entry,
   mentionAdvice,
   onHide,
+  onReplied,
   onBack,
 }: {
   entry: EntryView;
   mentionAdvice: string;
   onHide: (reason?: string) => void;
+  onReplied: () => void;
   onBack: () => void;
 }) {
   const id = useId();
@@ -94,10 +96,42 @@ export function EntryPanel({
                 o
               </Kbd>
             </a>
-            <Button type="button" variant="outline" onClick={() => onHide()}>
+            <Button type="button" variant="outline" onClick={onReplied}>
+              <CheckIcon aria-hidden /> I replied <Kbd>r</Kbd>
+            </Button>
+            <Button type="button" variant="ghost" onClick={() => onHide()}>
               Not for me <Kbd>d</Kbd>
             </Button>
           </div>
+          <p className="-mt-3 text-sm text-muted-foreground">
+            Greer also notices your reply by itself within 15 minutes.
+          </p>
+
+          {entry.also.length > 0 && (
+            <section
+              aria-labelledby={`${id}-also`}
+              className="flex flex-col gap-2"
+            >
+              <h3 id={`${id}-also`} className="font-sans text-sm font-medium">
+                Also from {entry.handle}
+              </h3>
+              <ul className="flex flex-col gap-1.5 text-sm">
+                {entry.also.map((t) => (
+                  <li key={t.id}>
+                    <a
+                      href={t.url}
+                      {...external}
+                      className="inline-flex items-start gap-1"
+                    >
+                      <span className="line-clamp-2">{t.title}</span>
+                      <NewTab />
+                    </a>{" "}
+                    <span className="text-muted-foreground">· {t.when}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
 
           <section
             aria-labelledby={`${id}-post`}

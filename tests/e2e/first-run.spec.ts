@@ -232,16 +232,17 @@ test.describe("as the owner", () => {
       { title: "How to do outreach without spam", score: 81 },
       { title: "Where do I find beta testers", score: 70 },
       { title: "Pricing a tool for developers", score: 65 },
-      { title: "Churn right after the trial", score: 60 },
+      // Same person as the first thread: one card for both.
+      { title: "Churn right after the trial", score: 60, author: "maker0" },
       { title: "A barely related thread", score: 30 },
       { title: "Show HN: My first SaaS", score: 75, category: "feedback" },
     ]);
 
-    // The scan page counts people (all seeded threads share one author) and
-    // previews the top three worth a reply; a thread opens on Today.
+    // The scan page counts people (maker0 has two threads) and previews the
+    // top three worth a reply; a thread opens on Today.
     await page.goto("/onboarding/scan");
     await expect(
-      page.getByText("Found 1 person you could help so far."),
+      page.getByText("Found 5 people you could help so far."),
     ).toBeVisible();
     const best = page.getByRole("region", { name: "Best threads so far" });
     await expect(best.getByRole("link")).toHaveCount(3);
@@ -274,6 +275,10 @@ test.describe("as the owner", () => {
     await expect(
       feed.getByRole("button", { name: /Show HN: My first SaaS/ }),
     ).toContainText("launched something and asks for feedback");
+    // One card per person: maker0's second thread rides along.
+    await expect(
+      feed.getByRole("button", { name: /Zero paying customers/ }),
+    ).toContainText("+1 more thread from maker0");
     await expect(
       page.getByRole("heading", { level: 2, name: "Your people" }),
     ).toBeVisible();
@@ -304,6 +309,15 @@ test.describe("as the owner", () => {
     await page.getByRole("button", { name: "Undo" }).click();
     await expect(feed.getByRole("button")).toHaveCount(3);
 
+    // "I replied" takes the card off right away, with undo. (Undo above
+    // picked the outreach card again.)
+    await expect(panelTitle("How to do outreach without spam")).toBeVisible();
+    await page.getByRole("button", { name: /^I replied/ }).click();
+    await expect(feed.getByRole("button")).toHaveCount(2);
+    await expect(page.getByText("counts in today's progress")).toBeVisible();
+    await page.getByRole("button", { name: "Undo" }).last().click();
+    await expect(feed.getByRole("button")).toHaveCount(3);
+
     // Escape goes back to your people.
     await page.keyboard.press("Escape");
     await expect(
@@ -311,17 +325,17 @@ test.describe("as the owner", () => {
     ).toBeVisible();
 
     // Past the pace is one click away, with a gentle note.
-    await page.getByRole("button", { name: "Show 3 more new people" }).click();
+    await page.getByRole("button", { name: "Show 2 more new people" }).click();
     await expect(
       page.getByText("You're past today's pace of 3."),
     ).toBeVisible();
     const more = page.getByRole("list", { name: "More people" });
-    await expect(more.getByRole("button")).toHaveCount(3);
+    await expect(more.getByRole("button")).toHaveCount(2);
 
     // Hidden threads bring one back for good.
     await more.getByRole("button", { name: /beta testers/ }).click();
     await page.getByRole("button", { name: /^Not for me/ }).click();
-    await expect(more.getByRole("button")).toHaveCount(2);
+    await expect(more.getByRole("button")).toHaveCount(1);
     await page.getByRole("link", { name: "Hidden threads" }).click();
     await expect(
       page.getByRole("heading", { level: 1, name: "Hidden threads" }),
@@ -336,7 +350,7 @@ test.describe("as the owner", () => {
       page.getByRole("heading", { name: "Nothing hidden" }),
     ).toBeVisible();
     await page.goto("/today");
-    await page.getByRole("button", { name: "Show 3 more new people" }).click();
+    await page.getByRole("button", { name: "Show 2 more new people" }).click();
     await expect(
       more.getByRole("button", { name: /beta testers/ }),
     ).toBeVisible();
@@ -398,10 +412,10 @@ test.describe("as the owner", () => {
     const first = feed.getByRole("button").first();
     await expect(first).toContainText("Someone you know");
     await expect(first).toContainText("devon_b asked you a follow-up");
-    // The linked account is established, so its pace allows all 6 new
-    // people (5 stuck, 1 launch).
+    // The linked account is established, so its pace allows all 5 new
+    // people (4 stuck, 1 launch).
     await expect(
-      page.getByText("1 person you know has news, and 6 new people"),
+      page.getByText("1 person you know has news, and 5 new people"),
     ).toBeVisible();
     await expectNoSeriousA11yViolations(page);
 

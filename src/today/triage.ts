@@ -33,6 +33,21 @@ export function dismissItem(
   });
 }
 
+// "I replied": the thread leaves Today and counts in the day's progress
+// right away, before Greer finds the reply on its next check.
+export function markReplied(
+  db: Db,
+  workspaceId: string,
+  itemId: string,
+  now = new Date(),
+) {
+  return update(db, workspaceId, itemId, {
+    triageStatus: "replied",
+    snoozedUntil: null,
+    triagedAt: now,
+  });
+}
+
 // Undo, or "Bring back" from Hidden threads.
 export function restoreItem(db: Db, workspaceId: string, itemId: string) {
   return update(db, workspaceId, itemId, {

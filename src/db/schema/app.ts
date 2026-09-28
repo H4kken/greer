@@ -183,6 +183,8 @@ export const triageStatus = pgEnum("triage_status", [
   "new",
   "snoozed",
   "dismissed",
+  // The user said they replied ("I replied"), before Greer found the reply.
+  "replied",
 ]);
 
 // A post or comment fetched from a platform, once per workspace.

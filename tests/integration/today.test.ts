@@ -9,7 +9,7 @@ import {
   sourceQuery,
   workspace,
 } from "@/db/schema";
-import { dismissItem, restoreItem } from "@/today/triage";
+import { dismissItem, markReplied, restoreItem } from "@/today/triage";
 import {
   hiddenThreads,
   loadToday,
@@ -126,6 +126,52 @@ describe("Today", () => {
     expect(await restoreItem(db, ws, a)).toBe(true);
     expect(await keys()).toEqual([key(a), key(b)]);
     expect(await hiddenThreads(db, ws)).toEqual([]);
+  });
+
+  it("takes a thread off with I replied, and counts it once in the day", async () => {
+    await saveAccount(db, ws, "hn", {
+      handle: "mathisg",
+      createdAt: new Date("2020-01-01T00:00:00Z"),
+      karma: 212,
+    });
+    const a = await addItem({ author: "kvn" });
+    const b = await addItem({ author: "lena" });
+
+    expect(await markReplied(db, ws, a, hoursAgo(1))).toBe(true);
+    expect(await keys()).toEqual([key(b)]);
+    expect((await load()).day.replies).toEqual([
+      { id: `mark:${a}`, at: hoursAgo(1), handle: "kvn" },
+    ]);
+    // Not hidden: it doesn't show in Hidden threads.
+    expect(await hiddenThreads(db, ws)).toEqual([]);
+
+    // Once Greer finds the actual reply, it counts once, as the reply.
+    const [thread] = await db
+      .select({ threadId: item.threadId })
+      .from(item)
+      .where(eq(item.id, a));
+    const [r] = await db
+      .insert(reply)
+      .values({
+        workspaceId: ws,
+        platform: "hn",
+        externalId: "c9",
+        parentExternalId: "p9",
+        parentAuthor: "kvn",
+        threadExternalId: thread!.threadId,
+        threadTitle: "t",
+        text: "x",
+        url: "u",
+        postedAt: hoursAgo(1),
+        raw: {},
+      })
+      .returning({ id: reply.id });
+    expect((await load()).day.replies).toEqual([
+      { id: r!.id, at: hoursAgo(1), handle: "kvn" },
+    ]);
+
+    // Undo makes it new again.
+    expect(await restoreItem(db, ws, a)).toBe(true);
   });
 
   it("brings back threads the old inbox snoozed once the snooze ends", async () => {

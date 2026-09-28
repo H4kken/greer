@@ -101,6 +101,18 @@ export default async function TodayPage({ searchParams }: PageProps<"/today">) {
         url: launch.url,
         when: formatRelative(launch.postedAt, now),
       },
+      also:
+        "otherThreadIds" in e
+          ? e.otherThreadIds.map((id) => {
+              const t = today.threads.get(id)!;
+              return {
+                id,
+                title: t.title || "(untitled)",
+                url: t.url,
+                when: formatRelative(t.postedAt, now),
+              };
+            })
+          : [],
       threads: person?.threads ?? [],
     };
   };

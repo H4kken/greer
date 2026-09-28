@@ -21,6 +21,9 @@ import { buildToday } from "./build";
 
 // Below this, a thread isn't worth a reply: it never shows on Today.
 export const MIN_SCORE = 50;
+// Older threads rarely need a reply anymore; 72 hours, not 48, so a
+// weekend away doesn't hide Friday's threads.
+export const FRESH_HOURS = 72;
 // More than a day's worth: "Show more" opens them.
 const THREAD_LIMIT = 60;
 const LAUNCH_DAYS = 7;
@@ -48,7 +51,8 @@ export async function loadToday(
     eq(item.platform, platform),
     eq(item.filterStatus, "kept"),
   );
-  const [facts, threads, launches] = await Promise.all([
+  const HOUR = 60 * 60 * 1000;
+  const [facts, threads, launches, marked] = await Promise.all([
     loadPeopleFacts(db, workspaceId, platform),
     db
       .select({
@@ -75,6 +79,7 @@ export async function loadToday(
           or(eq(item.category, "help"), eq(item.type, "story")),
           active(now),
           gte(itemScore.score, MIN_SCORE),
+          gte(item.postedAt, new Date(now.getTime() - FRESH_HOURS * HOUR)),
         ),
       )
       .orderBy(desc(itemScore.score), desc(item.postedAt), item.id)
@@ -103,6 +108,24 @@ export async function loadToday(
       )
       .orderBy(desc(item.postedAt), item.id)
       .limit(LAUNCH_LIMIT),
+    // Threads the user said they replied to ("I replied"), for the day's
+    // progress until Greer finds the reply itself.
+    db
+      .select({
+        id: item.id,
+        author: item.author,
+        threadId: item.threadId,
+        at: item.triagedAt,
+      })
+      .from(item)
+      .where(
+        and(
+          eq(item.workspaceId, workspaceId),
+          eq(item.platform, platform),
+          eq(item.triageStatus, "replied"),
+          gte(item.triagedAt, new Date(now.getTime() - 48 * HOUR)),
+        ),
+      ),
   ]);
 
   const { me, replies, answers, tried } = facts;
@@ -118,18 +141,24 @@ export async function loadToday(
     now,
   });
   // The last two days, enough for "today" in any time zone.
-  const since = now.getTime() - 48 * 60 * 60 * 1000;
+  const since = now.getTime() - 48 * HOUR;
+  const found = replies.filter((r) => r.postedAt.getTime() >= since);
+  const foundIn = new Set(found.map((r) => r.threadExternalId));
   return {
     me,
     people,
     day: {
-      replies: replies
-        .filter((r) => r.postedAt.getTime() >= since)
-        .map((r) => ({
+      replies: [
+        ...found.map((r) => ({
           id: r.id,
           at: r.postedAt,
           handle: r.parentAuthor || null,
         })),
+        // Marked by hand and not found yet: counted once, not twice.
+        ...marked
+          .filter((m) => m.at && !foundIn.has(m.threadId))
+          .map((m) => ({ id: `mark:${m.id}`, at: m.at!, handle: m.author })),
+      ],
       answers: answers
         .filter(
           (a) =>

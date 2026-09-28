@@ -13,7 +13,7 @@ import {
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/kbd";
-import { dismissAction, restoreAction } from "@/today/actions";
+import { dismissAction, repliedAction, restoreAction } from "@/today/actions";
 import { cn } from "@/lib/utils";
 import { EntryPanel } from "./entry-panel";
 import { PersonTag } from "./person-tag";
@@ -26,6 +26,9 @@ function isTyping(target: EventTarget | null): boolean {
       ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName))
   );
 }
+
+// The last card taken off Today, and its threads, for undo.
+type SetAside = { entry: EntryView; ids: string[] };
 
 // Where "o" and the card's main button go.
 const linkOf = (e: EntryView) =>
@@ -57,7 +60,7 @@ export function TodayView({
     !!initialKey && more.some((e) => e.key === initialKey),
   );
   const [selectedKey, setSelectedKey] = useState(initialKey);
-  const lastHidden = useRef<EntryView | null>(null);
+  const lastSetAside = useRef<SetAside | null>(null);
   const cardRefs = useRef(new Map<string, HTMLButtonElement>());
 
   const visible = useMemo(
@@ -138,8 +141,9 @@ export function TodayView({
     [visible, selected, select],
   );
 
+  // Takes back "not for me" or "I replied": the threads become new again.
   const undo = useCallback(
-    (entry: EntryView) => {
+    ({ entry, ids }: SetAside) => {
       setHidden((h) => {
         const next = new Set(h);
         next.delete(entry.key);
@@ -147,17 +151,25 @@ export function TodayView({
       });
       setSelectedKey(entry.key);
       startTransition(async () => {
-        const result = await restoreAction(entry.thread!.id);
-        if (!result.ok) toast.error(result.error);
+        const results = await Promise.all(ids.map((id) => restoreAction(id)));
+        const failed = results.find((r) => !r.ok);
+        if (failed && !failed.ok) toast.error(failed.error);
         router.refresh();
       });
     },
     [router],
   );
 
-  const hide = useCallback(
-    (entry: EntryView, reason?: string) => {
+  // Takes a card off Today: "not for me" hides all of the person's threads
+  // here; "I replied" marks the one they answered, so the day's progress
+  // counts it right away.
+  const setAside = useCallback(
+    (entry: EntryView, how: "hidden" | "replied", reason?: string) => {
       if (!entry.thread) return;
+      const ids =
+        how === "hidden"
+          ? [entry.thread.id, ...entry.also.map((t) => t.id)]
+          : [entry.thread.id];
       const index = visible.indexOf(entry);
       const next = visible[index + 1] ?? visible[index - 1] ?? null;
       setHidden((h) => new Set(h).add(entry.key));
@@ -165,21 +177,30 @@ export function TodayView({
         setSelectedKey(next?.key ?? null);
         if (next) requestAnimationFrame(() => select(next.key, true));
       }
-      lastHidden.current = entry;
+      const done = { entry, ids };
+      lastSetAside.current = done;
       startTransition(async () => {
-        const result = await dismissAction(entry.thread!.id, reason);
-        if (!result.ok) {
+        const results = await Promise.all(
+          ids.map((id) =>
+            how === "hidden" ? dismissAction(id, reason) : repliedAction(id),
+          ),
+        );
+        const failed = results.find((r) => !r.ok);
+        if (failed && !failed.ok) {
           setHidden((h) => {
             const n = new Set(h);
             n.delete(entry.key);
             return n;
           });
-          toast.error(result.error);
+          toast.error(failed.error);
           return;
         }
-        toast(`Hidden: ${entry.thread!.title || "thread"}`, {
-          action: { label: "Undo", onClick: () => undo(entry) },
-        });
+        toast(
+          how === "hidden"
+            ? `Hidden: ${entry.thread!.title}`
+            : `Nice. ${entry.handle} counts in today's progress.`,
+          { action: { label: "Undo", onClick: () => undo(done) } },
+        );
         router.refresh();
       });
     },
@@ -204,13 +225,16 @@ export function TodayView({
           break;
         }
         case "d":
-          if (selected?.thread) hide(selected);
+          if (selected?.thread) setAside(selected, "hidden");
+          break;
+        case "r":
+          if (selected?.thread) setAside(selected, "replied");
           break;
         case "z":
-          if (lastHidden.current) {
-            const entry = lastHidden.current;
-            lastHidden.current = null;
-            undo(entry);
+          if (lastSetAside.current) {
+            const last = lastSetAside.current;
+            lastSetAside.current = null;
+            undo(last);
           }
           break;
         case "Escape":
@@ -224,7 +248,7 @@ export function TodayView({
     }
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [move, selected, hide, undo, select]);
+  }, [move, selected, setAside, undo, select]);
 
   const card = (e: EntryView) => {
     const active = e.key === selected?.key;
@@ -277,6 +301,12 @@ export function TodayView({
             >
               {e.quote ? `“${e.headline}”` : e.headline}
             </span>
+            {e.also.length > 0 && (
+              <span className="text-sm text-muted-foreground">
+                +{e.also.length} more{" "}
+                {e.also.length === 1 ? "thread" : "threads"} from {e.handle}
+              </span>
+            )}
             {e.history && (
               <span className="text-sm text-muted-foreground">{e.history}</span>
             )}
@@ -336,8 +366,9 @@ export function TodayView({
           </Link>
         </div>
         <p className="hidden text-xs text-muted-foreground lg:block">
-          <Kbd>j</Kbd>/<Kbd>k</Kbd> move · <Kbd>o</Kbd> open · <Kbd>d</Kbd> not
-          for me · <Kbd>z</Kbd> undo · <Kbd>Esc</Kbd> close
+          <Kbd>j</Kbd>/<Kbd>k</Kbd> move · <Kbd>o</Kbd> open · <Kbd>r</Kbd> I
+          replied · <Kbd>d</Kbd> not for me · <Kbd>z</Kbd> undo · <Kbd>Esc</Kbd>{" "}
+          close
         </p>
       </div>
 
@@ -355,7 +386,8 @@ export function TodayView({
             key={selected.key}
             entry={selected}
             mentionAdvice={mentionAdvice}
-            onHide={(reason) => hide(selected, reason)}
+            onHide={(reason) => setAside(selected, "hidden", reason)}
+            onReplied={() => setAside(selected, "replied")}
             onBack={() => {
               const key = selected.key;
               select(null, false);

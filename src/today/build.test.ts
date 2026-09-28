@@ -193,6 +193,25 @@ describe("buildToday", () => {
     expect(entries[0]).toMatchObject({ launch: { id: "l-sarahk" } });
   });
 
+  it("shows one card per person, and paces people rather than threads", () => {
+    const { entries, more } = today({
+      threads: [
+        thread("a", "founder", 92),
+        thread("b", "Founder", 90),
+        thread("c", "kvn", 85),
+        thread("d", "founder", 60),
+        thread("e", "lena", 50),
+      ],
+      pace: 2,
+    });
+    expect(summary(entries)).toEqual(["stuck:founder", "stuck:kvn"]);
+    expect(entries[0]).toMatchObject({
+      threadId: "a",
+      otherThreadIds: ["b", "d"],
+    });
+    expect(summary(more)).toEqual(["stuck:lena"]);
+  });
+
   it("brings launches by new people into the same pool and pace", () => {
     const { entries, more } = today({
       replies: [reply("1", { parentAuthor: "sarahk" })],

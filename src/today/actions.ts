@@ -7,7 +7,7 @@ import { db } from "@/db";
 import { sourceQuery } from "@/db/schema";
 import { requireWorkspace } from "@/lib/session";
 import { QUEUES, trySendFromWeb } from "@/worker/queue";
-import { dismissItem, restoreItem } from "./triage";
+import { dismissItem, markReplied, restoreItem } from "./triage";
 
 type Result = { ok: true } | { ok: false; error: string };
 
@@ -27,6 +27,15 @@ export async function dismissAction(
   if (!parsed.success || !why.success)
     return { ok: false, error: "Invalid input." };
   return (await dismissItem(db, workspace.id, parsed.data, why.data || null))
+    ? { ok: true }
+    : NOT_FOUND;
+}
+
+export async function repliedAction(id: unknown): Promise<Result> {
+  const { workspace } = await requireWorkspace();
+  const parsed = itemId.safeParse(id);
+  if (!parsed.success) return { ok: false, error: "Invalid input." };
+  return (await markReplied(db, workspace.id, parsed.data))
     ? { ok: true }
     : NOT_FOUND;
 }
