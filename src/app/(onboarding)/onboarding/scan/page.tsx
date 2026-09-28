@@ -5,57 +5,33 @@ import { redirect } from "next/navigation";
 import { AutoRefresh } from "@/components/onboarding/auto-refresh";
 import { OnboardingSteps } from "@/components/onboarding/onboarding-steps";
 import { ScoreBadge } from "@/components/score-badge";
+import { LlmSettingsForm } from "@/components/settings/llm-settings-form";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { buttonVariants } from "@/components/ui/button";
 import { db } from "@/db";
 import { inboxHref, parseInboxParams } from "@/inbox/url";
 import { getWorkerHealth } from "@/lib/health";
 import { requireWorkspace } from "@/lib/session";
-import { getLlmStatus } from "@/llm/settings";
-import { getScanProgress, scanDone } from "@/onboarding/scan";
+import { describeLlmSettings, getLlmStatus } from "@/llm/settings";
+import { getScanProgress } from "@/onboarding/scan";
+import { describeScan } from "@/onboarding/scan-copy";
 
 export const metadata: Metadata = { title: "First scan · Greer" };
-
-// Share of the bar for the search phase; reading and scoring fill the rest.
-const SEARCH_SHARE = 0.15;
 
 export default async function ScanStepPage() {
   const { workspace } = await requireWorkspace();
   if (!workspace.onboardedAt) redirect("/onboarding");
 
-  const [progress, worker, llm] = await Promise.all([
+  const [progress, worker, llm, stored] = await Promise.all([
     getScanProgress(db, workspace.id),
     getWorkerHealth(),
     getLlmStatus(workspace.id),
+    describeLlmSettings(workspace.id),
   ]);
-  const done = scanDone(progress);
-  const waiting = !worker.healthy || !llm.configured;
-  const { people, top, queries } = progress;
-  const who = people === 1 ? "person" : "people";
-
-  const searching = queries.finished < queries.total;
-  const ratio = done
-    ? 1
-    : searching
-      ? SEARCH_SHARE * (queries.finished / Math.max(1, queries.total))
-      : SEARCH_SHARE +
-        (1 - SEARCH_SHARE) * (progress.scored / Math.max(1, progress.kept));
-  const progressLabel = searching
-    ? `${queries.finished} of ${queries.total} searches done`
-    : `${progress.scored} of ${progress.kept} read`;
-
-  const headline = !done
-    ? "Reading the last 7 days of Hacker News"
-    : people > 0
-      ? `${people} ${who} you could help today`
-      : "No one to help just yet";
-  const subline = !done
-    ? people > 0
-      ? `Found ${people} ${who} you could help so far.`
-      : "Looking for people you can genuinely help."
-    : people > 0
-      ? "Start with these. Take your time: a thoughtful reply beats a fast one."
-      : "Nothing from the last 7 days matched well. Greer keeps looking every 15 minutes.";
+  const { done, needsModel, ratio, progressLabel, headline, subline } =
+    describeScan(progress, { modelConfigured: llm.configured });
+  const waiting = !worker.healthy || needsModel;
+  const { people, top } = progress;
 
   const params = parseInboxParams({});
 
@@ -82,7 +58,7 @@ export default async function ScanStepPage() {
             aria-valuemin={0}
             aria-valuemax={100}
             aria-valuenow={Math.round(ratio * 100)}
-            aria-valuetext={done ? "Done" : progressLabel}
+            aria-valuetext={progressLabel}
             className="h-1.5 flex-1 overflow-hidden rounded-full bg-border"
           >
             <div
@@ -91,7 +67,7 @@ export default async function ScanStepPage() {
             />
           </div>
           <span className="font-mono text-sm text-muted-foreground">
-            {done ? "Done" : progressLabel}
+            {progressLabel}
           </span>
         </div>
       </section>
@@ -107,23 +83,30 @@ export default async function ScanStepPage() {
           </AlertDescription>
         </Alert>
       )}
-      {!llm.configured && (
-        <Alert>
-          <AlertTriangleIcon aria-hidden />
-          <AlertTitle>Scoring is waiting for an AI model</AlertTitle>
-          <AlertDescription>
-            <p>
-              Threads are collected, but not read yet.{" "}
-              <Link href="/settings#ai">Add an API key in Settings</Link>.
+      {needsModel && (
+        <section
+          aria-labelledby="ai-heading"
+          className="flex flex-col gap-4 rounded-2xl border bg-card p-6"
+        >
+          <div>
+            <h2 id="ai-heading" className="text-xl font-medium">
+              Connect an AI model
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Greer uses it to read each thread and judge whether you can help.
+              Reading a week of Hacker News costs a few cents with the default
+              models. The scan carries on as soon as it&apos;s saved.
             </p>
-          </AlertDescription>
-        </Alert>
+          </div>
+          <LlmSettingsForm stored={stored} />
+        </section>
       )}
-      {queries.failed > 0 && (
+      {progress.queries.failed > 0 && (
         <Alert>
           <AlertTriangleIcon aria-hidden />
           <AlertTitle>
-            {queries.failed} search{queries.failed === 1 ? "" : "es"} failed
+            {progress.queries.failed} search
+            {progress.queries.failed === 1 ? "" : "es"} failed
           </AlertTitle>
           <AlertDescription>
             Hacker News didn&apos;t answer. Greer retries automatically; the
@@ -186,7 +169,9 @@ export default async function ScanStepPage() {
         <p className="text-sm text-muted-foreground">
           {done
             ? "Greer keeps looking every 15 minutes."
-            : "No need to wait: the inbox fills up as Greer reads."}
+            : needsModel
+              ? "You can also add a model later, in Settings."
+              : "No need to wait: the inbox fills up as Greer reads."}
         </p>
         <Link
           href="/inbox"

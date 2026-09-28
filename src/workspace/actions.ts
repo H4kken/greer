@@ -1,7 +1,7 @@
 "use server";
 // Server actions for onboarding and Settings. Each one checks the session,
 // validates its input with zod and only touches the user's own workspace.
-import { revalidatePath } from "next/cache";
+import { refresh, revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/db";
@@ -11,6 +11,7 @@ import { suggestKeywords } from "@/llm/prompts/suggest-keywords";
 import { loadStoredSettings, saveLlmSettings } from "@/llm/settings";
 import { requireWorkspace } from "@/lib/session";
 import { startFirstScan } from "@/onboarding/scan";
+import { unscoredItemIds } from "@/scoring/score";
 import { SourceHttpError } from "@/sources/http";
 import { getSource } from "@/sources/registry";
 import { QUEUES, trySendFromWeb } from "@/worker/queue";
@@ -318,7 +319,21 @@ export async function saveLlmSettingsAction(
     // Ollama has no key: drop any key saved for another provider.
     ...(apiKey ? { apiKey } : rest.provider === "ollama" ? { apiKey: "" } : {}),
   });
+  // Threads collected while no model was set wait for the 15-minute sweep;
+  // score them now instead, so the first scan carries on right away.
+  const waiting = await unscoredItemIds(db, {
+    workspaceId: workspace.id,
+    limit: 500,
+  });
+  await trySendFromWeb(
+    waiting.map((itemId) => ({
+      name: QUEUES.scoreItem,
+      data: { itemId },
+      singletonKey: itemId,
+    })),
+  );
   revalidatePath("/settings");
   revalidatePath("/onboarding/product");
+  refresh();
   return { ok: true };
 }

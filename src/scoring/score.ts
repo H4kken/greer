@@ -92,8 +92,12 @@ export async function scoreItem(db: Db, itemId: string): Promise<ScoreOutcome> {
 }
 
 // Kept items with no score yet, in workspaces that can be scored. Used by the
-// periodic sweep, so items missed by a crash or an API outage get scored later.
-export async function unscoredItemIds(db: Db, limit = 200): Promise<string[]> {
+// periodic sweep, so items missed by a crash or an API outage get scored later,
+// and for one workspace right after its AI model is set up.
+export async function unscoredItemIds(
+  db: Db,
+  { workspaceId, limit = 200 }: { workspaceId?: string; limit?: number } = {},
+): Promise<string[]> {
   const rows = await db
     .select({ id: item.id })
     .from(item)
@@ -103,6 +107,7 @@ export async function unscoredItemIds(db: Db, limit = 200): Promise<string[]> {
       and(
         eq(item.filterStatus, "kept"),
         isNull(itemScore.itemId),
+        workspaceId ? eq(item.workspaceId, workspaceId) : undefined,
         sql`${workspace.productName} is not null and cardinality(${workspace.problems}) > 0`,
       ),
     )

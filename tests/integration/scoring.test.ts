@@ -133,4 +133,13 @@ describe("scoreItem (mock LLM)", () => {
 
     expect(await unscoredItemIds(db)).toEqual([unscored]);
   });
+
+  it("can limit the sweep to one workspace", async () => {
+    const ws = await createWorkspace();
+    const other = await createWorkspace();
+    const mine = await createItem(ws);
+    await createItem(other);
+
+    expect(await unscoredItemIds(db, { workspaceId: ws })).toEqual([mine]);
+  });
 });

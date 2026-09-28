@@ -4,6 +4,9 @@ import { item, itemScore, sourceQuery, workspace } from "@/db/schema";
 import { MIN_SCORE } from "@/inbox/queries";
 import { syncHnQueries } from "@/workspace/keywords";
 import type { FirstScanInput } from "@/workspace/schemas";
+import type { ScanProgress } from "./scan-copy";
+
+export { type ScanProgress, scanDone } from "./scan-copy";
 
 // Saves the chosen queries and marks onboarding done, in one transaction.
 // Returns the enabled query ids so the caller can poll them right away.
@@ -27,27 +30,6 @@ export async function startFirstScan(
     return ids;
   });
 }
-
-export type ScanProgress = {
-  queries: { total: number; finished: number; failed: number };
-  found: number;
-  kept: number;
-  scored: number;
-  // Distinct authors of threads worth your time: one person with a post and a
-  // comment counts once.
-  people: number;
-  // The best threads worth your time (score >= MIN_SCORE), best first.
-  top: {
-    id: string;
-    title: string;
-    url: string;
-    category: "help" | "feedback";
-    score: number;
-    criteriaMet: number;
-    criteriaTotal: number;
-    reason: string;
-  }[];
-};
 
 export async function getScanProgress(
   db: Db,
@@ -115,13 +97,4 @@ export async function getScanProgress(
     people: people?.n ?? 0,
     top,
   };
-}
-
-// Done when every query ran once and every kept item has a score.
-export function scanDone(p: ScanProgress): boolean {
-  return (
-    p.queries.total > 0 &&
-    p.queries.finished >= p.queries.total &&
-    p.scored >= p.kept
-  );
 }
