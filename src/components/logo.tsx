@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 
 // The sprout: two leaves on a stem, like a topic that took root. Drawn in
 // the theme's green, so it follows light and dark mode. The browser tab
-// uses the same drawing (src/app/icon.svg).
+// and the README use the same drawing (src/app/icon.svg).
 export function SproutMark({ className }: { className?: string }) {
   return (
     <svg

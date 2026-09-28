@@ -1,4 +1,4 @@
-# Greer
+# <img src="src/app/icon.svg" alt="" width="36" height="36"> Greer
 
 **Find the conversations where you can genuinely help. Write the replies yourself.**
 
