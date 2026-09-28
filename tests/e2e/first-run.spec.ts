@@ -69,8 +69,8 @@ test.describe("as the owner", () => {
   test("owner describes the product, picks keywords and starts the first scan", async ({
     page,
   }) => {
-    // Not onboarded yet: the inbox sends them back to onboarding.
-    await page.goto("/inbox");
+    // Not onboarded yet: Today sends them back to onboarding.
+    await page.goto("/today");
     await expect(page).toHaveURL(/\/onboarding\/product$/);
 
     // The mock LLM counts as configured, so no key form here.
@@ -152,13 +152,13 @@ test.describe("as the owner", () => {
     ).toBeVisible();
     await expectNoSeriousA11yViolations(page);
 
-    await page.getByRole("link", { name: /Open my inbox/ }).click();
-    await expect(page).toHaveURL(/\/inbox(\?|$)/);
+    await page.getByRole("link", { name: "Go to Today" }).click();
+    await expect(page).toHaveURL(/\/today$/);
     await expect(
-      page.getByRole("heading", { name: /Needs help/ }),
+      page.getByRole("heading", { level: 1, name: /, Ada$/ }),
     ).toBeVisible();
     await expect(
-      page.getByRole("heading", { name: "No threads yet" }),
+      page.getByRole("heading", { name: "Nobody here yet" }),
     ).toBeVisible();
     await expect(page.getByText("My workspace")).toBeVisible();
     await expectNoSeriousA11yViolations(page);
@@ -167,7 +167,7 @@ test.describe("as the owner", () => {
   test("accounts list every platform, with Hacker News ready to connect", async ({
     page,
   }) => {
-    await page.goto("/inbox");
+    await page.goto("/today");
     await page.getByRole("link", { name: "Accounts" }).click();
     await expect(page.getByRole("heading", { name: "Accounts" })).toBeVisible();
     await expect(page.getByLabel("Your Hacker News username")).toBeVisible();
@@ -182,7 +182,7 @@ test.describe("as the owner", () => {
   test("settings show the onboarding choices and keywords can be undone", async ({
     page,
   }) => {
-    await page.goto("/inbox");
+    await page.goto("/today");
     await page.getByRole("link", { name: "Settings" }).click();
     await expect(page.getByRole("heading", { name: "Settings" })).toBeVisible();
     await expect(page.getByLabel("Product name")).toHaveValue("Greer");
@@ -224,19 +224,21 @@ test.describe("as the owner", () => {
     ).toBeVisible();
   });
 
-  test("owner triages threads from the keyboard, with undo", async ({
+  test("owner meets today's people from the keyboard, with undo", async ({
     page,
   }) => {
     await seedThreads([
       { title: "Zero paying customers after a month", score: 92 },
       { title: "How to do outreach without spam", score: 81 },
       { title: "Where do I find beta testers", score: 70 },
+      { title: "Pricing a tool for developers", score: 65 },
+      { title: "Churn right after the trial", score: 60 },
       { title: "A barely related thread", score: 30 },
       { title: "Show HN: My first SaaS", score: 75, category: "feedback" },
     ]);
 
     // The scan page counts people (all seeded threads share one author) and
-    // previews the top three worth a reply; a thread opens in the inbox.
+    // previews the top three worth a reply; a thread opens on Today.
     await page.goto("/onboarding/scan");
     await expect(
       page.getByText("Found 1 person you could help so far."),
@@ -244,78 +246,103 @@ test.describe("as the owner", () => {
     const best = page.getByRole("region", { name: "Best threads so far" });
     await expect(best.getByRole("link")).toHaveCount(3);
     await expect(
-      page.getByRole("link", { name: "Meet them in your inbox" }),
+      page.getByRole("link", { name: "Meet them on Today" }),
     ).toBeVisible();
     await expectNoSeriousA11yViolations(page);
     await best.getByRole("link", { name: /Zero paying customers/ }).click();
-    await expect(page).toHaveURL(/\/inbox\?item=/);
-
-    await page.goto("/inbox");
-
-    const threads = page.getByRole("list", { name: "Threads" });
+    await expect(page).toHaveURL(/\/today\?p=item/);
     const panelTitle = (name: string) =>
       page.getByRole("heading", { level: 2, name });
-    await expect(threads.getByRole("button")).toHaveCount(3);
+    await expect(
+      panelTitle("Zero paying customers after a month"),
+    ).toBeVisible();
+
+    // Old inbox links land on Today.
+    await page.goto("/inbox");
+    await expect(page).toHaveURL(/\/today$/);
+
+    // No account yet, so the pace is a new account's: three new people, the
+    // weak match left out. Nobody picked: your people fill the space.
+    const feed = page.getByRole("list", { name: "Today's people" });
+    await expect(feed.getByRole("button")).toHaveCount(3);
+    await expect(page.getByText("3 people could use your help.")).toBeVisible();
+    await expect(
+      page.getByRole("heading", { level: 2, name: "Your people" }),
+    ).toBeVisible();
+    const launches = page.getByRole("region", {
+      name: "Meanwhile, people are building",
+    });
+    await expect(
+      launches.getByRole("link", { name: /Show HN: My first SaaS/ }),
+    ).toBeVisible();
+    await expectNoSeriousA11yViolations(page);
+
+    // j picks the first person and moves down; the panel follows.
+    await page.keyboard.press("j");
     await expect(
       panelTitle("Zero paying customers after a month"),
     ).toBeVisible();
     await expect(
       page.getByText("Strongly matches: Getting the first paying customers"),
     ).toBeVisible();
-    await expectNoSeriousA11yViolations(page);
-
-    // j moves down and focuses the row; the panel follows.
     await page.keyboard.press("j");
     await expect(
-      threads.getByRole("button", { name: /outreach without spam/ }),
+      feed.getByRole("button", { name: /outreach without spam/ }),
     ).toBeFocused();
     await expect(panelTitle("How to do outreach without spam")).toBeVisible();
+    await expectNoSeriousA11yViolations(page);
 
-    // d dismisses and moves on; Undo brings it back.
+    // d says "not for me" and moves on; Undo brings it back.
     await page.keyboard.press("d");
-    await expect(threads.getByRole("button")).toHaveCount(2);
+    await expect(feed.getByRole("button")).toHaveCount(2);
     await expect(panelTitle("Where do I find beta testers")).toBeVisible();
     await page.getByRole("button", { name: "Undo" }).click();
-    await expect(threads.getByRole("button")).toHaveCount(3);
+    await expect(feed.getByRole("button")).toHaveCount(3);
 
-    // s snoozes; the thread shows up in the Snoozed view, u moves it back.
-    await threads.getByRole("button", { name: /beta testers/ }).click();
-    await page.keyboard.press("s");
-    await expect(threads.getByRole("button")).toHaveCount(2);
-    await page.getByRole("link", { name: /^Snoozed/ }).click();
-    await expect(threads.getByRole("button")).toHaveCount(1);
-    await page.keyboard.press("u");
+    // Escape goes back to your people.
+    await page.keyboard.press("Escape");
     await expect(
-      page.getByRole("heading", { name: "Nothing snoozed" }),
+      page.getByRole("heading", { level: 2, name: "Your people" }),
     ).toBeVisible();
 
-    // Lower matches are one click away; launches have their own tab.
-    await page.getByRole("link", { name: /^Needs help/ }).click();
-    await expect(threads.getByRole("button")).toHaveCount(3);
-    await page.getByRole("link", { name: "Show 1 lower matches" }).click();
-    await expect(threads.getByRole("button")).toHaveCount(4);
-    await page.getByRole("link", { name: /^Feedback · Show HN/ }).click();
-    await expect(panelTitle("Show HN: My first SaaS")).toBeVisible();
+    // Past the pace is one click away, with a gentle note.
+    await page.getByRole("button", { name: "Show 2 more new people" }).click();
+    await expect(
+      page.getByText("You're past today's pace of 3."),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("list", { name: "More people" }).getByRole("button"),
+    ).toHaveCount(2);
 
-    // ? lists the shortcuts.
-    await page.keyboard.press("?");
-    const dialog = page.getByRole("dialog", { name: "Keyboard shortcuts" });
-    await expect(dialog).toBeVisible();
-    // Let the open animation finish, or axe measures half-faded text.
-    await dialog.evaluate((el) =>
-      Promise.all(el.getAnimations({ subtree: true }).map((a) => a.finished)),
-    );
+    // Hidden threads bring one back for good.
+    await feed.getByRole("button", { name: /beta testers/ }).click();
+    await page.getByRole("button", { name: /^Not for me/ }).click();
+    await expect(feed.getByRole("button")).toHaveCount(2);
+    await page.getByRole("link", { name: "Hidden threads" }).click();
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Hidden threads" }),
+    ).toBeVisible();
+    const hidden = page.getByRole("list", { name: "Hidden threads" });
+    await expect(
+      hidden.getByText("Where do I find beta testers"),
+    ).toBeVisible();
     await expectNoSeriousA11yViolations(page);
+    await hidden.getByRole("button", { name: "Bring back" }).click();
+    await expect(
+      page.getByRole("heading", { name: "Nothing hidden" }),
+    ).toBeVisible();
+    await page.goto("/today");
+    await expect(feed.getByRole("button")).toHaveCount(3);
   });
 
-  test("the inbox works on a phone and in dark mode", async ({ page }) => {
+  test("today works on a phone and in dark mode", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 800 });
     await page.emulateMedia({ colorScheme: "dark" });
-    await page.goto("/inbox");
+    await page.goto("/today");
     await expect(page.locator("html")).toHaveClass(/dark/);
 
-    const threads = page.getByRole("list", { name: "Threads" });
-    await expect(threads).toBeVisible();
+    const feed = page.getByRole("list", { name: "Today's people" });
+    await expect(feed).toBeVisible();
     const noSideScroll = () =>
       page.evaluate(
         () => document.documentElement.scrollWidth <= window.innerWidth,
@@ -323,11 +350,9 @@ test.describe("as the owner", () => {
     expect(await noSideScroll()).toBe(true);
     await expectNoSeriousA11yViolations(page);
 
-    // List and thread panel stack: opening a thread replaces the list.
-    await threads
-      .getByRole("button", { name: /outreach without spam/ })
-      .click();
-    await expect(threads).toBeHidden();
+    // Feed and panel stack: picking someone replaces the feed.
+    await feed.getByRole("button", { name: /outreach without spam/ }).click();
+    await expect(feed).toBeHidden();
     await expect(
       page.getByRole("heading", {
         level: 2,
@@ -336,22 +361,45 @@ test.describe("as the owner", () => {
     ).toBeVisible();
     expect(await noSideScroll()).toBe(true);
     await expectNoSeriousA11yViolations(page);
-    await page.getByRole("button", { name: "Back to the list" }).click();
-    await expect(threads).toBeVisible();
+    await page.getByRole("button", { name: "Back to today" }).click();
+    await expect(feed).toBeVisible();
   });
 
-  test("the inbox shows who answered the owner's replies", async ({ page }) => {
+  test("today shows people the owner knows when they have news", async ({
+    page,
+  }) => {
+    // Without a linked account, Today and People say how to get started.
+    await page.goto("/today");
+    await expect(
+      page.getByRole("link", { name: "Connect your Hacker News account" }),
+    ).toHaveCount(2);
+    await page.goto("/people");
+    await expect(
+      page.getByRole("heading", { name: "Connect your account first" }),
+    ).toBeVisible();
+
+    await seedAccount("ada_hn");
     await seedAnswer({
       author: "devon_b",
       text: "How long did that take before someone asked about your product?",
       tone: "question",
     });
-    await page.goto("/inbox");
-    const answers = page.getByRole("region", { name: "They answered you" });
-    await expect(answers.getByText("devon_b")).toBeVisible();
-    await expect(answers.getByText(/asked you something/)).toBeVisible();
+    await page.goto("/today");
+
+    // An open question comes first, tagged as someone you know.
+    const feed = page.getByRole("list", { name: "Today's people" });
+    const first = feed.getByRole("button").first();
+    await expect(first).toContainText("Someone you know");
+    await expect(first).toContainText("devon_b asked you a follow-up");
+    // The linked account is established, so its pace allows all 5 threads.
     await expect(
-      answers.getByRole("link", { name: /Answer on HN/ }),
+      page.getByText("1 person you know has news, and 5 new people"),
+    ).toBeVisible();
+    await expectNoSeriousA11yViolations(page);
+
+    await first.click();
+    await expect(
+      page.getByRole("link", { name: /Answer on HN/ }),
     ).toHaveAttribute("href", "https://news.ycombinator.com/item?id=80002");
     await expectNoSeriousA11yViolations(page);
   });
@@ -359,14 +407,7 @@ test.describe("as the owner", () => {
   test("people shows who the owner talked with, and takes a 'tried it' mark", async ({
     page,
   }) => {
-    // Without a linked account, the page says how to get started.
-    await page.goto("/people");
-    await expect(
-      page.getByRole("heading", { name: "Connect your account first" }),
-    ).toBeVisible();
-
-    // devon_b (question) is already there from the inbox test.
-    await seedAccount("ada_hn");
+    // The account and devon_b (question) are already there from Today's test.
     await seedAnswer(
       { author: "sarahk", text: "Thanks, trying it tonight!", tone: "thanks" },
       { n: 1, parentAuthor: "sarahk", topic: "Pricing" },
@@ -439,7 +480,7 @@ test("owner signs out and back in; a wrong password is rejected", async ({
 
   await page.getByLabel("Password").fill(owner.password);
   await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(page).toHaveURL(/\/inbox(\?|$)/);
+  await expect(page).toHaveURL(/\/today$/);
 
   await page.getByRole("button", { name: "Sign out" }).click();
   await expect(page).toHaveURL(/\/sign-in$/);
@@ -460,7 +501,7 @@ test("registration is closed once the owner exists", async ({ page }) => {
   ).toBeVisible();
 });
 
-test("the inbox requires a session", async ({ page }) => {
-  await page.goto("/inbox");
+test("today requires a session", async ({ page }) => {
+  await page.goto("/today");
   await expect(page).toHaveURL(/\/sign-in$/);
 });

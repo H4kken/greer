@@ -122,34 +122,3 @@ export async function pollAnswers(
   }
   return { checked: due.length, new: newIds.length, newIds };
 }
-
-// The latest answers to the user's replies, for the inbox's "They answered
-// you" block.
-export async function recentAnswers(
-  db: Db,
-  workspaceId: string,
-  { days = 7, limit = 5, now = new Date() } = {},
-) {
-  return db
-    .select({
-      id: replyAnswer.id,
-      author: replyAnswer.author,
-      text: replyAnswer.text,
-      url: replyAnswer.url,
-      postedAt: replyAnswer.postedAt,
-      tone: replyAnswer.tone,
-      threadTitle: reply.threadTitle,
-    })
-    .from(replyAnswer)
-    .innerJoin(reply, eq(reply.id, replyAnswer.replyId))
-    .where(
-      and(
-        eq(replyAnswer.workspaceId, workspaceId),
-        gte(replyAnswer.postedAt, new Date(now.getTime() - days * DAY)),
-      ),
-    )
-    .orderBy(sql`${replyAnswer.postedAt} desc`, asc(replyAnswer.id))
-    .limit(limit);
-}
-
-export type RecentAnswer = Awaited<ReturnType<typeof recentAnswers>>[number];

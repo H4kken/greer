@@ -4,8 +4,6 @@ import { and, eq } from "drizzle-orm";
 import type { Db } from "@/db";
 import { item } from "@/db/schema";
 
-export const SNOOZE_MS = 24 * 60 * 60 * 1000;
-
 async function update(
   db: Db,
   workspaceId: string,
@@ -35,20 +33,7 @@ export function dismissItem(
   });
 }
 
-export function snoozeItem(
-  db: Db,
-  workspaceId: string,
-  itemId: string,
-  now = new Date(),
-) {
-  return update(db, workspaceId, itemId, {
-    triageStatus: "snoozed",
-    snoozedUntil: new Date(now.getTime() + SNOOZE_MS),
-    triagedAt: now,
-  });
-}
-
-// Undo, or "move back to the inbox" from the snoozed and dismissed views.
+// Undo, or "Bring back" from Hidden threads.
 export function restoreItem(db: Db, workspaceId: string, itemId: string) {
   return update(db, workspaceId, itemId, {
     triageStatus: "new",

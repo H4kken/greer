@@ -7,7 +7,7 @@ import { getSession } from "@/lib/session";
 export const metadata: Metadata = { title: "Sign in · Greer" };
 
 export default async function SignInPage() {
-  if (await getSession()) redirect("/inbox");
+  if (await getSession()) redirect("/today");
   // Fresh install: nobody to sign in as yet; setup is on the welcome page.
   if (!(await hasAnyUser())) redirect("/");
   return <AuthForm mode="sign-in" />;

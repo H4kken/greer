@@ -1,5 +1,5 @@
 "use server";
-// Triage actions. The inbox updates optimistically and calls these; each one
+// Triage actions. Today updates optimistically and calls these; each one
 // checks the session and only touches items in the user's workspace.
 import { and, eq, isNotNull } from "drizzle-orm";
 import { z } from "zod";
@@ -7,14 +7,14 @@ import { db } from "@/db";
 import { sourceQuery } from "@/db/schema";
 import { requireWorkspace } from "@/lib/session";
 import { QUEUES, trySendFromWeb } from "@/worker/queue";
-import { dismissItem, restoreItem, snoozeItem } from "./triage";
+import { dismissItem, restoreItem } from "./triage";
 
 type Result = { ok: true } | { ok: false; error: string };
 
 const itemId = z.uuid();
 const NOT_FOUND: Result = {
   ok: false,
-  error: "This thread no longer exists. Reload the inbox.",
+  error: "This thread no longer exists. Reload the page.",
 };
 
 export async function dismissAction(
@@ -27,15 +27,6 @@ export async function dismissAction(
   if (!parsed.success || !why.success)
     return { ok: false, error: "Invalid input." };
   return (await dismissItem(db, workspace.id, parsed.data, why.data || null))
-    ? { ok: true }
-    : NOT_FOUND;
-}
-
-export async function snoozeAction(id: unknown): Promise<Result> {
-  const { workspace } = await requireWorkspace();
-  const parsed = itemId.safeParse(id);
-  if (!parsed.success) return { ok: false, error: "Invalid input." };
-  return (await snoozeItem(db, workspace.id, parsed.data))
     ? { ok: true }
     : NOT_FOUND;
 }

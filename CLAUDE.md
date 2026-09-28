@@ -51,7 +51,7 @@ src/workspace/    product profile, platform accounts, keywords + their server ac
 src/onboarding/   first scan (start + progress)
 src/replies/      the user's own replies (found from linked accounts) and the answers to them
 src/people/       people the user talked with, derived from replies and answers
-src/inbox/        inbox queries, triage (dismiss/snooze/undo) and URL params
+src/today/        the home feed (people you know with news + new people stuck), triage and its actions
 src/guardrails/   account maturity tiers, pacing (pure, unit-tested)
 src/lib/          shared utilities
 ```
@@ -84,10 +84,10 @@ Self-hosting stack: `docker-compose.yml` (Postgres + web + worker, one image fro
 
 ## Commits
 
-Use [Conventional Commits](https://www.conventionalcommits.org): `type(scope): summary`, imperative and lowercase, no trailing period, e.g. `feat(inbox): add keyboard triage with undo`.
+Use [Conventional Commits](https://www.conventionalcommits.org): `type(scope): summary`, imperative and lowercase, no trailing period, e.g. `feat(today): add keyboard navigation with undo`.
 
 - **Types:** `feat` (user-facing feature), `fix` (bug fix), `docs` (documentation only), `chore` (maintenance, config, dependencies), `refactor` (no behavior change), `test` (tests only), `ci` (GitHub Actions), `build` (Docker, bundling), `perf` (performance), `style` (formatting only), `revert`.
-- **Scope:** the area touched, e.g. `inbox`, `hn`, `llm`, `worker`, `db`, `auth`, `ui`, `docker`, `ci`, `deps`. Omit it when a change is truly cross-cutting.
+- **Scope:** the area touched, e.g. `today`, `people`, `hn`, `llm`, `worker`, `db`, `auth`, `ui`, `docker`, `ci`, `deps`. Omit it when a change is truly cross-cutting.
 - **Breaking changes:** add `!` after the scope (`feat(db)!: …`) and a `BREAKING CHANGE:` footer explaining the upgrade path for self-hosters.
 - One logical change per commit; the body explains _why_ when it isn't obvious.
 

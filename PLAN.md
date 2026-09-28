@@ -253,7 +253,14 @@ Built ahead of Milestone 3, from principle 7:
 - **Your people:** a map of everyone the user talked with, the person panel (open questions first), a "they tried the product" mark, and the long-game path (talked with → answered → came back → tried).
 - **Topics:** "What you help people with", named per reply and reused; each grows (planted → growing → rooted) only from what people do back.
 
-Next: a **Today** home screen built on these (Moments first, then people who could use help, with a daily goal sized to the account's safe pace).
+- **Today** (the home screen, replacing the inbox). Designed on the canvas as "tagged feed + the person beside it":
+  - **One feed of people**, each card tagged **Someone you know** or **Someone new**. Known people appear when they have news: an open question to you (until you answer it, up to 14 days), another answer in the last 3 days, a new help thread of theirs that Greer found, or a Show HN they posted. New people are the best-scored help threads by someone you haven't talked with yet.
+  - **The pace caps new people only**: as many picks a day as the account's safe pace (3, 5 or 10 by maturity). "Show more" opens the rest with a gentle "past today's pace" note; it warns, never blocks. People you know are never capped.
+  - Order: open questions first, then new and known people alternate.
+  - **Beside the feed:** nothing picked shows your people as a slowly moving network (who has news today glows, today's new people wait at the edge). Picking someone shows their thread and, later, the reply brief (Milestone 3), or your history with them.
+  - **"Meanwhile, people are building"**: recent Show HN posts drift slowly across the top, to enjoy rather than triage; it pauses on hover and stays still with reduced motion.
+  - "Not for me" hides a thread, with undo; **Hidden threads** lists them to bring one back. Snooze, tabs, keyword filters and the lower-matches toggle are gone. `/inbox` redirects to Today.
+  - Deferred: watching known people's own new posts beyond what keyword searches find (one Algolia call per person), and "since you last looked" (a seen marker).
 
 Out of scope for now: **product mentions** (searching HN for the product's name). Mentions can take months to appear, and other features matter more first.
 

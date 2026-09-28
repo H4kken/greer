@@ -1,4 +1,5 @@
-// Loads everything the People page needs for one workspace and platform.
+// Loads everything the People page (and Today) need for one workspace and
+// platform.
 import { and, eq, isNotNull } from "drizzle-orm";
 import type { Db } from "@/db";
 import {
@@ -10,20 +11,26 @@ import {
 } from "@/db/schema";
 import type { Platform } from "@/sources/types";
 import {
+  type AnswerFact,
   buildPeople,
   buildTopics,
   type Person,
+  type ReplyFact,
   type TopicSummary,
 } from "./build";
 
-export async function listPeople(
+// The raw facts people are derived from: the user's replies, the answers to
+// them, their marks and topics. Today and People both build on these.
+export async function loadPeopleFacts(
   db: Db,
   workspaceId: string,
   platform: Platform,
 ): Promise<{
   me: string | null;
-  people: Person[];
-  topics: TopicSummary[];
+  replies: ReplyFact[];
+  answers: AnswerFact[];
+  tried: Map<string, Date>;
+  topics: { id: string; name: string }[];
 }> {
   const [account] = await db
     .select({ handle: platformAccount.handle })
@@ -34,7 +41,8 @@ export async function listPeople(
         eq(platformAccount.platform, platform),
       ),
     );
-  if (!account) return { me: null, people: [], topics: [] };
+  if (!account)
+    return { me: null, replies: [], answers: [], tried: new Map(), topics: [] };
 
   const where = <
     T extends typeof reply | typeof replyAnswer | typeof personMark,
@@ -77,16 +85,33 @@ export async function listPeople(
       .from(topic)
       .where(eq(topic.workspaceId, workspaceId)),
   ]);
+  return {
+    me: account.handle,
+    replies,
+    answers,
+    tried: new Map(marks.map((m) => [m.handle, m.at!])),
+    topics,
+  };
+}
 
-  const me = account.handle;
+export async function listPeople(
+  db: Db,
+  workspaceId: string,
+  platform: Platform,
+): Promise<{
+  me: string | null;
+  people: Person[];
+  topics: TopicSummary[];
+}> {
+  const { me, replies, answers, tried, topics } = await loadPeopleFacts(
+    db,
+    workspaceId,
+    platform,
+  );
+  if (!me) return { me: null, people: [], topics: [] };
   return {
     me,
-    people: buildPeople({
-      me,
-      replies,
-      answers,
-      tried: new Map(marks.map((m) => [m.handle, m.at!])),
-    }),
+    people: buildPeople({ me, replies, answers, tried }),
     topics: buildTopics({ me, topics, replies, answers }),
   };
 }

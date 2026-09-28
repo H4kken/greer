@@ -39,7 +39,7 @@ const PROMISES = [
 // The front door. A fresh install shows the welcome with the owner-account
 // form; once someone owns the instance, the same page signs people in.
 export default async function Home() {
-  if (await getSession()) redirect("/inbox");
+  if (await getSession()) redirect("/today");
   const firstRun = !(await hasAnyUser());
 
   return (

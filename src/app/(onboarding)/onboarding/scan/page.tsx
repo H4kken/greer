@@ -9,7 +9,6 @@ import { LlmSettingsForm } from "@/components/settings/llm-settings-form";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { buttonVariants } from "@/components/ui/button";
 import { db } from "@/db";
-import { inboxHref, parseInboxParams } from "@/inbox/url";
 import { getWorkerHealth } from "@/lib/health";
 import { requireWorkspace } from "@/lib/session";
 import { describeLlmSettings, getLlmStatus } from "@/llm/settings";
@@ -32,8 +31,6 @@ export default async function ScanStepPage() {
     describeScan(progress, { modelConfigured: llm.configured });
   const waiting = !worker.healthy || needsModel;
   const { people, top } = progress;
-
-  const params = parseInboxParams({});
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 py-4">
@@ -125,10 +122,7 @@ export default async function ScanStepPage() {
                 className="rounded-2xl border bg-card motion-safe:animate-arrive"
               >
                 <Link
-                  href={inboxHref(params, {
-                    view: t.category === "feedback" ? "feedback" : "help",
-                    item: t.id,
-                  })}
+                  href={`/today?p=item:${t.id}`}
                   className="flex gap-4 rounded-2xl p-5 hover:bg-accent/60"
                 >
                   <ScoreBadge
@@ -171,16 +165,16 @@ export default async function ScanStepPage() {
             ? "Greer keeps looking every 15 minutes."
             : needsModel
               ? "You can also add a model later, in Settings."
-              : "No need to wait: the inbox fills up as Greer reads."}
+              : "No need to wait: Today fills up as Greer reads."}
         </p>
         <Link
-          href="/inbox"
+          href="/today"
           className={buttonVariants({
             variant: done ? "default" : "outline",
             size: "lg",
           })}
         >
-          {people > 0 ? "Meet them in your inbox" : "Open my inbox"}
+          {people > 0 ? "Meet them on Today" : "Go to Today"}
         </Link>
       </div>
     </div>

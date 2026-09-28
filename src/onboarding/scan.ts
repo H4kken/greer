@@ -1,7 +1,7 @@
 import { and, count, countDistinct, desc, eq, gte, sql } from "drizzle-orm";
 import type { Db } from "@/db";
 import { item, itemScore, sourceQuery, workspace } from "@/db/schema";
-import { MIN_SCORE } from "@/inbox/queries";
+import { MIN_SCORE } from "@/today/queries";
 import { syncHnQueries } from "@/workspace/keywords";
 import type { FirstScanInput } from "@/workspace/schemas";
 import type { ScanProgress } from "./scan-copy";

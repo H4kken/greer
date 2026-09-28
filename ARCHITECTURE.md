@@ -32,17 +32,17 @@ ingest-schedule ──► ingest-poll (one per query) ──► item rows (prefi
                                                    score-item ──► item_score rows
                                                                       │
                                                                       ▼
-                                                     inbox (ranked, triaged by the user)
+                                                     Today (people to help, picked by the user)
 ```
 
 1. **Onboarding** ([src/app/(onboarding)](<src/app/(onboarding)>), [src/workspace](src/workspace), [src/onboarding](src/onboarding)) saves the product profile, the HN account (an optional step; afterwards on the Accounts page, which lists every platform from [src/workspace/platforms.ts](src/workspace/platforms.ts)) and the keywords. The account is read from HN's public profile only; linking it sets the pacing and hides the user's own posts already collected, and it is what reply tracking follows. Each keyword becomes a `source_query` row. Starting the first scan enqueues one poll per query right away, instead of waiting for the next scheduled run.
 2. **Scheduling** ([src/worker/index.ts](src/worker/index.ts)): `ingest-schedule` runs every 15 minutes. It enqueues one `ingest-poll` job per enabled query, then a "sweep" that re-enqueues any kept item that still has no score (after a crash, an API outage, or before an LLM key was set).
 3. **Polling** ([src/ingest/poll.ts](src/ingest/poll.ts)) runs one query through its source adapter. The first poll fetches the last 7 days; later polls fetch since the last poll, with a one-hour overlap. Items are upserted on `(workspace, platform, external_id)`, so running a poll twice is harmless.
 4. **Prefilter** ([src/ingest/prefilter.ts](src/ingest/prefilter.ts)): cheap, deterministic rules run before any LLM call and set `filter_status` (dead, the user's own posts, hiring threads, too short). Filtered items are still stored, so the scan page's counts stay honest. Show HN posts get the `feedback` category; everything else is `help`.
-5. **Scoring** ([src/scoring](src/scoring)): one `score-item` job per new kept item. The model answers a few yes/no and enum criteria ([src/llm/prompts/score-help.ts](src/llm/prompts/score-help.ts), [score-launch.ts](src/llm/prompts/score-launch.ts)). Code then turns the answers into a 0–100 score ([compute.ts](src/scoring/compute.ts)). Keeping the weights in code means they can change without asking the model again, and the inbox can explain every score ([explain.ts](src/scoring/explain.ts)).
-6. **Inbox** ([src/inbox](src/inbox), [src/app/(app)/inbox](<src/app/(app)/inbox>)) lists scored threads above a threshold, ranked by score. The user triages them: dismiss, snooze or undo. Triage state lives on the `item` row.
+5. **Scoring** ([src/scoring](src/scoring)): one `score-item` job per new kept item. The model answers a few yes/no and enum criteria ([src/llm/prompts/score-help.ts](src/llm/prompts/score-help.ts), [score-launch.ts](src/llm/prompts/score-launch.ts)). Code then turns the answers into a 0–100 score ([compute.ts](src/scoring/compute.ts)). Keeping the weights in code means they can change without asking the model again, and Today can explain every score ([explain.ts](src/scoring/explain.ts)).
+6. **Today** ([src/today](src/today), [src/app/(app)/today](<src/app/(app)/today>)), the home screen: one feed of people, built on each visit ([build.ts](src/today/build.ts), pure). People you know appear when they have news (an open question to you, a recent answer, a help thread of theirs, a Show HN); new people are the best-scored help threads above a threshold, capped at the account's safe pace ([src/guardrails/maturity.ts](src/guardrails/maturity.ts)), the rest behind "Show more". Beside the feed, the people network, or the picked person's thread; recent Show HN posts drift slowly across the top. "Not for me" dismisses a thread (triage state lives on the `item` row) and Hidden threads brings it back. `/inbox`, the old home, redirects here.
 7. **Replies** ([src/replies/poll.ts](src/replies/poll.ts)): for each linked account, `ingest-schedule` also enqueues a `replies-poll` job (and linking an account enqueues one right away). It asks the source for the user's own comments (on HN, an Algolia author search), 30 days back the first time, then since the last check. Each one becomes a `reply` row, unique per `(workspace, platform, external_id)`, linked to the collected item it answers (or its thread) when Greer has it. Switching or removing the account deletes its replies.
-8. **Answers** ([src/replies/answers.ts](src/replies/answers.ts), [classify.ts](src/replies/classify.ts)): the same job then looks under each reply for direct answers by other people (`fetchThread` on the reply). Fresh replies are checked every poll, then hourly after a day and every 6 hours after three; after 14 days they're no longer watched (at most 50 replies per poll). Each answer becomes a `reply_answer` row, and a `classify-answer` job asks the model three yes/no questions (thanked? asked the user something? disagreed?). Code turns them into one tone: a question wins, then thanks, then disagreement, else neutral. The inbox shows the last week's answers above the list ("They answered you").
+8. **Answers** ([src/replies/answers.ts](src/replies/answers.ts), [classify.ts](src/replies/classify.ts)): the same job then looks under each reply for direct answers by other people (`fetchThread` on the reply). Fresh replies are checked every poll, then hourly after a day and every 6 hours after three; after 14 days they're no longer watched (at most 50 replies per poll). Each answer becomes a `reply_answer` row, and a `classify-answer` job asks the model three yes/no questions (thanked? asked the user something? disagreed?). Code turns them into one tone: a question wins, then thanks, then disagreement, else neutral. Today shows open questions until the user answers them, and other answers for 3 days.
 9. **People** ([src/people](src/people), [src/app/(app)/people](<src/app/(app)/people>)): not stored, derived on each visit from replies and answers ([build.ts](src/people/build.ts), pure). Someone is a person if the user replied to them (`reply.parent_author`, filled from the collected item or one HN lookup per reply, [src/replies/authors.ts](src/replies/authors.ts)) or they answered the user. Each person has a kind (thanked, talked, waiting for an answer), a number of conversations (distinct threads: 2+ means they came back) and any open question. The only thing stored is what the user alone knows: `person_mark` ("they tried the product"). The map places people by number of conversations, at positions derived from the handle ([layout.ts](src/people/layout.ts)).
 10. **Topics** ([src/replies/topics.ts](src/replies/topics.ts)): a `name-topic` job per new reply asks the model (`topic-of-reply`, fast slot) what the reply helped with, showing it the workspace's existing topics so it reuses them. Names are normalized (sentence case) and unique per workspace, case-insensitively; the queue runs one job at a time so each reply sees the topics named just before it. On People, a topic's stage comes only from what people did back ([build.ts](src/people/build.ts) `buildTopics`): planted (you replied), growing (someone answered), rooted (2+ people thanked you, or someone came back on it).
 
@@ -50,11 +50,11 @@ ingest-schedule ──► ingest-poll (one per query) ──► item rows (prefi
 
 ### Web (Next.js 16, App Router)
 
-- **Server components** fetch data directly from the database. `"use client"` is only used for interactivity (forms, the inbox's keyboard triage).
-- **Mutations are server actions** ([src/workspace/actions.ts](src/workspace/actions.ts), [src/inbox/actions.ts](src/inbox/actions.ts)). Each one checks the session with `requireWorkspace()`, validates its input with zod, and only touches rows of the user's workspace.
+- **Server components** fetch data directly from the database. `"use client"` is only used for interactivity (forms, Today's keyboard navigation).
+- **Mutations are server actions** ([src/workspace/actions.ts](src/workspace/actions.ts), [src/today/actions.ts](src/today/actions.ts)). Each one checks the session with `requireWorkspace()`, validates its input with zod, and only touches rows of the user's workspace.
 - **[src/proxy.ts](src/proxy.ts)** (Next 16's replacement for middleware) redirects requests that have no session cookie. Pages still validate the session themselves; the proxy is only a fast first check.
 - **Auth** is [Better Auth](https://www.better-auth.com) with email and password ([src/lib/auth.ts](src/lib/auth.ts)). Users and workspaces are separate (`workspace_member`, many-to-many): every new account gets its own workspace and owns it. Registration closes once the first account exists, unless `ALLOW_REGISTRATION=true`. Pages and actions work in the user's current workspace (`requireWorkspace()`: today, the one they own; a workspace switcher would plug in there).
-- **UI state that should survive a reload lives in the URL**, e.g. the inbox view, filter, sort and selected thread ([src/inbox/url.ts](src/inbox/url.ts)).
+- **UI state that should survive a reload lives in the URL**, e.g. the person picked on Today (`?p=`).
 
 ### Worker
 
@@ -80,11 +80,13 @@ All queue access goes through [src/worker/queue.ts](src/worker/queue.ts); nothin
 ## Code layout
 
 ```
-src/app/          routes: (auth), (onboarding), (app) = inbox + settings, api/
+src/app/          routes: (auth), (onboarding), (app) = today, people, accounts, settings; api/
 src/components/   UI by feature; ui/ = shadcn (generated, don't edit by hand)
 src/workspace/    product profile, platform accounts, keywords + their server actions
 src/onboarding/   first scan: start it, report progress
-src/inbox/        inbox queries, triage, URL params, server actions
+src/today/        the home feed: queries, pure feed rules, triage, server actions
+src/replies/      the user's own replies, the answers to them, their topics
+src/people/       people derived from replies and answers
 src/ingest/       poll one query, prefilter
 src/scoring/      score one item, compute and explain scores
 src/llm/          provider-neutral LLM layer, prompts/, evals
@@ -95,7 +97,7 @@ src/db/           Drizzle schema, migrations, connection
 src/lib/          auth, session, crypto, env, time and other shared helpers
 ```
 
-Dependencies point one way: **`app` / `components` → feature modules (`workspace`, `inbox`, `onboarding`, `scoring`, `ingest`) → `llm`, `sources`, `guardrails` → `db`, `lib`.**
+Dependencies point one way: **`app` / `components` → feature modules (`workspace`, `today`, `people`, `replies`, `onboarding`, `scoring`, `ingest`) → `llm`, `sources`, `guardrails` → `db`, `lib`.**
 
 Feature modules export plain functions that take `db` as a parameter. The same functions serve the pages, the server actions, the worker and the integration tests.
 
@@ -155,12 +157,12 @@ A source adapter implements the read-only `Source` interface in [src/sources/typ
 
 ## Testing
 
-| Layer       | Tool                          | Covers                                                                                                                |
-| ----------- | ----------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| Unit        | Vitest, next to the code      | pure logic: normalizers, prefilter, score math, maturity tiers, schemas, prompt builders                              |
-| Integration | Vitest, `tests/integration`   | real Postgres (fresh `greer_test` database): polls, scoring with the mock model, inbox queries, isolation             |
-| End-to-end  | Playwright + axe, `tests/e2e` | production build on a fresh `greer_e2e` database: sign-up, onboarding, settings, inbox triage, phone width, dark mode |
-| LLM quality | `pnpm eval`                   | prompt precision and recall against labeled real threads                                                              |
+| Layer       | Tool                          | Covers                                                                                                                                          |
+| ----------- | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| Unit        | Vitest, next to the code      | pure logic: normalizers, prefilter, score math, maturity tiers, schemas, prompt builders                                                        |
+| Integration | Vitest, `tests/integration`   | real Postgres (fresh `greer_test` database): polls, scoring with the mock model, Today's feed, isolation                                        |
+| End-to-end  | Playwright + axe, `tests/e2e` | production build on a fresh `greer_e2e` database: sign-up, onboarding, settings, Today (keyboard, undo, hidden threads), phone width, dark mode |
+| LLM quality | `pnpm eval`                   | prompt precision and recall against labeled real threads                                                                                        |
 
 Tests never hit the network: sources are tested against recorded fixtures, and LLM code against the mock provider. CI runs all of the above except evals, plus a smoke test that starts the self-hosting stack in Docker.
 

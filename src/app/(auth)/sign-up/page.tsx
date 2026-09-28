@@ -14,7 +14,7 @@ import { getSession } from "@/lib/session";
 export const metadata: Metadata = { title: "Create your account · Greer" };
 
 export default async function SignUpPage() {
-  if (await getSession()) redirect("/inbox");
+  if (await getSession()) redirect("/today");
 
   if (!(await isRegistrationOpen())) {
     return (

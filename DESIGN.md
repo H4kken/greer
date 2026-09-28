@@ -59,7 +59,7 @@ Rules:
 - **Radius:** `rounded-lg` (12 px) for controls and nav items, `rounded-xl` for lists and info boxes, `rounded-2xl` for large surfaces (thread panel, empty states). Chips are `rounded-full`.
 - **Borders, not shadows.** Surfaces are `bg-card` with a 1 px `border`. Empty and placeholder areas use a dashed border.
 - **Spacing:** multiples of 4 px; `gap-*` on flex and grid containers rather than margins. Pages get `px-4 py-6` to `py-8`; panels `p-5` to `p-6`.
-- **Widths:** the inbox uses the full screen (up to `max-w-screen-2xl`); settings and onboarding read best at `max-w-5xl`, with forms at `max-w-xl`.
+- **Widths:** Today uses a wide layout (up to `max-w-screen-xl`) and starts with a full-width strip; settings and onboarding read best at `max-w-5xl`, with forms at `max-w-xl`.
 
 ## Components and patterns
 
@@ -78,4 +78,4 @@ Rules:
 
 ## Dark mode
 
-Dark mode follows the system setting and uses the same tokens. It isn't an inverted light mode: the background is a warm near-black, the accent is a lighter green that keeps its contrast, and `primary-soft` is a deep green. Check new screens in both themes; the e2e suite runs axe on the inbox in dark mode at phone width.
+Dark mode follows the system setting and uses the same tokens. It isn't an inverted light mode: the background is a warm near-black, the accent is a lighter green that keeps its contrast, and `primary-soft` is a deep green. Check new screens in both themes; the e2e suite runs axe on Today in dark mode at phone width.

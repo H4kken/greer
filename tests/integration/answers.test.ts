@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/db";
 import { reply, replyAnswer, workspace } from "@/db/schema";
-import { pollAnswers, recentAnswers } from "@/replies/answers";
+import { pollAnswers } from "@/replies/answers";
 import { classifyReplyAnswer, unclassifiedAnswerIds } from "@/replies/classify";
 import { SourceHttpError } from "@/sources/http";
 import type { Source, ThreadNode } from "@/sources/types";
@@ -202,38 +202,5 @@ describe("classifyReplyAnswer (mock LLM)", () => {
     });
     expect(byAuthor.tomw!.tone).toBe("neutral");
     expect(await unclassifiedAnswerIds(db)).toEqual([]);
-  });
-});
-
-describe("recentAnswers", () => {
-  beforeEach(truncateAll);
-
-  it("lists the last week's answers, newest first, for one workspace", async () => {
-    const ws = await setup();
-    const other = await setup();
-    const replyId = await addReply(ws, "1");
-    const otherReply = await addReply(other, "2");
-    const answer = (id: string, r: string, w: string, hoursAgo: number) => ({
-      workspaceId: w,
-      replyId: r,
-      platform: "hn" as const,
-      externalId: id,
-      author: `user${id}`,
-      text: "Thanks!",
-      url: `https://news.ycombinator.com/item?id=${id}`,
-      postedAt: new Date(NOW.getTime() - hoursAgo * HOUR),
-    });
-    await db
-      .insert(replyAnswer)
-      .values([
-        answer("a", replyId, ws, 5),
-        answer("b", replyId, ws, 1),
-        answer("old", replyId, ws, 24 * 8),
-        answer("c", otherReply, other, 1),
-      ]);
-
-    const rows = await recentAnswers(db, ws, { now: NOW });
-    expect(rows.map((r) => r.author)).toEqual(["userb", "usera"]);
-    expect(rows[0]!.threadTitle).toBe("Ask HN: Pricing my first SaaS?");
   });
 });

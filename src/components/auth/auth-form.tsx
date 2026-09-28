@@ -46,7 +46,7 @@ export function AuthForm(props: Props) {
       : {
           title: "Create your account",
           description:
-            "You'll get your own workspace on this instance, with its own product, keywords and inbox.",
+            "You'll get your own workspace on this instance, with its own product, keywords and people.",
           submit: "Create account",
         }
     : {
@@ -75,7 +75,7 @@ export function AuthForm(props: Props) {
         );
         return;
       }
-      router.push("/inbox");
+      router.push("/today");
       router.refresh();
     });
   }

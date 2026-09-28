@@ -22,7 +22,7 @@ Greer takes the opposite approach. **It does the tedious part (finding, filterin
 
 - **Watches the communities you care about.** It follows the keywords and communities where your future users talk about their problems. Hacker News comes first; Reddit follows.
 - **Surfaces the threads worth your time.** An LLM scores each post for relevance and tells you _why_ it was surfaced, so you're not reading hundreds of posts.
-- **Gives you a fast daily inbox.** Triage in 10–15 minutes, keyboard-first: open, snooze or dismiss.
+- **Gives you a calm daily page.** Today shows people you already know when they have news, and a few new people stuck on something you know about, paced to what's safe for your account.
 - **Helps you think, not write.** For each thread, a short _reply brief_:
   - what the person really needs;
   - what the thread already covers;
@@ -54,7 +54,7 @@ Greer takes the opposite approach. **It does the tedious part (finding, filterin
 ## How it will work
 
 ```
-Pick keywords & communities → Greer finds and scores threads → you triage your inbox
+Pick keywords & communities → Greer finds and scores threads → you pick people on Today
 → read the brief → write your own reply → post it on Reddit → Greer tracks the conversation
 ```
 
@@ -124,7 +124,7 @@ Greer won't work around that. For Reddit (v0.2), you'll use your own approved AP
 | Stage     | Goal                                                                                                                                                      |
 | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Spike** | Done: finding and scoring HN threads is useful. The script was retired once the app replaced it; its threads became the scoring eval set                  |
-| **v0.1**  | Hacker News monitoring, scored inbox, reply briefs, reply check, conversation tracking, account-aware guardrails, one-step Coolify deploy                 |
+| **v0.1**  | Hacker News monitoring, the Today page, reply briefs, reply check, conversation tracking, account-aware guardrails, one-step Coolify deploy               |
 | **v0.2**  | Reddit with your own API credentials, a "bring a thread" bookmarklet, per-community requirements (karma, account age), smarter scoring from your feedback |
 | **Later** | More official-API sources (Bluesky, GitHub Discussions, Lobsters, Stack Exchange…), based on what users ask for                                           |
 
