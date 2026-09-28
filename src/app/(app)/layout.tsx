@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { ThemeMenu } from "@/components/theme-toggle";
 import { AppNav } from "@/components/app-nav";
+import { Logo } from "@/components/logo";
 import { requireWorkspace } from "@/lib/session";
 
 export default async function AppLayout({ children }: LayoutProps<"/">) {
@@ -14,11 +15,8 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
       <header className="border-b">
         <div className="mx-auto flex h-14 max-w-screen-2xl items-center justify-between gap-4 px-4">
           <div className="flex min-w-0 items-center gap-4 sm:gap-6">
-            <Link
-              href="/today"
-              className="font-heading text-2xl font-semibold tracking-tight"
-            >
-              Greer
+            <Link href="/today" className="text-foreground no-underline">
+              <Logo />
             </Link>
             <AppNav />
           </div>

@@ -1,6 +1,7 @@
 import { EyeIcon, PenLineIcon, ServerIcon } from "lucide-react";
 import { redirect } from "next/navigation";
 import { AuthForm } from "@/components/auth/auth-form";
+import { Logo } from "@/components/logo";
 import { ThemeMenu } from "@/components/theme-toggle";
 import { InboxPreview } from "@/components/welcome/inbox-preview";
 import { hasAnyUser } from "@/lib/registration";
@@ -45,9 +46,7 @@ export default async function Home() {
   return (
     <div className="flex min-h-dvh flex-col">
       <header className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between px-4">
-        <span className="font-heading text-2xl font-semibold tracking-tight">
-          Greer
-        </span>
+        <Logo />
         <ThemeMenu />
       </header>
 
