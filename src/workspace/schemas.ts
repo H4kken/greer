@@ -71,6 +71,14 @@ export const firstScanSchema = z.object({
 });
 export type FirstScanInput = z.infer<typeof firstScanSchema>;
 
+export const jevKeySchema = z.object({
+  apiKey: z
+    .string()
+    .trim()
+    .min(1, "Paste your TypeSafe API key.")
+    .max(500, "That's too long for an API key."),
+});
+
 export const llmSettingsSchema = z
   .object({
     provider: z.enum(["anthropic", "openai", "ollama"]),

@@ -175,7 +175,7 @@ export function LlmSettingsForm({
               aria-describedby={`${id}-fast-help`}
             />
             <FieldDescription id={`${id}-fast-help`}>
-              Cheap and fast: reads every thread.
+              Cheap and fast: keywords, answers, and scoring without TypeSafe.
             </FieldDescription>
             <FieldError>{errors.fastModel}</FieldError>
           </Field>

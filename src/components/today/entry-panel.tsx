@@ -162,7 +162,8 @@ export function EntryPanel({
             <h3 id={`${id}-why`} className="text-lg font-medium">
               Why you
             </h3>
-            <p>{thread.reason}</p>
+            {/* Jev scores without a reason line; the checklist says why. */}
+            {thread.reason && <p>{thread.reason}</p>}
             <ul className="flex flex-col gap-1 text-sm">
               {thread.criteria.map((c) => (
                 <li key={c.label} className="flex items-start gap-2">

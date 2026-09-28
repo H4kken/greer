@@ -1,10 +1,24 @@
 import { and, desc, eq, isNull, sql } from "drizzle-orm";
 import type { Db } from "@/db";
-import { item, itemScore, workspace } from "@/db/schema";
+import { item, itemScore, llmCall, workspace } from "@/db/schema";
 import { generateStructured } from "@/llm/client";
+import type { LlmConfig } from "@/llm/config";
+import {
+  askJev,
+  helpQuestions,
+  JEV_HELP_VERSION,
+  JEV_LAUNCH_VERSION,
+  JevError,
+  jevHelpScore,
+  jevLaunchScore,
+  jevState,
+  launchQuestions,
+} from "@/llm/jev";
 import { scoreHelp } from "@/llm/prompts/score-help";
 import { scoreLaunch } from "@/llm/prompts/score-launch";
-import type { ProductProfile } from "@/llm/prompts/shared";
+import type { ItemForScoring, ProductProfile } from "@/llm/prompts/shared";
+import { ScorerNotConfiguredError } from "@/llm/scorer";
+import { getScorer } from "@/llm/settings";
 import { computeHelpScore, computeLaunchScore } from "./compute";
 
 export type ScoreOutcome =
@@ -41,45 +55,58 @@ export async function scoreItem(db: Db, itemId: string): Promise<ScoreOutcome> {
   const product = productProfileOf(row.workspace);
   if (!product) return { status: "skipped", reason: "no_product_profile" };
 
-  const input = {
-    product,
-    item: { type: row.item.type, title: row.item.title, text: row.item.text },
+  const itemIn = {
+    type: row.item.type,
+    title: row.item.title,
+    text: row.item.text,
   };
-  const scored =
-    row.item.category === "feedback"
-      ? await (async () => {
-          const r = await generateStructured(
-            row.item.workspaceId,
-            scoreLaunch,
-            input,
-          );
-          return {
-            ...computeLaunchScore(r.output),
-            criteria: r.output,
-            intent: "sharing_launch",
-            reason: r.output.reason,
-            promptVersion: scoreLaunch.version,
-            model: r.model,
-          };
-        })()
-      : await (async () => {
-          const r = await generateStructured(
-            row.item.workspaceId,
-            scoreHelp,
-            input,
-          );
-          return {
-            ...computeHelpScore(r.output),
-            criteria: r.output,
-            intent: r.output.intent,
-            reason: r.output.reason,
-            promptVersion: scoreHelp.version,
-            model: r.model,
-          };
-        })();
+  const { workspaceId, category } = row.item;
+  const scorer = await getScorer(workspaceId);
+  let scored: Scored;
+  if (scorer.kind === "jev") {
+    try {
+      scored = await scoreWithJev(
+        db,
+        workspaceId,
+        scorer.apiKey,
+        category,
+        product,
+        itemIn,
+      );
+    } catch (error) {
+      if (!(error instanceof JevError)) throw error;
+      if (scorer.fallback) {
+        console.warn(
+          `[score] Jev failed, using ${scorer.fallback.provider}: ${error.message}`,
+        );
+        scored = await scoreWithLlm(
+          workspaceId,
+          scorer.fallback,
+          category,
+          product,
+          itemIn,
+        );
+      } else if (error.badKey) {
+        // Retrying won't help: wait for a new key, like with no key at all.
+        throw new ScorerNotConfiguredError(
+          "TypeSafe rejected the API key. Update it in Settings.",
+        );
+      } else {
+        throw error;
+      }
+    }
+  } else {
+    scored = await scoreWithLlm(
+      workspaceId,
+      scorer.config,
+      category,
+      product,
+      itemIn,
+    );
+  }
 
   const values = {
-    workspaceId: row.item.workspaceId,
+    workspaceId,
     ...scored,
     reason: scored.reason.slice(0, 300),
     scoredAt: new Date(),
@@ -89,6 +116,141 @@ export async function scoreItem(db: Db, itemId: string): Promise<ScoreOutcome> {
     .values({ itemId, ...values })
     .onConflictDoUpdate({ target: itemScore.itemId, set: values });
   return { status: "scored", score: scored.score };
+}
+
+type Scored = {
+  score: number;
+  criteriaMet: number;
+  criteriaTotal: number;
+  criteria: unknown;
+  intent: string;
+  reason: string;
+  promptVersion: string;
+  model: string;
+};
+
+async function scoreWithLlm(
+  workspaceId: string,
+  config: LlmConfig,
+  category: "help" | "feedback",
+  product: ProductProfile,
+  itemIn: ItemForScoring,
+): Promise<Scored> {
+  const input = { product, item: itemIn };
+  if (category === "feedback") {
+    const r = await generateStructured(workspaceId, scoreLaunch, input, {
+      config,
+    });
+    return {
+      ...computeLaunchScore(r.output),
+      criteria: r.output,
+      intent: "sharing_launch",
+      reason: r.output.reason,
+      promptVersion: scoreLaunch.version,
+      model: r.model,
+    };
+  }
+  const r = await generateStructured(workspaceId, scoreHelp, input, {
+    config,
+  });
+  return {
+    ...computeHelpScore(r.output),
+    criteria: r.output,
+    intent: r.output.intent,
+    reason: r.output.reason,
+    promptVersion: scoreHelp.version,
+    model: r.model,
+  };
+}
+
+// Jev writes no reason line: the "why" checklist comes from the criteria.
+// The raw probabilities are kept with them, for tuning the weights later.
+async function scoreWithJev(
+  db: Db,
+  workspaceId: string,
+  apiKey: string,
+  category: "help" | "feedback",
+  product: ProductProfile,
+  itemIn: ItemForScoring,
+): Promise<Scored> {
+  const launch = category === "feedback";
+  const promptVersion = launch ? JEV_LAUNCH_VERSION : JEV_HELP_VERSION;
+  const started = Date.now();
+  const record = (fields: {
+    ok: boolean;
+    model: string;
+    inputTokens?: number;
+    error?: string;
+  }) =>
+    db.insert(llmCall).values({
+      workspaceId,
+      slot: "fast",
+      provider: "typesafe",
+      model: fields.model,
+      promptName: launch ? "score-launch" : "score-help",
+      promptVersion,
+      inputTokens: fields.inputTokens ?? null,
+      outputTokens: 0,
+      durationMs: Date.now() - started,
+      ok: fields.ok,
+      error: fields.error?.slice(0, 500) ?? null,
+    });
+
+  let r;
+  try {
+    r = await askJev(
+      apiKey,
+      jevState(product, itemIn),
+      launch ? launchQuestions() : helpQuestions(product),
+    );
+  } catch (error) {
+    await record({
+      ok: false,
+      model: "jev-latest",
+      error: (error as Error).message,
+    });
+    throw error;
+  }
+  await record({ ok: true, model: r.model, inputTokens: r.inputTokens });
+
+  const probabilities = Object.fromEntries(
+    Object.entries(r.answers).map(([k, a]) => [
+      k,
+      a.type === "noul" ? a.noul : a.probabilities,
+    ]),
+  );
+  if (launch) {
+    const { score, criteria } = jevLaunchScore(r.answers);
+    const met = Object.values(criteria);
+    return {
+      score,
+      criteriaMet: met.filter(Boolean).length,
+      criteriaTotal: met.length,
+      criteria: { ...criteria, probabilities },
+      intent: "sharing_launch",
+      reason: "",
+      promptVersion,
+      model: r.model,
+    };
+  }
+  const { score, criteria } = jevHelpScore(r.answers, product.problems.length);
+  const met = [
+    criteria.own_situation,
+    criteria.seeking_help,
+    criteria.problem_match !== "none",
+    criteria.specific,
+    criteria.reply_welcome,
+  ];
+  return {
+    score,
+    criteriaMet: met.filter(Boolean).length,
+    criteriaTotal: met.length,
+    criteria: { ...criteria, probabilities },
+    intent: criteria.intent,
+    reason: "",
+    promptVersion,
+    model: r.model,
+  };
 }
 
 // Kept items with no score yet, in workspaces that can be scored. Used by the

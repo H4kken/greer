@@ -5,6 +5,19 @@ export type EvalOutcome = {
   score: number;
 };
 
+// Ranking quality without a threshold: the share of (yes, no) pairs where
+// the yes scores higher (ties count half). 1 is perfect, 0.5 is chance.
+export function rankAuc(outcomes: EvalOutcome[]): number | null {
+  const yes = outcomes.filter((o) => o.expected === "yes");
+  const no = outcomes.filter((o) => o.expected === "no");
+  if (!yes.length || !no.length) return null;
+  let wins = 0;
+  for (const y of yes)
+    for (const n of no)
+      wins += y.score > n.score ? 1 : y.score === n.score ? 0.5 : 0;
+  return wins / (yes.length * no.length);
+}
+
 export function evalMetrics(outcomes: EvalOutcome[], threshold: number) {
   const labeled = outcomes.filter((o) => o.expected !== "maybe");
   const tp = labeled.filter(

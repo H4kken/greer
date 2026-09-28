@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { evalMetrics } from "./eval";
+import { evalMetrics, rankAuc } from "./eval";
 
 describe("evalMetrics", () => {
   it("computes precision/recall at a threshold, ignoring maybes", () => {
@@ -29,5 +29,23 @@ describe("evalMetrics", () => {
     );
     expect(m.tiedInTop10).toBe(3);
     expect(m.distinctScores).toBe(3);
+  });
+});
+
+describe("rankAuc", () => {
+  it("is the share of yes/no pairs ranked the right way, ties half", () => {
+    const auc = rankAuc([
+      { expected: "yes", score: 90 },
+      { expected: "yes", score: 50 },
+      { expected: "no", score: 50 },
+      { expected: "no", score: 10 },
+      { expected: "maybe", score: 100 },
+    ]);
+    // 90>50, 90>10, 50=50 (half), 50>10: 3.5 of 4 pairs.
+    expect(auc).toBe(0.875);
+  });
+
+  it("is null without both labels", () => {
+    expect(rankAuc([{ expected: "yes", score: 1 }])).toBeNull();
   });
 });

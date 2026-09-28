@@ -186,8 +186,27 @@ test.describe("as the owner", () => {
     await page.getByRole("link", { name: "Settings" }).click();
     await expect(page.getByRole("heading", { name: "Settings" })).toBeVisible();
     await expect(page.getByLabel("Product name")).toHaveValue("Greer");
-    await expect(page.getByText("Mock (test mode)")).toBeVisible();
+    await expect(page.getByText("Mock (test mode)").first()).toBeVisible();
     await expectNoSeriousA11yViolations(page);
+
+    // A TypeSafe key makes Jev the scorer, with the AI provider as fallback
+    // (mock mode skips the test call). Removing it goes back.
+    const ai = page.getByRole("region", { name: "AI models" });
+    await ai.getByLabel("TypeSafe API key").fill("ts-e2e-key");
+    await ai.getByRole("button", { name: "Test and save" }).first().click();
+    await expect(page.getByText("TypeSafe key saved.")).toBeVisible();
+    await expect(
+      ai.getByText(
+        "Scoring threads with TypeSafe Jev, or Mock (test mode) when Jev is unavailable.",
+      ),
+    ).toBeVisible();
+    await expect(ai.getByLabel("TypeSafe API key")).toHaveAttribute(
+      "placeholder",
+      /^Saved: /,
+    );
+    await ai.getByRole("button", { name: "Remove key" }).click();
+    await expect(ai.getByText(/Scoring threads with Mock/)).toBeVisible();
+    await expect(ai.getByRole("button", { name: "Remove key" })).toHaveCount(0);
 
     const keywords = page.getByRole("region", { name: "Keywords" });
     await expect(keywords.getByText("first users")).toBeVisible();

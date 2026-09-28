@@ -4,9 +4,11 @@
 
 x-app-env: &app-env
   DATABASE_URL: postgres://greer:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@postgres:5432/greer
-  # Also decrypts an LLM key saved in Settings, so the worker needs it too.
+  # Also decrypts the keys saved in Settings, so the worker needs it too.
   BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?Set BETTER_AUTH_SECRET}
-  # LLM: set one provider here, or save a key in Settings instead.
+  # AI: a TypeSafe key (scoring, recommended) and/or one LLM provider here,
+  # or save keys in Settings instead.
+  TYPESAFE_API_KEY: ${TYPESAFE_API_KEY:-}
   ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
   OPENAI_API_KEY: ${OPENAI_API_KEY:-}
   OPENAI_BASE_URL: ${OPENAI_BASE_URL:-}

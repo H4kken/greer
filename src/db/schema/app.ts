@@ -89,6 +89,17 @@ export const llmSettings = pgTable("llm_settings", {
   ...timestamps,
 });
 
+// TypeSafe key saved from Settings. When set (here or TYPESAFE_API_KEY),
+// Jev scores threads and the LLM above is the fallback (src/llm/scorer.ts).
+export const jevSettings = pgTable("jev_settings", {
+  workspaceId: text("workspace_id")
+    .primaryKey()
+    .references(() => workspace.id, { onDelete: "cascade" }),
+  // Encrypted with src/lib/crypto.ts, never stored in plain text.
+  apiKeyEncrypted: text("api_key_encrypted").notNull(),
+  ...timestamps,
+});
+
 // One row per model call: powers cost display and debugging.
 export const llmCall = pgTable(
   "llm_call",

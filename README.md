@@ -103,12 +103,13 @@ Create a new resource from this Git repository using the **Docker Compose** buil
 | `BETTER_AUTH_URL`                     | yes            | Public URL of your instance, e.g. `https://greer.example.com`.                                                                                                                                              |
 | `ALLOW_REGISTRATION`                  | no             | `false` by default: sign-ups close once the first account exists. Set to `true` to let others sign up; each gets their own workspace, and uses the server's LLM key unless they save their own in Settings. |
 | `PORT`                                | no             | Host port for the web app (default `3000`).                                                                                                                                                                 |
-| `ANTHROPIC_API_KEY`                   | one LLM option | Anthropic key. Default models: `claude-haiku-4-5` (scoring) and `claude-opus-5` (briefs).                                                                                                                   |
+| `TYPESAFE_API_KEY`                    | recommended    | TypeSafe key: Jev scores every thread, about 30× cheaper and 6× faster than an LLM. The LLM below is the fallback and does the rest (keyword suggestions, reading answers).                                 |
+| `ANTHROPIC_API_KEY`                   | one LLM option | Anthropic key. Default models: `claude-haiku-4-5` (scoring without a TypeSafe key, suggestions) and `claude-opus-5` (briefs).                                                                               |
 | `OPENAI_API_KEY`, `OPENAI_BASE_URL`   | one LLM option | OpenAI or any OpenAI-compatible API. Also set `LLM_FAST_MODEL` and `LLM_QUALITY_MODEL`.                                                                                                                     |
 | `OLLAMA_BASE_URL`                     | one LLM option | A local Ollama, e.g. `http://host.docker.internal:11434/v1`. Also set both model variables.                                                                                                                 |
 | `LLM_FAST_MODEL`, `LLM_QUALITY_MODEL` | no             | Override the model used for scoring (fast) and for briefs (quality).                                                                                                                                        |
 
-Instead of LLM variables, you can save a key in Settings: it's stored encrypted with `BETTER_AUTH_SECRET` and takes precedence. If you change `BETTER_AUTH_SECRET`, re-enter the key.
+Instead of these variables, you can save keys in Settings: they're stored encrypted with `BETTER_AUTH_SECRET` and take precedence. If you change `BETTER_AUTH_SECRET`, re-enter them. With no key at all, Greer still collects threads and scores them once a key is added.
 
 `GET /api/health` reports the database and the background worker; the web container's health check uses it.
 

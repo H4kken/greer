@@ -1,6 +1,7 @@
 // Runs the scoring prompts on the eval set against a real model and reports
 // precision/recall and score spread. Usage: pnpm eval [--threshold 60]
 // Other prompts: pnpm eval classify-answer | topic-of-reply
+// Jev comparison: pnpm eval jev (see scripts/eval-jev.ts)
 // Needs an LLM key in the environment (e.g. ANTHROPIC_API_KEY). Nothing is
 // written to the database.
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
@@ -16,12 +17,18 @@ import { computeHelpScore, computeLaunchScore } from "@/scoring/compute";
 const { values, positionals } = parseArgs({
   options: { threshold: { type: "string", default: "60" } },
   allowPositionals: true,
+  // Sub-evals (e.g. jev) take their own flags.
+  strict: false,
 });
 const threshold = Number(values.threshold);
 
 // `pnpm eval classify-answer` runs that prompt's set instead of scoring.
 if (positionals[0] === "classify-answer") {
   await import("./eval-classify-answer");
+  process.exit(0);
+}
+if (positionals[0] === "jev") {
+  await import("./eval-jev");
   process.exit(0);
 }
 if (positionals[0] === "topic-of-reply") {

@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
 import { OnboardingSteps } from "@/components/onboarding/onboarding-steps";
 import { ProductStep } from "@/components/onboarding/product-step";
-import { LlmSettingsForm } from "@/components/settings/llm-settings-form";
+import { AiSetup } from "@/components/onboarding/ai-setup";
 import { db } from "@/db";
-import { describeLlmSettings, getLlmStatus } from "@/llm/settings";
+import {
+  describeJevKey,
+  describeLlmSettings,
+  getScoringStatus,
+} from "@/llm/settings";
 import { requireWorkspace } from "@/lib/session";
 import { getProductProfile } from "@/workspace/profile";
 
@@ -11,10 +15,11 @@ export const metadata: Metadata = { title: "Your product · Greer" };
 
 export default async function ProductStepPage() {
   const { workspace } = await requireWorkspace();
-  const [profile, llm, stored] = await Promise.all([
+  const [profile, scoring, stored, jevKey] = await Promise.all([
     getProductProfile(db, workspace.id),
-    getLlmStatus(workspace.id),
+    getScoringStatus(workspace.id),
     describeLlmSettings(workspace.id),
+    describeJevKey(workspace.id),
   ]);
 
   return (
@@ -25,22 +30,12 @@ export default async function ProductStepPage() {
         anywhere: Greer only reads.
       </p>
 
-      {!llm.configured && (
-        <section
-          aria-labelledby="ai-heading"
-          className="flex flex-col gap-4 rounded-2xl border bg-card p-6"
-        >
-          <div>
-            <h2 id="ai-heading" className="text-xl font-medium">
-              Connect an AI model
-            </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Greer uses it to read threads and suggest keywords. Scoring a week
-              of Hacker News costs a few cents with the default models.
-            </p>
-          </div>
-          <LlmSettingsForm stored={stored} />
-        </section>
+      {!scoring.configured && (
+        <AiSetup
+          intro="Greer uses it to read each thread and judge whether you can help."
+          jevKey={jevKey}
+          stored={stored}
+        />
       )}
 
       <section

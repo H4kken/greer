@@ -1,5 +1,5 @@
 {
-  "about": "Scoring eval set: real Hacker News posts and comments from the Milestone 0 spike (Sep 2026), author names removed, text cut to 700 characters. expected = would the builder genuinely want to reply (yes/no); maybe = excluded from precision/recall.",
+  "about": "Scoring eval set: real Hacker News posts and comments from the Milestone 0 spike (Sep 2026), author names removed, text cut to 700 characters. expected = would the builder genuinely want to reply (yes/no); maybe = excluded from precision/recall. Launch cases added Sep 29 2026 from threads where Haiku and Jev disagreed.",
   "labeledBy": "Proposed by Claude, to be reviewed by the maintainer",
   "product": {
     "name": "Greer",
@@ -283,6 +283,240 @@
       "text": "We built a site for a launch and it was unreachable for anyone on an Xfinity router. We only found out because we have an Xfinity router at home. There's no notice to the site owner.\n\nXfinity's Advanced Security draws on third-party domain reputation lists and blocks at the gateway. We found out a blacklist called SURBL had flagged us. Not sure exactly what tripped it. Since then I've hit the same block on 10+ unrelated sites and told the site owner. Now sharing with everyone here.\n\nHow to check whether it's happening to you:\n\nhttps://spa.xfinity.com/check_url_status\nIf blocked, look for the upstream list: https://mxtoolbox.com/blacklists.aspx\nReport at https://spa.xfinity.com/report and cal…",
       "expected": "no",
       "note": "ISP blocking domains: not one of the problems"
+    },
+    {
+      "id": "hn-49865067",
+      "category": "feedback",
+      "type": "story",
+      "title": "Show HN: LightCloud – A cloud console organised like file system",
+      "text": "Hi HN, Light Cloud is a hosting platform where the unit of organisation is a folder. A folder holds everything project needs: frontend, API, database, env variables, preview per branch.",
+      "expected": "yes",
+      "note": "Indie hosting platform looking for its first users"
+    },
+    {
+      "id": "hn-49830869",
+      "category": "feedback",
+      "type": "story",
+      "title": "Show HN: Jexxa – On Device Dictation, Now with Perpetual License",
+      "text": "Dictation Demonstration Against a Fast Chatbot: https://www.linkedin.com/feed/update/urn:li:activity:7508058...\n\nAlso Now with added security, opt in analytics and best of all, \nPerpetual License\nWith feedback from people here.\nWe also offer enterprise perpetual license now.\nSo please reach out to me on linkedin if interested.",
+      "expected": "yes",
+      "note": "Small maker selling a dictation app, iterating on HN feedback"
+    },
+    {
+      "id": "hn-49858268",
+      "category": "feedback",
+      "type": "story",
+      "title": "Show HN: Read while you listen to your Audiobooks",
+      "text": "I am a product manager, and in the last few months I got laid off, coupled with a disruptive job market. Due to this, I used to scroll short-form content a lot; I was a slave to it, and anything I picked to read had me going back to scrolling. This became a reading comprehension problem; my attention span was clearly in decline; I found that a lot of people were also not able to read without an assist like a physical book or an ebook, especially for readers with ADHD/Dyslexia - this problem was hard-hitting. So I built Hushbook- a read-along audiobook app that helps you read while you listen. It works with a tiny transcription engine that functions natively on-device and transcribes audioboo",
+      "expected": "yes",
+      "note": "Laid-off PM launching a reading app, wants users"
+    },
+    {
+      "id": "hn-49834368",
+      "category": "feedback",
+      "type": "story",
+      "title": "Show HN: bananabread AI – Find what customers love and want from your products",
+      "text": "We recently launched an API that finds what people consistently love about a specific consumer product. Some of our first users reached out asking whether it could also find what people still want from the product. That’s what we're launching today.\n\nFor example, reviews like \"I love the taste, but I wish it had less sugar\" tells you what's working well already and what you could improve.\n\nGive the API a brand + product name (only consumer goods work for now). It first searches for thousands of reviews per product across Amazon, TikTok, Reddit, YouTube, Instagram, Walmart, and other web sources. It then extracts what people love and what they wish was better, and shows you the evidence (actu",
+      "expected": "yes",
+      "note": "Early API startup talking about its first users"
+    },
+    {
+      "id": "hn-49831744",
+      "category": "feedback",
+      "type": "story",
+      "title": "Show HN: Are My ETFs Overvalued? Daily ETF insights and comparisons tool",
+      "text": "I built ETF Copilot (https://etf-copilot.com/go/show-hn) as analytical support for my own investing. It answers what financial screeners and platforms do not: which valuation, growth, quality and risk metrics matter for each ETF, and how do they compare to own history and peers. It covers 1,000+ US-listed equity ETFs and updates every night with fresh data.\n\nFree version without signup offers 5 fund views. Overlap, concentration, and theme pages are unlimited. Pro $20/month tier adds unlimited views, full rankings, watchlists, alerts, and twice a week ETF market newsletter. For Show HN I opened a broader access showing most functionality for free.\n\n> > >  Background:\nAbout a year ago I becam",
+      "expected": "yes",
+      "note": "Indie ETF analysis tool, launch with a tracked link"
+    },
+    {
+      "id": "hn-49821177",
+      "category": "feedback",
+      "type": "story",
+      "title": "Show HN: Ceptile AI Search platform which combines web results with AI chat",
+      "text": "I built Ceptile because I wanted a search tool that could combine the convenience of an AI answer with the ability to inspect the actual web pages behind it.\nA Ceptile search retrieves pages from the web, ranks the retrieved sources, and uses them to produce an answer with links back to the sources. You can open the sources and continue researching from there.\n\nI've also been building some things around the search workflow, including Notes for keeping research, translation tools, and ways to work with information found during a search. Just select a text in answer or web results, and it will show a toolbar to save it to notes, translate, etc.\n\nThe project is still early. A lot of the work so",
+      "expected": "yes",
+      "note": "Indie AI search product looking for users"
+    },
+    {
+      "id": "hn-49850553",
+      "category": "feedback",
+      "type": "story",
+      "title": "Show HN: Recurse – Develop and deploy specialist agents faster",
+      "text": "Hi HN! We are looking to gather some feedback on our serverless agent harness. The admittedly not-so-specific use case is to accelerate agent development and deployment. After building several custom/special-purpose agents for a few customers, we built this to accelerate our workflow at first, and now we are trying to understand whether it could be useful to others.\n\nOur driver use case was development of specialist agents with a request/response lifecycle. Think of agents that have a well established input/output contract where they are expected to produce high-quality output (artifacts, responses etc.). Especially when the problem is in some verifiable domain and the LLM can iteratively re",
+      "expected": "yes",
+      "note": "Small team asks for feedback on its agent harness"
+    },
+    {
+      "id": "hn-49848552",
+      "category": "feedback",
+      "type": "story",
+      "title": "Show HN: Digitron – a virtual analog synth and sequencer",
+      "text": "I’ve just released Digitron on iOS.\n\nIt’s a virtual analog synthesizer with a sequencer. If I had to describe the rough idea, I’d say it’s something like a child of a Moog and a Pocket Operator.\nI started working on it about four years ago, mostly out of boredom. I was tired of building similar client-server apps that, in the end, were mostly different ways of displaying lists. I wanted to build something self-contained.\n\nThe first version of Digitron was pretty simple: a 16-step sequencer and a monophonic synth with two oscillators and cross-modulation.\nI wrote the first audio engine in Kotlin. As long as it was rendering WAV files offline, everything sounded fine. But the first time I trie",
+      "expected": "yes",
+      "note": "Indie iOS synth app just released after four years"
+    },
+    {
+      "id": "hn-49864877",
+      "category": "feedback",
+      "type": "story",
+      "title": "Show HN: I built an AR App that overlays makeup tutorials live on your face",
+      "text": "Hi Hacker News,\n\nI built UR Artist: AR Makeup Studio after seeing my girlfriend struggling to apply makeup outside with her tiny mirror and bad lighting. I thought to myself, that it would be really cool to have the mirror tell her exactly where and how to apply the makeup she wants. So the app was born ;). I would really love to get some feedback on how you guys see the app's functionality and where I could improve it",
+      "expected": "yes",
+      "note": "Indie AR makeup app, consumer product by a solo builder"
+    },
+    {
+      "id": "hn-49850874",
+      "category": "feedback",
+      "type": "story",
+      "title": "Show HN: Wallstreetclaws.com – Create AI Agents for Trading",
+      "text": "I wanted to try out some AI driven trading strategies so created this platform (https://wallstreetclaws.com) where people can easily create and deploy AI agents for trading.\n\nIt supports two types of Agents:\n\n1. Cortex: Fully agentic strategy execution. An LLM will run your system prompt with access to market data, web search and simulated market APIs.\n\n2. Flux: Define advanced quant strategies using indicators, entry conditions, exit conditions, risk management, etc. You can also run backtests on these strategies.\n\nYou can also optionally connect your Robinhood agent account to your Cortex agents.\n\nThere's also a leaderboard to know how your strategies stack up against other people: https:/",
+      "expected": "yes",
+      "note": "Indie platform for trading agents, wants users"
+    },
+    {
+      "id": "hn-49827649",
+      "category": "feedback",
+      "type": "story",
+      "title": "Show HN: Full-page screenshots with free annotation and PDF export",
+      "text": "I built Fullpage Screenshot because I wanted to capture a whole webpage and mark it up without paying to unlock the editor. GoFullPage offers annotation through Premium; this extension includes crop, arrows, shapes, text, pen, and solid redaction for free. \nNo accounts and nothing ever leaves your computer.\n\nPS: The annotation editor is built with the open source Konva.js—shoutout to its maintainers.",
+      "expected": "maybe",
+      "note": "Free browser extension, no business, but wants users"
+    },
+    {
+      "id": "hn-49869904",
+      "category": "feedback",
+      "type": "story",
+      "title": "Show HN: A bookshelf of rare company documents and out-of-print tech books",
+      "text": "i kept collecting rare internal company docs + out-of-print business books in random folders, so i put them all on one page.\n\ntop shelf has docs like:\n\n> intel's 1968 investor memo  \n> apple's original marketing philosophy  \n> bill gates' internet tidal wave memo  \n> yahoo's peanut butter manifesto  \n> facebook's little red book  \n> valve's handbook  \n> mrbeast's onboarding doc\n\nbottom shelf has hard-to-find books from the founders/leaders of ibm, hp, gm, fastenal and others.\n\neverything links to a free legal source. original pdf/scan when i could find one, otherwise internet archive.\n\nif you know any rare docs or books that belong here, send them my way.",
+      "expected": "no",
+      "note": "A collection page of documents, not a product"
+    },
+    {
+      "id": "hn-49835336",
+      "category": "feedback",
+      "type": "story",
+      "title": "Show HN: See your portfolio in your Mac Menubar",
+      "text": "We see tons of interesting and complex finance apps getting built at SnapTrade, but personally I prefer something dead simple and minimalistic. This is a no-fuss, quick way to see your portfolio balance and top holdings on a Mac. I have all my personal brokerage accounts stored at SnapTrade, so sharing access of my investments to the app is a one-click OAuth grant.\n\nFree to download, free to link your accounts, would love to see what HN thinks!",
+      "expected": "no",
+      "note": "Employee side project promoting their company's API"
+    },
+    {
+      "id": "hn-49818692",
+      "category": "feedback",
+      "type": "story",
+      "title": "Show HN: Karpathy's microgpt in Rust and an array language",
+      "text": "A ML Study group stepped through Karpathy's python code on Colab, and we looked at a Rust version I created.  I was asked to create a more readable version in my ML/array programming language.\n\nThis work is helping me with dogfooding my language.  I am now adding several improvements to the language to improve ergonomics, readability, and possibly speed (one example in sw-MLPL actually runs faster than my Rust port).  I was able to express the code more compactly than the Python or Rust versions.\n\nThe planned improvements will allow me to simplify many downstream demo projects that have been working around language deficiencies.\n\nThe link includes literate programming explanations of the cod",
+      "expected": "no",
+      "note": "Study-group experiment in a programming language"
+    },
+    {
+      "id": "hn-49864439",
+      "category": "feedback",
+      "type": "story",
+      "title": "Show HN: A Simple GPU Job Scheduler",
+      "text": "Hi guys,\n\nA few months ago, I've been training several simple models as a side hobby. I tried training N models at once on a single GPU, but OOM spikes kept crashing my runs. So I built my own simple way to manage this kind of training. At the time, I also wanted to make some sort of interface that AI agents could use to dynamically allocate GPU resources and train models on their own. It's been quite fun working on this, so I wanted to share it in case any of you are looking for something similar. Claude helped me write most of the code, but I've made sure that the stuff works as described (I've used this exact repo for my own training runs).\n\nHope you like it!",
+      "expected": "no",
+      "note": "Hobby tool built for their own training runs"
+    },
+    {
+      "id": "hn-49867775",
+      "category": "feedback",
+      "type": "story",
+      "title": "Show HN: TinyAIArena watch AI agents battle it out",
+      "text": "Did you ever click on an “AI Arena” expecting glorious battle and instead get a boring benchmark? If so, this project is for you: proper life-or-death fights between four models on a picturesque 8×8 grid. May the most intelligent one win!\n\nClick on any of the matches to spectate them.\n\nCode: https://github.com/hp6/ai-arena",
+      "expected": "no",
+      "note": "Fun AI arena project, no users sought"
+    },
+    {
+      "id": "hn-49857528",
+      "category": "feedback",
+      "type": "story",
+      "title": "Show HN: A Claude Code skill to analyze your chess games",
+      "text": "Hello HN,\n\nIt started as an experiment: can Claude play chess properly if it uses vision instead of PGN notation? Somehow it can.\n\nThe next experiment was to see whether Claude + Stockfish could explain a game. Somehow it can too.\n\nA few sessions later, I had a system that takes my live audio notes (or text, for that matter) and a vague instruction like \"analyze my last lichess game\", and gives me a commented video of the game. The result is not perfect and it takes time to deliver (an hour or so), but for me it is a much more pleasant and memorable experience than clicking around Stockfish branches. It burns tokens, so make sure you have enough quota. From the session logs, the last analyze",
+      "expected": "no",
+      "note": "Personal Claude Code skill experiment"
+    },
+    {
+      "id": "hn-49840734",
+      "category": "feedback",
+      "type": "story",
+      "title": "Show HN: Lift and Coast (Browser based F1 game)",
+      "text": "Hello F1 fans!\n\nI vibecoded a F1 game that works in the browser (also supports mobile) and I want you guys to come and check it out and provide constructive criticism and what needs improving.\n\nHope you guys enjoy!\n\nSource code: https://github.com/Hussain004/lift-and-coast",
+      "expected": "no",
+      "note": "Vibe-coded hobby game"
+    },
+    {
+      "id": "hn-49840686",
+      "category": "feedback",
+      "type": "story",
+      "title": "Show HN: A single-use authorization boundary in Rust",
+      "text": "I built a small Rust experiment for putting an authorization boundary in front of a protected action.\n\nAn authorization is tied to a specific action, resource, and payload. Once it's used successfully, trying to use the same authorization again is denied.\n\nThe repo includes the implementation, tests, and reproduction steps.\n\nhttps://github.com/trencinodin-stack/arcstone-mcp-sidecar\n\nI'm interested in edge cases or failure modes I've missed.",
+      "expected": "no",
+      "note": "Small Rust experiment, not a product"
+    },
+    {
+      "id": "hn-49835715",
+      "category": "feedback",
+      "type": "story",
+      "title": "Show HN: Inkdom – Draw loops on the real world map to claim territory",
+      "text": "I made a small multiplayer browser game on the real world map.\n\nYou have an ink tank that refills over time. Draw a closed loop and the land inside becomes yours. Every new loop has to touch your existing territory, and other players can draw into yours and take it. More land means more ink and faster refills. There are global and per-country leaderboards.\n\nIt's early, so feedback and bug reports are very welcome.",
+      "expected": "no",
+      "note": "Hobby multiplayer game"
+    },
+    {
+      "id": "hn-49863556",
+      "category": "feedback",
+      "type": "story",
+      "title": "Show HN: Niral – Daily Tamil/Tanglish Puzzle Game",
+      "text": "I built a Daily puzzle game - where you get to rearrange shuffled words between lines to reconstruct lyrics of famous movie songs.\n\nThe App has two modes - Tamil (for native Tamil language readers) and Tanglish (for those who understand Tamil, but cant read the script).\n\nThe Game is inspired by similar puzzle games out there, but highly customized for Tamil pop culture.\n\nWould love to hear feedback and comments!",
+      "expected": "no",
+      "note": "Hobby daily puzzle game"
+    },
+    {
+      "id": "hn-49872224",
+      "category": "feedback",
+      "type": "story",
+      "title": "Show HN: Help us fire our UI/UX designers",
+      "text": "Get $10,000  & 3 months of Claude Max on me\n\nRedesign http://vosu.ai with any AI tool\n\nBetter visuals. Better structure\n\nIf we love it and choose your redesign, I’ll pay for your Claude Max subscription for 3 months\n\nReply with your demo",
+      "expected": "no",
+      "note": "A contest to redesign their site, not a launch"
+    },
+    {
+      "id": "hn-49861765",
+      "category": "feedback",
+      "type": "story",
+      "title": "Show HN: Detailed Guide to Agent Memory",
+      "text": "I wrote a detailed guide to agent memory from the perspective of a builder in the space that has been doing it for 3 years. Hope you like it, and would love to hear feedback.",
+      "expected": "no",
+      "note": "A written guide, not a product"
+    },
+    {
+      "id": "hn-49872023",
+      "category": "feedback",
+      "type": "story",
+      "title": "Show HN: DeepFace is now running on PyTorch alongside TensorFlow",
+      "text": "In early 2020, tensorflow was the dominant deep learning framework. So, deepface was built to run on top of tensorflow. Thereafter, pytorch becomes the dominant framework for deep learning. We got many requests from community to support pytorch.\n\nIn the latest release (v0.0.101), DeepFace can now run on top of PyTorch alongside TensorFlow!\n\nUsers has been installing deepface as `pip install deepface` commmand and this was installing its tensorflow dependency. Now, users should install the library as `pip install deepface[tensorflow]` or `pip install deepface[pytorch]` commands to install its deep learning framework dependency. To avoid releasing breaking change, the default `pip install deep",
+      "expected": "no",
+      "note": "Established open-source library release"
+    },
+    {
+      "id": "hn-49835670",
+      "category": "feedback",
+      "type": "story",
+      "title": "Show HN: Little Memory 2.0, one-line-a-day journal, offline-first",
+      "text": "I launched Little Memory in 2011 as a Rails app, with the iOS app following in 2012. You write one line about your day, and a year later it comes back to you. Everyone's entries lived in my database, which always made me feel uneasy: if something ever happened to me, someone else would have to keep the servers running just so people could keep using their own diaries. Over the years, people have written over 1 million memories in it.\n\n2.0 is a full rewrite, and it's offline-first. Entries live on the phone (with iCloud sync). You can write in your diary without an account, and your private and personal data stays in your control and in your phone rather than on my servers. It's iOS only, fre",
+      "expected": "no",
+      "note": "Product running since 2011, not early-stage"
+    },
+    {
+      "id": "hn-49834098",
+      "category": "feedback",
+      "type": "story",
+      "title": "Show HN: Critic – Review code with the agent that wrote it",
+      "text": "Hey HN, I'm Shreyash from Feyn. We help companies build custom models from their data. Today we're releasing Critic, a change review platform that lets you engage directly with the AI that wrote the code.\n\nAgents write most of our code. While that has made us more productive, understanding a change and its consequences has become incredibly difficult. As our company adopted more agentic tools, we found it harder to loop people in on the impact of a PR and the state of a project. We built Critic to fix this.\n\nCritic lets AI agents present their code, annotate key blocks, and include relevant evidence (like screenshots and instructions to run locally).  Anyone viewing that change can talk dire",
+      "expected": "no",
+      "note": "Launch by an established company"
     }
   ]
 }

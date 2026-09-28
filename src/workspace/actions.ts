@@ -8,7 +8,13 @@ import { db } from "@/db";
 import { checkConnection, generateStructured } from "@/llm/client";
 import { LlmNotConfiguredError, resolveLlmConfig } from "@/llm/config";
 import { suggestKeywords } from "@/llm/prompts/suggest-keywords";
-import { loadStoredSettings, saveLlmSettings } from "@/llm/settings";
+import { checkJevKey } from "@/llm/jev";
+import {
+  clearJevKey,
+  loadStoredSettings,
+  saveJevKey,
+  saveLlmSettings,
+} from "@/llm/settings";
 import { requireWorkspace } from "@/lib/session";
 import { startFirstScan } from "@/onboarding/scan";
 import { unclassifiedAnswerIds } from "@/replies/classify";
@@ -37,6 +43,7 @@ import {
   hnHandleSchema,
   type KeywordInput,
   keywordSchema,
+  jevKeySchema,
   llmSettingsSchema,
   productProfileSchema,
 } from "./schemas";
@@ -172,7 +179,7 @@ export async function suggestKeywordsAction(): Promise<
       return {
         ok: false,
         error:
-          "Add an AI key (step 1) to get suggestions, or add your own keywords below.",
+          "Suggestions need an AI provider (Anthropic, OpenAI or Ollama), which you can add in Settings. Add your own keywords below for now.",
       };
     }
     console.warn("[onboarding] keyword suggestions failed", error);
@@ -329,16 +336,19 @@ export async function saveLlmSettingsAction(
     // Ollama has no key: drop any key saved for another provider.
     ...(apiKey ? { apiKey } : rest.provider === "ollama" ? { apiKey: "" } : {}),
   });
-  // Threads collected while no model was set wait for the 15-minute sweep;
-  // score them now instead, so the first scan carries on right away.
-  const waiting = await unscoredItemIds(db, {
-    workspaceId: workspace.id,
-    limit: 500,
-  });
-  const answers = await unclassifiedAnswerIds(db, {
-    workspaceId: workspace.id,
-  });
-  const replies = await unnamedReplyIds(db, { workspaceId: workspace.id });
+  await queueWaitingAiWork(workspace.id);
+  revalidatePath("/settings");
+  revalidatePath("/onboarding/product");
+  refresh();
+  return { ok: true };
+}
+
+// Threads collected while no model was set wait for the 15-minute sweep;
+// score them now instead, so the first scan carries on right away.
+async function queueWaitingAiWork(workspaceId: string) {
+  const waiting = await unscoredItemIds(db, { workspaceId, limit: 500 });
+  const answers = await unclassifiedAnswerIds(db, { workspaceId });
+  const replies = await unnamedReplyIds(db, { workspaceId });
   await trySendFromWeb([
     ...waiting.map((itemId) => ({
       name: QUEUES.scoreItem,
@@ -356,8 +366,37 @@ export async function saveLlmSettingsAction(
       singletonKey: replyId,
     })),
   ]);
+}
+
+// ---- TypeSafe (Jev), the preferred scorer ----
+
+export async function saveJevKeyAction(input: unknown): Promise<ActionResult> {
+  const { workspace } = await requireWorkspace();
+  const parsed = jevKeySchema.safeParse(input);
+  if (!parsed.success) return invalid(parsed.error);
+  // Tests and demos (mock mode) never call TypeSafe.
+  if (process.env.LLM_PROVIDER !== "mock") {
+    const check = await checkJevKey(parsed.data.apiKey);
+    if (!check.ok) {
+      return {
+        ok: false,
+        error: check.error,
+        fieldErrors: { apiKey: check.error },
+      };
+    }
+  }
+  await saveJevKey(workspace.id, parsed.data.apiKey);
+  await queueWaitingAiWork(workspace.id);
   revalidatePath("/settings");
   revalidatePath("/onboarding/product");
+  refresh();
+  return { ok: true };
+}
+
+export async function removeJevKeyAction(): Promise<ActionResult> {
+  const { workspace } = await requireWorkspace();
+  await clearJevKey(workspace.id);
+  revalidatePath("/settings");
   refresh();
   return { ok: true };
 }

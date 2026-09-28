@@ -1,7 +1,18 @@
 import { eq } from "drizzle-orm";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 import { db } from "@/db";
 import { item, itemScore, llmCall, workspace } from "@/db/schema";
+import { ScorerNotConfiguredError } from "@/llm/scorer";
+import { saveJevKey } from "@/llm/settings";
 import { scoreItem, unscoredItemIds } from "@/scoring/score";
 import { truncateAll } from "../helpers/truncate";
 
@@ -141,5 +152,118 @@ describe("scoreItem (mock LLM)", () => {
     await createItem(other);
 
     expect(await unscoredItemIds(db, { workspaceId: ws })).toEqual([mine]);
+  });
+});
+
+// Jev's HTTP API, stubbed: tests never hit the network.
+const noul = (v: number) => ({ type: "noul", noul: v });
+function jevReplies(status = 200) {
+  return vi.spyOn(globalThis, "fetch").mockImplementation(async (url) => {
+    expect(String(url)).toBe("https://api.typesafe.ai/v1/systemone");
+    if (status !== 200) return new Response("nope", { status });
+    return Response.json({
+      model: "jev-1.13.0",
+      answers: {
+        own_situation: noul(0.95),
+        seeking_help: noul(0.9),
+        specific: noul(0.2),
+        reply_welcome: noul(0.9),
+        intent: {
+          type: "choice",
+          choice: "asking_for_help",
+          confidence: 0.8,
+          probabilities: { asking_for_help: 0.9, discussion: 0.1 },
+        },
+        problem_0: noul(0.9),
+        problem_1: noul(0.1),
+      },
+      usage: { input_tokens: 1200, output_tokens: 40 },
+    });
+  });
+}
+
+describe("scoreItem with Jev", () => {
+  beforeEach(truncateAll);
+  afterEach(() => {
+    vi.restoreAllMocks();
+    delete process.env.LLM_PROVIDER;
+  });
+
+  it("scores with Jev when a TypeSafe key is saved, and logs the call", async () => {
+    const ws = await createWorkspace();
+    await saveJevKey(ws, "ts-test-key");
+    const fetchSpy = jevReplies();
+    const id = await createItem(ws);
+
+    // 20×0.95 + 20×0.9 + 30×0.9 + 20×0.2 + 10×0.9 = 77
+    expect(await scoreItem(db, id)).toEqual({ status: "scored", score: 77 });
+    const init = fetchSpy.mock.calls[0]![1]!;
+    expect(new Headers(init.headers).get("Authorization")).toBe(
+      "Bearer ts-test-key",
+    );
+
+    const [row] = await db.select().from(itemScore);
+    expect(row).toMatchObject({
+      score: 77,
+      criteriaMet: 4,
+      criteriaTotal: 5,
+      intent: "asking_for_help",
+      reason: "",
+      promptVersion: "jev-help-v1",
+      model: "jev-1.13.0",
+    });
+    // Same criteria as the LLM's, plus the raw probabilities for tuning.
+    expect(row!.criteria).toMatchObject({
+      problem_match: "strong",
+      matched_problem: 1,
+      probabilities: { problem_0: 0.9 },
+    });
+    const [call] = await db.select().from(llmCall);
+    expect(call).toMatchObject({
+      provider: "typesafe",
+      model: "jev-1.13.0",
+      promptName: "score-help",
+      inputTokens: 1200,
+      ok: true,
+    });
+  });
+
+  it("falls back to the AI provider when Jev fails", async () => {
+    process.env.LLM_PROVIDER = "mock";
+    const ws = await createWorkspace();
+    await saveJevKey(ws, "ts-test-key");
+    jevReplies(503);
+    const id = await createItem(ws);
+
+    expect(await scoreItem(db, id)).toEqual({ status: "scored", score: 70 });
+    const [row] = await db.select().from(itemScore);
+    expect(row!.model).toBe("mock-fast");
+    const calls = await db.select().from(llmCall);
+    expect(calls.map((c) => [c.provider, c.ok])).toEqual(
+      expect.arrayContaining([
+        ["typesafe", false],
+        ["mock", true],
+      ]),
+    );
+  });
+
+  it("waits for a new key when TypeSafe rejects it and nothing else is set", async () => {
+    const ws = await createWorkspace();
+    await saveJevKey(ws, "ts-wrong-key");
+    jevReplies(401);
+    const id = await createItem(ws);
+
+    await expect(scoreItem(db, id)).rejects.toThrow(ScorerNotConfiguredError);
+    expect(await db.select().from(itemScore)).toHaveLength(0);
+    // Still unscored, so the sweep tries again once the key is fixed.
+    expect(await unscoredItemIds(db)).toEqual([id]);
+  });
+
+  it("waits, without calling anything, when no model is set at all", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    const id = await createItem(await createWorkspace());
+
+    await expect(scoreItem(db, id)).rejects.toThrow(ScorerNotConfiguredError);
+    expect(fetchSpy).not.toHaveBeenCalled();
   });
 });

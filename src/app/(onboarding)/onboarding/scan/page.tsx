@@ -2,16 +2,20 @@ import { AlertTriangleIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { AiSetup } from "@/components/onboarding/ai-setup";
 import { AutoRefresh } from "@/components/onboarding/auto-refresh";
 import { OnboardingSteps } from "@/components/onboarding/onboarding-steps";
 import { ScoreBadge } from "@/components/score-badge";
-import { LlmSettingsForm } from "@/components/settings/llm-settings-form";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { buttonVariants } from "@/components/ui/button";
 import { db } from "@/db";
 import { getWorkerHealth } from "@/lib/health";
 import { requireWorkspace } from "@/lib/session";
-import { describeLlmSettings, getLlmStatus } from "@/llm/settings";
+import {
+  describeJevKey,
+  describeLlmSettings,
+  getScoringStatus,
+} from "@/llm/settings";
 import { getScanProgress } from "@/onboarding/scan";
 import { describeScan } from "@/onboarding/scan-copy";
 
@@ -21,14 +25,15 @@ export default async function ScanStepPage() {
   const { workspace } = await requireWorkspace();
   if (!workspace.onboardedAt) redirect("/onboarding");
 
-  const [progress, worker, llm, stored] = await Promise.all([
+  const [progress, worker, scoring, stored, jevKey] = await Promise.all([
     getScanProgress(db, workspace.id),
     getWorkerHealth(),
-    getLlmStatus(workspace.id),
+    getScoringStatus(workspace.id),
     describeLlmSettings(workspace.id),
+    describeJevKey(workspace.id),
   ]);
   const { done, needsModel, ratio, progressLabel, headline, subline } =
-    describeScan(progress, { modelConfigured: llm.configured });
+    describeScan(progress, { modelConfigured: scoring.configured });
   const waiting = !worker.healthy || needsModel;
   const { people, top } = progress;
 
@@ -81,22 +86,11 @@ export default async function ScanStepPage() {
         </Alert>
       )}
       {needsModel && (
-        <section
-          aria-labelledby="ai-heading"
-          className="flex flex-col gap-4 rounded-2xl border bg-card p-6"
-        >
-          <div>
-            <h2 id="ai-heading" className="text-xl font-medium">
-              Connect an AI model
-            </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Greer uses it to read each thread and judge whether you can help.
-              Reading a week of Hacker News costs a few cents with the default
-              models. The scan carries on as soon as it&apos;s saved.
-            </p>
-          </div>
-          <LlmSettingsForm stored={stored} />
-        </section>
+        <AiSetup
+          intro="Greer uses it to read each thread and judge whether you can help. The scan carries on as soon as it's saved."
+          jevKey={jevKey}
+          stored={stored}
+        />
       )}
       {progress.queries.failed > 0 && (
         <Alert>

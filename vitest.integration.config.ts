@@ -23,6 +23,7 @@ export default defineConfig({
       ALLOW_REGISTRATION: "false",
       // Never pick up a real key from the shell during tests.
       ANTHROPIC_API_KEY: "",
+      TYPESAFE_API_KEY: "",
     },
   },
 });
