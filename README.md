@@ -1,8 +1,12 @@
-# <img src="src/app/icon.svg" alt="" width="36" height="36"> Greer
+<div align="center">
 
-**Find the conversations where you can genuinely help. Write the replies yourself.**
+<img src="src/app/icon.svg" alt="Greer logo" width="120" height="120">
 
-Greer is an open-source, self-hostable tool for small SaaS builders who want to grow a community from zero: find people who have the problem you solve, join their conversations with useful answers, and remember who you talked to.
+# Greer
+
+**An open-source tool for small SaaS builders who want to grow a community from zero: find the conversations where you can genuinely help. Write the replies yourself**
+
+</div>
 
 > **Status: early, planning stage.** There's nothing to install yet. This README explains what Greer is for; [PLAN.md](PLAN.md) has the detailed v1 plan. Feedback on the idea is very welcome.
 
