@@ -5,7 +5,12 @@ import { toast } from "sonner";
 import { HnLogo } from "@/components/logos/hn-logo";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import type { AccountSummary } from "@/workspace/accounts";
 import {
@@ -193,11 +198,25 @@ function HnCard({
                   spellCheck={false}
                   className="max-w-64"
                   aria-invalid={!!error}
+                  aria-describedby={`${id}-handle-help`}
                 />
                 <Button type="submit" disabled={pending || !handle.trim()}>
                   {pending ? "Connecting…" : "Connect"}
                 </Button>
               </div>
+              <FieldDescription id={`${id}-handle-help`}>
+                No account yet?{" "}
+                <a
+                  href="https://news.ycombinator.com/login"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Create one on Hacker News
+                  <span className="sr-only"> (opens in a new tab)</span>
+                </a>
+                , then connect it here. New accounts get a gentler pace while
+                they build karma.
+              </FieldDescription>
               <FieldError>{error}</FieldError>
             </Field>
           </form>
