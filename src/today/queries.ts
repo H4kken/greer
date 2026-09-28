@@ -115,9 +115,27 @@ export async function loadToday(
     pace,
     now,
   });
+  // The last two days, enough for "today" in any time zone.
+  const since = now.getTime() - 48 * 60 * 60 * 1000;
   return {
     me,
     people,
+    day: {
+      replies: replies
+        .filter((r) => r.postedAt.getTime() >= since)
+        .map((r) => ({
+          id: r.id,
+          at: r.postedAt,
+          handle: r.parentAuthor || null,
+        })),
+      answers: answers
+        .filter(
+          (a) =>
+            a.postedAt.getTime() >= since &&
+            a.author.toLowerCase() !== me?.toLowerCase(),
+        )
+        .map((a) => ({ at: a.postedAt, author: a.author })),
+    },
     topics: facts.topics,
     threads: new Map(threads.map((t) => [t.id, t])),
     launches,

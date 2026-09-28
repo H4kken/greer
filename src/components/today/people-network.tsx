@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { placePeople } from "@/people/layout";
 import type { NetworkPerson } from "./types";
@@ -23,9 +26,17 @@ function place(people: NetworkPerson[]) {
   ];
 }
 
+// One slow turn around you, in seconds: your people one way, today's new
+// people the other way and slower. Each person also drifts a little closer
+// and further, at their own pace.
+const TURN_S = 480;
+const NEW_TURN_S = -720;
+const DRIFT = 1.2; // % of the box
+
 // What fills the space beside the feed when nobody is picked: the people
-// you've talked with, gently moving. Who has news glows; the new people you
-// could meet today wait at the edge. Decorative: the feed is the way in.
+// you've talked with, always slowly moving. Who has news glows; the new
+// people you could meet today wait at the edge. Decorative: the feed is the
+// way in.
 export function PeopleNetwork({
   people,
   summary,
@@ -37,6 +48,41 @@ export function PeopleNetwork({
 }) {
   const placed = place(people);
   const knownCount = people.filter((p) => p.kind !== "new").length;
+  const nodes = useRef<(HTMLSpanElement | null)[]>([]);
+  const lines = useRef<(SVGLineElement | null)[]>([]);
+
+  // Moves the DOM directly each frame: no React render per frame. The first
+  // paint (server and browser) is the resting layout; reduced motion keeps it.
+  const layout = placed.map((p) => ({
+    r: Math.hypot(p.x - 50, p.y - 50),
+    angle: Math.atan2(p.y - 50, p.x - 50),
+    turn: p.kind === "new" ? NEW_TURN_S : TURN_S,
+  }));
+  const key = placed.map((p) => p.handle).join();
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let frame = 0;
+    let start: number | null = null;
+    const tick = (ms: number) => {
+      start ??= ms;
+      const t = (ms - start) / 1000;
+      layout.forEach((l, i) => {
+        const angle = l.angle + (2 * Math.PI * t) / l.turn;
+        const r = l.r + DRIFT * Math.sin((2 * Math.PI * t) / (9 + (i % 4)) + i);
+        const x = 50 + r * Math.cos(angle);
+        const y = 50 + r * Math.sin(angle);
+        nodes.current[i]?.style.setProperty("left", `${x}%`);
+        nodes.current[i]?.style.setProperty("top", `${y}%`);
+        lines.current[i]?.setAttribute("x2", String(x));
+        lines.current[i]?.setAttribute("y2", String(y));
+      });
+      frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+    // The layout only changes when the people do.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
 
   return (
     <section
@@ -76,9 +122,12 @@ export function PeopleNetwork({
           preserveAspectRatio="none"
           className="absolute inset-0 size-full"
         >
-          {placed.map((p) => (
+          {placed.map((p, i) => (
             <line
               key={p.handle}
+              ref={(el) => {
+                lines.current[i] = el;
+              }}
               x1="50"
               y1="50"
               x2={p.x}
@@ -108,6 +157,9 @@ export function PeopleNetwork({
         {placed.map((p, i) => (
           <span
             key={p.handle}
+            ref={(el) => {
+              nodes.current[i] = el;
+            }}
             aria-hidden
             className="absolute"
             style={{
@@ -117,13 +169,7 @@ export function PeopleNetwork({
               transform: `translate(-${p.size / 2}px, -50%)`,
             }}
           >
-            <span
-              className="flex items-center gap-2 motion-safe:animate-float"
-              style={{
-                animationDelay: `-${(i * 0.9) % 7}s`,
-                animationDuration: `${6 + (i % 4)}s`,
-              }}
-            >
+            <span className="flex items-center gap-2">
               <span
                 style={{
                   width: p.size,

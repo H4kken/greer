@@ -3,7 +3,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { LaunchStrip } from "@/components/today/launch-strip";
 import { PeopleNetwork } from "@/components/today/people-network";
+import { DayProgress } from "@/components/today/day-progress";
 import { Greeting } from "@/components/today/greeting";
+import { NextCheck } from "@/components/today/next-check";
 import { RetrySearchesButton } from "@/components/today/retry-searches-button";
 import { TodayView } from "@/components/today/today-view";
 import type {
@@ -21,6 +23,7 @@ import { db } from "@/db";
 import { MATURITY_ADVICE } from "@/guardrails/maturity";
 import { requireWorkspace } from "@/lib/session";
 import { formatAbsolute, formatRelative } from "@/lib/time";
+import { getWorkerHealth } from "@/lib/health";
 import { getLlmStatus } from "@/llm/settings";
 import { explainCriteria } from "@/scoring/explain";
 import type { TodayEntry } from "@/today/build";
@@ -44,12 +47,13 @@ export default async function TodayPage({ searchParams }: PageProps<"/today">) {
   const account = await getAccountSummary(db, workspace.id, "hn");
   const tier = account?.tier ?? "new";
   const pace = MATURITY_ADVICE[tier].repliesPerDay;
-  const [today, profile, health, unscored, llm] = await Promise.all([
+  const [today, profile, health, unscored, llm, worker] = await Promise.all([
     loadToday(db, workspace.id, { platform: "hn", pace, now }),
     getProductProfile(db, workspace.id),
     sourceHealth(db, workspace.id),
     unscoredCount(db, workspace.id),
     getLlmStatus(workspace.id),
+    getWorkerHealth(now),
   ]);
 
   const topicName = new Map(today.topics.map((t) => [t.id, t.name]));
@@ -177,25 +181,50 @@ export default async function TodayPage({ searchParams }: PageProps<"/today">) {
                 : summaryLine(knownCount, freshCount)}
             </p>
           </div>
-          {today.me ? (
-            <Link
-              href="/people"
-              className="text-sm text-muted-foreground no-underline hover:text-foreground"
-            >
-              This week:{" "}
-              <span className="text-foreground">
-                {today.week.thanked} thanked you · {today.week.talking} answered
-                you · {today.week.met} new{" "}
-                {today.week.met === 1 ? "person" : "people"}
-              </span>
-            </Link>
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              <Link href="/accounts">Connect your Hacker News account</Link> to
-              see who answers you.
-            </p>
-          )}
+          <div className="flex flex-col items-start gap-1 text-sm text-muted-foreground sm:items-end">
+            {today.me ? (
+              <Link
+                href="/people"
+                className="text-muted-foreground no-underline hover:text-foreground"
+              >
+                This week:{" "}
+                <span className="text-foreground">
+                  {today.week.thanked} thanked you · {today.week.talking}{" "}
+                  answered you · {today.week.met} new{" "}
+                  {today.week.met === 1 ? "person" : "people"}
+                </span>
+              </Link>
+            ) : (
+              <p>
+                <Link href="/accounts">Connect your Hacker News account</Link>{" "}
+                to see who you helped and who answers you.
+              </p>
+            )}
+            <NextCheck
+              lastCheckAt={health.lastCheckAt?.toISOString() ?? null}
+              workerRunning={worker.healthy}
+              serverNow={now.getTime()}
+            />
+          </div>
         </div>
+
+        {today.me && (
+          // Close to the summary above: it's the same thought, about today.
+          <div className="-mt-3">
+            <DayProgress
+              replies={today.day.replies.map((r) => ({
+                ...r,
+                at: r.at.toISOString(),
+              }))}
+              answers={today.day.answers.map((a) => ({
+                ...a,
+                at: a.at.toISOString(),
+              }))}
+              pace={pace}
+              serverNow={now.getTime()}
+            />
+          </div>
+        )}
 
         {health.failing.length > 0 && (
           <Alert>

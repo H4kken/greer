@@ -260,6 +260,10 @@ test.describe("as the owner", () => {
     // Old inbox links land on Today.
     await page.goto("/inbox");
     await expect(page).toHaveURL(/\/today$/);
+    // No worker runs in e2e: Today says checks are paused, not a countdown.
+    await expect(
+      page.getByText("Greer's background worker isn't running"),
+    ).toBeVisible();
 
     // No account yet, so the pace is a new account's: three new people, the
     // weak match left out. Nobody picked: your people fill the space.

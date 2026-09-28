@@ -15,9 +15,8 @@ import {
   touchHeartbeatFile,
 } from "./jobs/heartbeat";
 import { createQueue, ensureQueues, QUEUES, repliesKey } from "./queue";
+import { INGEST_CRON } from "./schedule";
 import type { Platform } from "@/sources/types";
-
-const INGEST_CRON = "*/15 * * * *"; // every 15 minutes
 
 async function main() {
   const connectionString = process.env.DATABASE_URL;

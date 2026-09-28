@@ -191,6 +191,11 @@ describe("Today", () => {
     expect(today.launches.map((l) => l.id)).toEqual([launch]);
     // First replied to sarahk 30 hours ago: met this week.
     expect(today.week).toEqual({ thanked: 1, talking: 1, met: 1 });
+    // The last two days, for "you helped N people today".
+    expect(today.day.replies).toEqual([
+      { id: r!.id, at: hoursAgo(30), handle: "sarahk" },
+    ]);
+    expect(today.day.answers).toEqual([{ at: hoursAgo(3), author: "sarahk" }]);
   });
 
   it("never shows or touches another workspace's threads", async () => {
