@@ -13,6 +13,8 @@ export const QUEUES = {
   scoreItem: "score-item",
   // One linked account: find the user's new comments. Keyed by workspace + platform.
   repliesPoll: "replies-poll",
+  // One answer to the user's reply: ask the model how they answered.
+  classifyAnswer: "classify-answer",
 } as const;
 export type QueueName = (typeof QUEUES)[keyof typeof QUEUES];
 
@@ -32,6 +34,13 @@ const QUEUE_OPTIONS: Partial<
     policy: "stately",
     retryLimit: 3,
     retryDelay: 30,
+    retryBackoff: true,
+  },
+  // One waiting and one running job per answer (singletonKey = answer id).
+  [QUEUES.classifyAnswer]: {
+    policy: "stately",
+    retryLimit: 2,
+    retryDelay: 60,
     retryBackoff: true,
   },
   // One waiting and one running job per item (singletonKey = item id).

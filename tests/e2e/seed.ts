@@ -55,3 +55,39 @@ export async function seedThreads(threads: SeedThread[]): Promise<void> {
     await client.end();
   }
 }
+
+// One of the owner's replies with an answer, as the worker would store it.
+export async function seedAnswer(answer: {
+  author: string;
+  text: string;
+  tone: "question" | "thanks" | "disagreement" | "neutral";
+}): Promise<void> {
+  const client = new Client({ connectionString: E2E_DATABASE_URL });
+  await client.connect();
+  try {
+    const { rows } = await client.query<{ id: string }>(
+      "select id from workspace order by created_at limit 1",
+    );
+    const workspaceId = rows[0]!.id;
+    const replyId = crypto.randomUUID();
+    await client.query(
+      `insert into reply (id, workspace_id, platform, external_id, parent_external_id, thread_external_id, thread_title, text, url, posted_at, raw)
+       values ($1, $2, 'hn', '80001', '80000', '80000', 'Ask HN: How do you get your first users?', 'I answered questions where they hang out.', 'https://news.ycombinator.com/item?id=80001', now() - interval '5 hours', '{}')`,
+      [replyId, workspaceId],
+    );
+    await client.query(
+      `insert into reply_answer (id, workspace_id, reply_id, platform, external_id, author, text, url, posted_at, tone)
+       values ($1, $2, $3, 'hn', '80002', $4, $5, 'https://news.ycombinator.com/item?id=80002', now() - interval '2 hours', $6)`,
+      [
+        crypto.randomUUID(),
+        workspaceId,
+        replyId,
+        answer.author,
+        answer.text,
+        answer.tone,
+      ],
+    );
+  } finally {
+    await client.end();
+  }
+}

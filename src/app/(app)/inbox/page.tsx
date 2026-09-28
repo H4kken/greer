@@ -1,3 +1,5 @@
+import { AnswersBlock } from "@/components/replies/answers-block";
+import { recentAnswers } from "@/replies/answers";
 import { AlertTriangleIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -44,24 +46,34 @@ export default async function InboxPage({ searchParams }: PageProps<"/inbox">) {
   const { workspace } = await requireWorkspace();
   const now = new Date();
 
-  const [list, counts, keywords, health, account, profile, unscored, llm] =
-    await Promise.all([
-      listInbox(db, workspace.id, {
-        view: params.view,
-        sort: params.sort,
-        queryId: params.q,
-        showLow: params.low,
-        limit: params.n,
-        now,
-      }),
-      inboxCounts(db, workspace.id, now),
-      keywordLabels(db, workspace.id),
-      sourceHealth(db, workspace.id),
-      getAccountSummary(db, workspace.id, "hn"),
-      getProductProfile(db, workspace.id),
-      unscoredCount(db, workspace.id),
-      getLlmStatus(workspace.id),
-    ]);
+  const [
+    list,
+    counts,
+    keywords,
+    health,
+    account,
+    profile,
+    unscored,
+    llm,
+    answers,
+  ] = await Promise.all([
+    listInbox(db, workspace.id, {
+      view: params.view,
+      sort: params.sort,
+      queryId: params.q,
+      showLow: params.low,
+      limit: params.n,
+      now,
+    }),
+    inboxCounts(db, workspace.id, now),
+    keywordLabels(db, workspace.id),
+    sourceHealth(db, workspace.id),
+    getAccountSummary(db, workspace.id, "hn"),
+    getProductProfile(db, workspace.id),
+    unscoredCount(db, workspace.id),
+    getLlmStatus(workspace.id),
+    recentAnswers(db, workspace.id, { now }),
+  ]);
 
   const labelOf = new Map(keywords.map((k) => [k.id, k.label]));
   const rows: InboxRow[] = list.items.map((i) => ({
@@ -324,6 +336,10 @@ export default async function InboxPage({ searchParams }: PageProps<"/inbox">) {
               </p>
             </AlertDescription>
           </Alert>
+        )}
+
+        {params.view === "help" && !params.q && (
+          <AnswersBlock answers={answers} now={now} />
         )}
 
         <Inbox

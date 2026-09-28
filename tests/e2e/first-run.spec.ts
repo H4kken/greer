@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
-import { seedThreads } from "./seed";
+import { seedAnswer, seedThreads } from "./seed";
 
 // One story, in order: a fresh install gets its owner, who goes through
 // onboarding; then registration is closed. The LLM is mocked (see
@@ -338,6 +338,22 @@ test.describe("as the owner", () => {
     await expectNoSeriousA11yViolations(page);
     await page.getByRole("button", { name: "Back to the list" }).click();
     await expect(threads).toBeVisible();
+  });
+
+  test("the inbox shows who answered the owner's replies", async ({ page }) => {
+    await seedAnswer({
+      author: "devon_b",
+      text: "How long did that take before someone asked about your product?",
+      tone: "question",
+    });
+    await page.goto("/inbox");
+    const answers = page.getByRole("region", { name: "They answered you" });
+    await expect(answers.getByText("devon_b")).toBeVisible();
+    await expect(answers.getByText(/asked you something/)).toBeVisible();
+    await expect(
+      answers.getByRole("link", { name: /Answer on HN/ }),
+    ).toHaveAttribute("href", "https://news.ycombinator.com/item?id=80002");
+    await expectNoSeriousA11yViolations(page);
   });
 });
 

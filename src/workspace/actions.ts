@@ -11,6 +11,7 @@ import { suggestKeywords } from "@/llm/prompts/suggest-keywords";
 import { loadStoredSettings, saveLlmSettings } from "@/llm/settings";
 import { requireWorkspace } from "@/lib/session";
 import { startFirstScan } from "@/onboarding/scan";
+import { unclassifiedAnswerIds } from "@/replies/classify";
 import { unscoredItemIds } from "@/scoring/score";
 import { SourceHttpError } from "@/sources/http";
 import { getSource } from "@/sources/registry";
@@ -333,13 +334,21 @@ export async function saveLlmSettingsAction(
     workspaceId: workspace.id,
     limit: 500,
   });
-  await trySendFromWeb(
-    waiting.map((itemId) => ({
+  const answers = await unclassifiedAnswerIds(db, {
+    workspaceId: workspace.id,
+  });
+  await trySendFromWeb([
+    ...waiting.map((itemId) => ({
       name: QUEUES.scoreItem,
       data: { itemId },
       singletonKey: itemId,
     })),
-  );
+    ...answers.map((answerId) => ({
+      name: QUEUES.classifyAnswer,
+      data: { answerId },
+      singletonKey: answerId,
+    })),
+  ]);
   revalidatePath("/settings");
   revalidatePath("/onboarding/product");
   refresh();

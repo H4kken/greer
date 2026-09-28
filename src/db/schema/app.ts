@@ -282,6 +282,8 @@ export const reply = pgTable(
     url: text("url").notNull(),
     postedAt: timestamp("posted_at", { withTimezone: true }).notNull(),
     raw: jsonb("raw").notNull(),
+    // Last look for answers to it (src/replies/answers.ts).
+    answersCheckedAt: timestamp("answers_checked_at", { withTimezone: true }),
     ...timestamps,
   },
   (t) => [
@@ -292,5 +294,55 @@ export const reply = pgTable(
     ),
     index("reply_workspace_posted_idx").on(t.workspaceId, t.postedAt),
     index("reply_item_idx").on(t.itemId),
+  ],
+);
+
+// How someone answered the user, from the model's yes/no signals
+// (src/replies/classify.ts). A question wins: it's a conversation to continue.
+export const answerTone = pgEnum("answer_tone", [
+  "question",
+  "thanks",
+  "disagreement",
+  "neutral",
+]);
+
+// A direct answer to one of the user's replies, by someone else.
+export const replyAnswer = pgTable(
+  "reply_answer",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspace.id, { onDelete: "cascade" }),
+    replyId: text("reply_id")
+      .notNull()
+      .references(() => reply.id, { onDelete: "cascade" }),
+    platform: platform("platform").notNull(),
+    externalId: text("external_id").notNull(),
+    author: text("author").notNull(),
+    text: text("text").notNull(),
+    url: text("url").notNull(),
+    postedAt: timestamp("posted_at", { withTimezone: true }).notNull(),
+    // Null until the model has read it.
+    tone: answerTone("tone"),
+    thanked: boolean("thanked"),
+    asked: boolean("asked"),
+    disagreed: boolean("disagreed"),
+    toneReason: text("tone_reason"),
+    promptVersion: text("prompt_version"),
+    model: text("model"),
+    classifiedAt: timestamp("classified_at", { withTimezone: true }),
+    ...timestamps,
+  },
+  (t) => [
+    uniqueIndex("reply_answer_workspace_platform_external_idx").on(
+      t.workspaceId,
+      t.platform,
+      t.externalId,
+    ),
+    index("reply_answer_workspace_posted_idx").on(t.workspaceId, t.postedAt),
+    index("reply_answer_reply_idx").on(t.replyId),
   ],
 );

@@ -2,6 +2,8 @@ import "./env";
 import { db } from "@/db";
 import { enabledQueryIds, pollQuery } from "@/ingest/poll";
 import { LlmNotConfiguredError } from "@/llm/config";
+import { pollAnswers } from "@/replies/answers";
+import { classifyReplyAnswer, unclassifiedAnswerIds } from "@/replies/classify";
 import { linkedAccounts, pollReplies } from "@/replies/poll";
 import { scoreItem, unscoredItemIds } from "@/scoring/score";
 import { getSource } from "@/sources/registry";
@@ -29,6 +31,16 @@ async function main() {
   });
   await boss.schedule(QUEUES.heartbeat, HEARTBEAT_CRON);
 
+  const queueClassifying = async (answerIds: string[]) => {
+    for (const answerId of answerIds) {
+      await boss.send(
+        QUEUES.classifyAnswer,
+        { answerId },
+        { singletonKey: answerId },
+      );
+    }
+  };
+
   const queueScoring = async (itemIds: string[]) => {
     for (const itemId of itemIds) {
       await boss.send(QUEUES.scoreItem, { itemId }, { singletonKey: itemId });
@@ -50,6 +62,7 @@ async function main() {
     }
     // Sweep: anything left unscored (crash, outage, LLM not configured yet).
     await queueScoring(await unscoredItemIds(db));
+    await queueClassifying(await unclassifiedAnswerIds(db));
   });
   await boss.schedule(QUEUES.ingestSchedule, INGEST_CRON);
 
@@ -67,8 +80,32 @@ async function main() {
     QUEUES.repliesPoll,
     async ([job]) => {
       const { workspaceId, platform } = job!.data;
-      const counts = await pollReplies(db, getSource, workspaceId, platform);
-      console.log(`[replies] ${repliesKey(job!.data)}:`, counts);
+      const replies = await pollReplies(db, getSource, workspaceId, platform);
+      const { newIds, ...answers } = await pollAnswers(
+        db,
+        getSource,
+        workspaceId,
+        platform,
+      );
+      console.log(`[replies] ${repliesKey(job!.data)}:`, { replies, answers });
+      await queueClassifying(newIds);
+    },
+  );
+
+  await boss.work<{ answerId: string }>(
+    QUEUES.classifyAnswer,
+    { localConcurrency: 4 },
+    async ([job]) => {
+      try {
+        await classifyReplyAnswer(db, job!.data.answerId);
+      } catch (error) {
+        // Same as scoring: the sweep picks it up once a model is set.
+        if (error instanceof LlmNotConfiguredError) {
+          console.warn(`[classify] ${error.message}`);
+          return;
+        }
+        throw error;
+      }
     },
   );
 

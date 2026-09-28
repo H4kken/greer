@@ -1,5 +1,6 @@
 // Runs the scoring prompts on the eval set against a real model and reports
 // precision/recall and score spread. Usage: pnpm eval [--threshold 60]
+// Other prompts: pnpm eval classify-answer
 // Needs an LLM key in the environment (e.g. ANTHROPIC_API_KEY). Nothing is
 // written to the database.
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
@@ -12,10 +13,17 @@ import { scoreHelp } from "@/llm/prompts/score-help";
 import { scoreLaunch } from "@/llm/prompts/score-launch";
 import { computeHelpScore, computeLaunchScore } from "@/scoring/compute";
 
-const { values } = parseArgs({
+const { values, positionals } = parseArgs({
   options: { threshold: { type: "string", default: "60" } },
+  allowPositionals: true,
 });
 const threshold = Number(values.threshold);
+
+// `pnpm eval classify-answer` runs that prompt's set instead of scoring.
+if (positionals[0] === "classify-answer") {
+  await import("./eval-classify-answer");
+  process.exit(0);
+}
 
 type Case = {
   id: string;
