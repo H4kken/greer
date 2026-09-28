@@ -38,6 +38,7 @@
   --color-secondary: var(--secondary);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
@@ -67,6 +68,7 @@
   --popover-foreground: #1c1917;
   --primary: #2f6b4f; /* forest: primary actions, focus, selection */
   --primary-foreground: #ffffff;
+  --primary-hover: #23513c; /* darker, so white text keeps its contrast */
   --primary-soft: #e6efe9; /* selected rows and views, score chips */
   --primary-soft-foreground: #1f4a37;
   --secondary: #f0ede6;
@@ -104,6 +106,7 @@
   --popover-foreground: #f3f0ea;
   --primary: #7fc4a0; /* lighter forest so it reads on dark */
   --primary-foreground: #10241a;
+  --primary-hover: #9dd3b6;
   --primary-soft: #1f3329;
   --primary-soft-foreground: #b9e0ca;
   --secondary: #262320;
