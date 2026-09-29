@@ -8,6 +8,8 @@ export type EntryView = {
   key: string;
   kind: "answer" | "asks" | "launch" | "stuck" | "launched";
   known: boolean;
+  // Known only from the user's replies: they haven't answered yet.
+  waiting: boolean;
   handle: string;
   when: string; // "5h ago"
   whenTitle: string; // absolute, for hover

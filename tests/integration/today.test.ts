@@ -177,6 +177,23 @@ describe("Today", () => {
     expect(await restoreItem(db, ws, a)).toBe(true);
   });
 
+  it("offers only the room left in today's pace, the rest behind Show more", async () => {
+    await saveAccount(db, ws, "hn", {
+      handle: "mathisg",
+      createdAt: new Date("2020-01-01T00:00:00Z"),
+      karma: 212,
+    });
+    const helped = await addItem({ author: "kvn", score: 95 });
+    const a = await addItem({ author: "lena", score: 90 });
+    const b = await addItem({ author: "pjt", score: 85 });
+    await markReplied(db, ws, helped, hoursAgo(1));
+
+    // Pace 2, one person helped today: one new person, one waiting.
+    const today = await load(2);
+    expect(today.entries.map((e) => e.key)).toEqual([key(a)]);
+    expect(today.more.map((e) => e.key)).toEqual([key(b)]);
+  });
+
   it("asks about marked replies Greer still hasn't found", async () => {
     await saveAccount(db, ws, "hn", {
       handle: "mathisg",

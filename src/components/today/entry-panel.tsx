@@ -43,6 +43,9 @@ export function EntryPanel({
   const id = useId();
   const { thread, answer, launch } = entry;
   const feedback = thread?.category === "feedback";
+  // Where you talked, minus the thread already shown above.
+  const shown = new Set([thread?.url, launch?.url].filter(Boolean));
+  const where = entry.threads.filter((t) => !shown.has(t.url));
 
   return (
     <article
@@ -61,7 +64,7 @@ export function EntryPanel({
 
       <header className="flex flex-col gap-3">
         <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
-          <PersonTag known={entry.known} />
+          <PersonTag entry={entry} />
           <span>
             <span className="font-medium text-foreground">{entry.handle}</span>{" "}
             {entry.event} · <time title={entry.whenTitle}>{entry.when}</time>
@@ -187,15 +190,6 @@ export function EntryPanel({
             </ul>
           </section>
 
-          <section
-            aria-label="Ideas for your reply"
-            className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground"
-          >
-            {feedback
-              ? "Ideas for your feedback come next: short notes to think with (what to try, what to ask the maker). You write it; Greer never does."
-              : "Ideas for your reply come next: short notes to think with (what they need, angles, questions to ask back). You write the reply; Greer never does."}
-          </section>
-
           <p className="text-sm text-muted-foreground">
             Hacker News asks for kind, substantive replies; if you mention
             something you built, say so. {mentionAdvice}{" "}
@@ -231,7 +225,20 @@ export function EntryPanel({
         </div>
       )}
 
-      {launch && (
+      {/* A launch that is the card itself: its title is the heading above. */}
+      {launch && entry.kind === "launch" && (
+        <a
+          href={launch.url}
+          {...external}
+          className={cn(buttonVariants(), "w-fit")}
+        >
+          See it on HN
+          <NewTab />
+        </a>
+      )}
+
+      {/* A launch that came along with other news. */}
+      {launch && entry.kind !== "launch" && (
         <div className="flex flex-col gap-2 rounded-xl bg-primary-soft p-4 text-primary-soft-foreground">
           <p className="text-sm font-medium">
             {entry.handle} launched something · {launch.when}
@@ -247,7 +254,7 @@ export function EntryPanel({
         </div>
       )}
 
-      {entry.threads.length > 0 && (
+      {where.length > 0 && (
         <section
           aria-labelledby={`${id}-where`}
           className="flex flex-col gap-2"
@@ -256,7 +263,7 @@ export function EntryPanel({
             Where you talked
           </h3>
           <ul className="flex flex-col gap-1.5 text-sm">
-            {entry.threads.map((t) => (
+            {where.map((t) => (
               <li key={t.url}>
                 <a
                   href={t.url}

@@ -1,7 +1,7 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
-import { dayProgress, progressLine } from "@/today/progress";
+import { useEffect, useSyncExternalStore } from "react";
+import { dayProgress, progressLine, TIME_ZONE_COOKIE } from "@/today/progress";
 import { useMinute } from "./use-minute";
 
 const noSubscribe = () => () => {};
@@ -27,6 +27,14 @@ export function DayProgress({
     () => false,
   );
   const now = useMinute(serverNow);
+  // Tell the server what "today" is here, so the feed offers only the room
+  // left in today's pace (see loadToday).
+  useEffect(() => {
+    const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (!document.cookie.includes(`${TIME_ZONE_COOKIE}=${zone}`)) {
+      document.cookie = `${TIME_ZONE_COOKIE}=${zone}; path=/; max-age=31536000; samesite=lax`;
+    }
+  }, []);
   if (!inBrowser) return <div aria-hidden className="h-7" />;
 
   const isToday = (d: Date) => d.toDateString() === now.toDateString();
@@ -40,7 +48,7 @@ export function DayProgress({
   return (
     <div
       aria-live="polite"
-      className="flex min-h-7 flex-wrap items-center gap-x-3 gap-y-2 text-sm text-muted-foreground"
+      className="flex flex-col items-start gap-1.5 text-sm text-muted-foreground lg:items-end lg:text-right"
     >
       {(p.helped.length > 0 || p.room > 0) && (
         <span aria-hidden className="flex items-center gap-1.5">

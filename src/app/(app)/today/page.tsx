@@ -1,5 +1,6 @@
 import { AlertTriangleIcon } from "lucide-react";
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import Link from "next/link";
 import { PeopleNetwork } from "@/components/today/people-network";
 import { DayProgress } from "@/components/today/day-progress";
@@ -23,6 +24,7 @@ import { getWorkerHealth } from "@/lib/health";
 import { getAiStatus } from "@/llm/settings";
 import { explainCriteria } from "@/scoring/explain";
 import type { TodayEntry } from "@/today/build";
+import { sameDayAs, TIME_ZONE_COOKIE } from "@/today/progress";
 import {
   eventLine,
   historyLine,
@@ -44,13 +46,20 @@ export default async function TodayPage({ searchParams }: PageProps<"/today">) {
   const { p } = await searchParams;
   const { session, workspace } = await requireWorkspace();
   const now = new Date();
+  // Saved by the browser (DayProgress): what "today" is for the viewer.
+  const timeZone = (await cookies()).get(TIME_ZONE_COOKIE)?.value ?? null;
 
   const account = await getAccountSummary(db, workspace.id, "hn");
   const tier = account?.tier ?? "new";
   const pace = MATURITY_ADVICE[tier].repliesPerDay;
   const [today, profile, health, unscored, ai, worker, missing] =
     await Promise.all([
-      loadToday(db, workspace.id, { platform: "hn", pace, now }),
+      loadToday(db, workspace.id, {
+        platform: "hn",
+        pace,
+        now,
+        isToday: sameDayAs(now, timeZone),
+      }),
       getProductProfile(db, workspace.id),
       sourceHealth(db, workspace.id),
       unscoredCount(db, workspace.id),
@@ -73,6 +82,7 @@ export default async function TodayPage({ searchParams }: PageProps<"/today">) {
       key: e.key,
       kind: e.kind,
       known: !!person,
+      waiting: person?.kind === "waiting",
       handle: e.handle,
       when: formatRelative(e.at, now),
       whenTitle: formatAbsolute(e.at),
@@ -154,7 +164,12 @@ export default async function TodayPage({ searchParams }: PageProps<"/today">) {
     .filter(Boolean)
     .join(" ");
 
-  const knownCount = newsFrom.size;
+  const knownCount = new Set(
+    entries.filter((e) => e.known && !e.waiting).map((e) => e.handle),
+  ).size;
+  const repliedCount = new Set(
+    entries.filter((e) => e.waiting).map((e) => e.handle),
+  ).size;
   const freshCount = entries.filter((e) => !e.known).length;
   const nothingYet = !entries.length && !more.length && !today.people.length;
 
@@ -176,16 +191,32 @@ export default async function TodayPage({ searchParams }: PageProps<"/today">) {
   return (
     <div className="flex flex-1 flex-col">
       <div className="mx-auto flex w-full max-w-screen-xl flex-col gap-6 px-4 py-8">
-        <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-3">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between lg:gap-12">
           <div className="flex flex-col gap-2">
             <Greeting name={session.user.name} />
             <p className="text-lg text-muted-foreground">
               {nothingYet
                 ? "Greer is getting to know Hacker News for you."
-                : summaryLine(knownCount, freshCount)}
+                : summaryLine(knownCount, freshCount, repliedCount)}
             </p>
           </div>
-          <div className="flex flex-col items-start gap-1 text-sm text-muted-foreground sm:items-end">
+          {/* Your numbers (today, this week, checks), apart from the
+              invitation on the left about who's here. */}
+          <div className="flex flex-col items-start gap-1 text-sm text-muted-foreground lg:max-w-md lg:shrink-0 lg:items-end lg:text-right">
+            {today.me && (
+              <DayProgress
+                replies={today.day.replies.map((r) => ({
+                  ...r,
+                  at: r.at.toISOString(),
+                }))}
+                answers={today.day.answers.map((a) => ({
+                  ...a,
+                  at: a.at.toISOString(),
+                }))}
+                pace={pace}
+                serverNow={now.getTime()}
+              />
+            )}
             {today.me ? (
               <Link
                 href="/people"
@@ -211,24 +242,6 @@ export default async function TodayPage({ searchParams }: PageProps<"/today">) {
             />
           </div>
         </div>
-
-        {today.me && (
-          // Close to the summary above: it's the same thought, about today.
-          <div className="-mt-3">
-            <DayProgress
-              replies={today.day.replies.map((r) => ({
-                ...r,
-                at: r.at.toISOString(),
-              }))}
-              answers={today.day.answers.map((a) => ({
-                ...a,
-                at: a.at.toISOString(),
-              }))}
-              pace={pace}
-              serverNow={now.getTime()}
-            />
-          </div>
-        )}
 
         <MissingReplies
           rows={missing.map((m) => ({

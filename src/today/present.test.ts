@@ -69,5 +69,9 @@ describe("Today's words", () => {
     expect(summaryLine(1, 0)).toBe("1 person you know has news.");
     expect(summaryLine(0, 1)).toBe("1 person could use your help.");
     expect(summaryLine(0, 0)).toBe("Nobody new today. Greer keeps listening.");
+    expect(summaryLine(1, 2, 1)).toBe(
+      "1 person you know has news, 1 person you replied to has news, and 2 new people could use your help.",
+    );
+    expect(summaryLine(0, 0, 2)).toBe("2 people you replied to have news.");
   });
 });

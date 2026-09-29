@@ -25,6 +25,7 @@ import {
 import { buildPeople } from "@/people/build";
 import { loadPeopleFacts } from "@/people/queries";
 import type { Platform } from "@/sources/types";
+import { dayProgress, sameDayAs } from "./progress";
 import { buildToday } from "./build";
 
 // Below this, a thread isn't worth a reply: it never shows on Today.
@@ -48,10 +49,13 @@ export async function loadToday(
     platform,
     pace,
     now = new Date(),
+    isToday = sameDayAs(now, null),
   }: {
     platform: Platform;
     pace: number;
     now?: Date;
+    // What "today" is for the viewer (see sameDayAs).
+    isToday?: (d: Date) => boolean;
   },
 ) {
   const mine = and(
@@ -141,19 +145,6 @@ export async function loadToday(
 
   const { me, replies, answers, tried } = facts;
   const people = me ? buildPeople({ me, replies, answers, tried }) : [];
-  const today = buildToday({
-    me,
-    people,
-    replies,
-    answers,
-    threads,
-    launches,
-    marks: marked.flatMap((m) =>
-      m.at ? [{ author: m.author, at: m.at }] : [],
-    ),
-    pace,
-    now,
-  });
   // The last two days, enough for "today" in any time zone.
   const since = now.getTime() - 48 * HOUR;
   const found = replies.filter((r) => r.postedAt.getTime() >= since);
@@ -165,34 +156,56 @@ export async function loadToday(
   const foundAs = new Set(
     found.map((r) => sameThread(r.parentAuthor, r.threadTitle)),
   );
+  const day = {
+    replies: [
+      ...found.map((r) => ({
+        id: r.id,
+        at: r.postedAt,
+        handle: r.parentAuthor || null,
+      })),
+      // Marked by hand and not found yet: counted once, not twice.
+      ...marked
+        .filter(
+          (m) =>
+            m.at &&
+            !foundIn.has(m.threadId) &&
+            !foundAs.has(sameThread(m.author, m.title)),
+        )
+        .map((m) => ({ id: `mark:${m.id}`, at: m.at!, handle: m.author })),
+    ],
+    answers: answers
+      .filter(
+        (a) =>
+          a.postedAt.getTime() >= since &&
+          a.author.toLowerCase() !== me?.toLowerCase(),
+      )
+      .map((a) => ({ at: a.postedAt, author: a.author })),
+  };
+  // New people offered today: only the room left in the pace. The rest wait
+  // behind "Show more", like everything past the pace.
+  const { room } = dayProgress({
+    replies: day.replies,
+    answers: [],
+    pace,
+    isToday,
+  });
+  const today = buildToday({
+    me,
+    people,
+    replies,
+    answers,
+    threads,
+    launches,
+    marks: marked.flatMap((m) =>
+      m.at ? [{ author: m.author, at: m.at }] : [],
+    ),
+    pace: room,
+    now,
+  });
   return {
     me,
     people,
-    day: {
-      replies: [
-        ...found.map((r) => ({
-          id: r.id,
-          at: r.postedAt,
-          handle: r.parentAuthor || null,
-        })),
-        // Marked by hand and not found yet: counted once, not twice.
-        ...marked
-          .filter(
-            (m) =>
-              m.at &&
-              !foundIn.has(m.threadId) &&
-              !foundAs.has(sameThread(m.author, m.title)),
-          )
-          .map((m) => ({ id: `mark:${m.id}`, at: m.at!, handle: m.author })),
-      ],
-      answers: answers
-        .filter(
-          (a) =>
-            a.postedAt.getTime() >= since &&
-            a.author.toLowerCase() !== me?.toLowerCase(),
-        )
-        .map((a) => ({ at: a.postedAt, author: a.author })),
-    },
+    day,
     topics: facts.topics,
     threads: new Map(threads.map((t) => [t.id, t])),
     launches,

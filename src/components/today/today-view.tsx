@@ -282,7 +282,7 @@ export function TodayView({
           </span>
           <span className="flex min-w-0 flex-1 flex-col gap-1">
             <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
-              <PersonTag known={e.known} />
+              <PersonTag entry={e} />
               <time title={e.whenTitle}>{e.when}</time>
               {e.match && (
                 <span className="font-medium text-primary-soft-foreground">

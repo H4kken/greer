@@ -64,3 +64,25 @@ export function progressLine(p: DayProgress, pace: number): string {
       return `${helped}, past your pace of ${pace}. Slowing down keeps your account safe.`;
   }
 }
+
+export const TIME_ZONE_COOKIE = "tz";
+
+// "Same calendar day as now" in the viewer's time zone, for the server (the
+// browser saves its zone in a cookie). Without a valid zone: the last 24h.
+export function sameDayAs(
+  now: Date,
+  timeZone: string | null | undefined,
+): (d: Date) => boolean {
+  if (timeZone) {
+    try {
+      const day = new Intl.DateTimeFormat("en-CA", { timeZone });
+      const today = day.format(now);
+      return (d) => day.format(d) === today;
+    } catch {
+      // Unknown zone: fall through.
+    }
+  }
+  return (d) =>
+    d.getTime() > now.getTime() - 24 * 60 * 60 * 1000 &&
+    d.getTime() <= now.getTime();
+}

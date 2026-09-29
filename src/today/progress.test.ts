@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { type DayReply, dayProgress, progressLine } from "./progress";
+import {
+  type DayReply,
+  dayProgress,
+  progressLine,
+  sameDayAs,
+} from "./progress";
 
 const today = (h: number) => new Date(Date.UTC(2026, 8, 28, h));
 const yesterday = new Date(Date.UTC(2026, 8, 27, 22));
@@ -65,5 +70,24 @@ describe("dayProgress", () => {
     expect(progressLine(progress(five), 3)).toBe(
       "You helped 5 people today, past your pace of 3. Slowing down keeps your account safe.",
     );
+  });
+});
+
+describe("sameDayAs", () => {
+  const now = new Date("2026-09-28T23:30:00Z");
+
+  it("uses the viewer's calendar day", () => {
+    // 23:30 UTC is already the 29th in Paris, still the 28th in New York.
+    const paris = sameDayAs(now, "Europe/Paris");
+    expect(paris(new Date("2026-09-28T22:30:00Z"))).toBe(true);
+    expect(paris(new Date("2026-09-28T21:30:00Z"))).toBe(false);
+    const ny = sameDayAs(now, "America/New_York");
+    expect(ny(new Date("2026-09-28T12:00:00Z"))).toBe(true);
+  });
+
+  it("falls back to the last 24 hours without a valid zone", () => {
+    const day = sameDayAs(now, "Not/AZone");
+    expect(day(new Date("2026-09-28T00:00:00Z"))).toBe(true);
+    expect(day(new Date("2026-09-27T23:00:00Z"))).toBe(false);
   });
 });

@@ -50,19 +50,23 @@ export function matchLabel(score: number): string {
   return "Possible match";
 }
 
-// The line under the greeting: who's there today, in a sentence.
-export function summaryLine(known: number, fresh: number): string {
+// The line under the greeting: who's there today, in a sentence. People you
+// replied to who haven't answered yet aren't "people you know" yet.
+export function summaryLine(
+  known: number,
+  fresh: number,
+  repliedTo = 0,
+): string {
   const people = (n: number) => (n === 1 ? "person" : "people");
-  const knownPart =
-    known > 0
-      ? `${known} ${people(known)} you know ${known === 1 ? "has" : "have"} news`
-      : "";
-  const freshPart =
-    fresh > 0
-      ? `${fresh} ${known > 0 ? "new " : ""}${people(fresh)} could use your help`
-      : "";
-  if (knownPart && freshPart) return `${knownPart}, and ${freshPart}.`;
-  if (knownPart) return `${knownPart}.`;
-  if (freshPart) return `${freshPart}.`;
-  return "Nobody new today. Greer keeps listening.";
+  const has = (n: number) => (n === 1 ? "has" : "have");
+  const parts = [
+    known > 0 && `${known} ${people(known)} you know ${has(known)} news`,
+    repliedTo > 0 &&
+      `${repliedTo} ${people(repliedTo)} you replied to ${has(repliedTo)} news`,
+    fresh > 0 &&
+      `${fresh} ${known + repliedTo > 0 ? "new " : ""}${people(fresh)} could use your help`,
+  ].filter((p): p is string => !!p);
+  if (!parts.length) return "Nobody new today. Greer keeps listening.";
+  const last = parts.pop()!;
+  return `${parts.length ? `${parts.join(", ")}, and ` : ""}${last}.`;
 }
