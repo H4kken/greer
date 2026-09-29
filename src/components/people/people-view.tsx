@@ -185,12 +185,9 @@ export function PeopleView({
   const inTopic = (p: PersonView) => !topic || p.topicIds.includes(topic.id);
   const person = people.find((p) => p.handle === selected) ?? people[0]!;
   const placed = placePeople(people);
-  // The map turns slowly, like Today's; it holds still under the pointer so
-  // a dot is easy to pick.
-  const orbitBox = useOrbit(
-    placed.map((p) => ({ ...p, turn: TURN_S })),
-    { pauseOnHover: true },
-  );
+  // The map turns slowly, like Today's; dots near the pointer slow right
+  // down so one is easy to pick.
+  const orbitBox = useOrbit(placed.map((p) => ({ ...p, turn: TURN_S })));
   const path = {
     ...initialPath,
     tried: people.filter((p) => p.tried).length,

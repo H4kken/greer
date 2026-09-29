@@ -516,13 +516,9 @@ test.describe("as the owner", () => {
     ).toHaveAttribute("href", "https://news.ycombinator.com/item?id=80002");
     await expectNoSeriousA11yViolations(page);
 
-    // The map turns slowly and holds still under the pointer, so a dot can
-    // be picked.
-    const map = page.getByRole("region", {
-      name: "Everyone you've talked with",
-    });
-    await map.hover();
-    await page.getByRole("button", { name: /^sarahk,/ }).click();
+    // The map turns slowly and holds still while a dot has keyboard focus.
+    await page.getByRole("button", { name: /^sarahk,/ }).focus();
+    await page.keyboard.press("Enter");
     const sarah = page.getByRole("region", { name: "sarahk" });
     await expect(sarah.getByText("Thanks, trying it tonight!")).toBeVisible();
     await sarah.getByRole("button", { name: "They tried Greer" }).click();
@@ -534,8 +530,8 @@ test.describe("as the owner", () => {
     // be taken back.
     await expect(sarah.getByRole("button", { name: "Undo" })).toBeEnabled();
     await page.reload();
-    await map.hover();
-    await page.getByRole("button", { name: /^sarahk,.*tried Greer/ }).click();
+    await page.getByRole("button", { name: /^sarahk,.*tried Greer/ }).focus();
+    await page.keyboard.press("Enter");
     await page
       .getByRole("region", { name: "sarahk" })
       .getByRole("button", { name: "Undo" })
