@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowUpRightIcon, XIcon, ZoomOutIcon } from "lucide-react";
+import { ArrowUpRightIcon, XIcon, ScanIcon } from "lucide-react";
 import {
   useEffect,
   useState,
@@ -436,7 +436,7 @@ export function PeopleView({
               person && "lg:right-[27rem]",
             )}
           >
-            <ZoomOutIcon aria-hidden /> Zoom out
+            <ScanIcon aria-hidden /> Reset zoom
           </Button>
         )}
         {person && wide && (

@@ -566,16 +566,20 @@ test.describe("as the owner", () => {
     await topics.getByRole("button", { name: "Everyone" }).click();
     await expect(line).toBeHidden();
 
-    // The wheel zooms in around the pointer; one click zooms back out.
+    // The wheel zooms in around the pointer; one click resets it.
     const map = page.getByRole("region", {
       name: "Everyone you've talked with",
     });
     const box = (await map.boundingBox())!;
     await page.mouse.move(box.x + box.width / 3, box.y + box.height / 2);
     await page.mouse.wheel(0, -400);
-    const zoomOut = page.getByRole("button", { name: "Zoom out" });
-    await zoomOut.click();
-    await expect(zoomOut).toBeHidden();
+    const resetZoom = page.getByRole("button", { name: "Reset zoom" });
+    await resetZoom.click();
+    await expect(resetZoom).toBeHidden();
+    // Past the resting view, it zooms out too.
+    await page.mouse.wheel(0, 400);
+    await resetZoom.click();
+    await expect(resetZoom).toBeHidden();
 
     // Escape puts the picked person away.
     await page.keyboard.press("Escape");

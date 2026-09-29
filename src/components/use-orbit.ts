@@ -16,7 +16,9 @@ const SLOWEST = 0.04;
 // jumps.
 const EASE = 5;
 
-// Zoom, from the whole map (1) to this much closer.
+// Zoom, around the resting view (1): out to see the map with room around
+// it, in to spread crowded people apart.
+const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 4;
 // How much one wheel notch (100 px of deltaY) zooms: about 16%.
 const ZOOM_PER_PX = 0.0015;
@@ -41,7 +43,7 @@ function smoothstep(near: number, far: number, d: number) {
 // With `zoomable`, the wheel zooms in and out around the pointer: people
 // spread apart while dots and names keep their size. Mark "You" with
 // `data-orbit-center` so it follows. `onZoom` hears whether the map is
-// zoomed in; `reset` (returned) zooms back out.
+// zoomed at all; `reset` (returned) brings the resting view back.
 export function useOrbit(
   nodes: OrbitNode[],
   {
@@ -99,13 +101,22 @@ export function useOrbit(
     const view = { zoom: 1, x: 0, y: 0 };
     const target = { ...view };
     let zoomed = false;
-    // Keeps the zoomed-in map covering the box: no empty edges.
+    // Zoomed in, the map keeps covering the box (no empty edges); zoomed
+    // out, it stays inside it.
     const clampTarget = () => {
-      target.x = Math.min(0, Math.max(width * (1 - target.zoom), target.x));
-      target.y = Math.min(0, Math.max(height * (1 - target.zoom), target.y));
+      const spareX = width * (1 - target.zoom);
+      const spareY = height * (1 - target.zoom);
+      target.x = Math.min(
+        Math.max(0, spareX),
+        Math.max(Math.min(0, spareX), target.x),
+      );
+      target.y = Math.min(
+        Math.max(0, spareY),
+        Math.max(Math.min(0, spareY), target.y),
+      );
     };
     const tellZoomed = () => {
-      const now = target.zoom > 1.001;
+      const now = Math.abs(target.zoom - 1) > 0.001;
       if (now !== zoomed) onZoomRef.current?.((zoomed = now));
     };
     const onWheel = (e: WheelEvent) => {
@@ -116,7 +127,10 @@ export function useOrbit(
       const lines = e.deltaMode === 1 ? 16 : 1; // Firefox scrolls in lines
       const zoom = Math.min(
         MAX_ZOOM,
-        Math.max(1, target.zoom * Math.exp(-e.deltaY * lines * ZOOM_PER_PX)),
+        Math.max(
+          MIN_ZOOM,
+          target.zoom * Math.exp(-e.deltaY * lines * ZOOM_PER_PX),
+        ),
       );
       // The point under the pointer stays under the pointer.
       target.x = px - ((px - target.x) * zoom) / target.zoom;
