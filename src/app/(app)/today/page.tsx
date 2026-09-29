@@ -171,6 +171,17 @@ export default async function TodayPage({ searchParams }: PageProps<"/today">) {
   const newcomers = [
     ...new Set(entries.filter((e) => !e.known).map((e) => e.handle)),
   ];
+  // Someone you just replied to (or marked "I replied") is waiting for an
+  // answer, before Greer's next reply check makes them one of your people.
+  const inNetwork = new Set(today.people.map((p) => p.handle.toLowerCase()));
+  const justReplied = [
+    ...new Set(
+      today.day.replies
+        .map((r) => r.handle)
+        .filter((h): h is string => !!h && !inNetwork.has(h.toLowerCase())),
+    ),
+  ];
+  const meetToday = newcomers.filter((h) => !justReplied.includes(h));
   const network: NetworkPerson[] = [
     ...today.people.map((p) => ({
       handle: p.handle,
@@ -178,7 +189,13 @@ export default async function TodayPage({ searchParams }: PageProps<"/today">) {
       conversations: p.conversations,
       news: newsFrom.has(p.handle),
     })),
-    ...newcomers.map((handle) => ({
+    ...justReplied.map((handle) => ({
+      handle,
+      kind: "waiting" as const,
+      conversations: 1,
+      news: false,
+    })),
+    ...meetToday.map((handle) => ({
       handle,
       kind: "new" as const,
       conversations: 0,
@@ -188,8 +205,10 @@ export default async function TodayPage({ searchParams }: PageProps<"/today">) {
   const networkSummary = [
     `${today.people.length} people you've talked with.`,
     newsFrom.size > 0 && `${[...newsFrom].join(", ")} have news today.`,
-    newcomers.length > 0 &&
-      `${newcomers.join(", ")} are new people you could meet today.`,
+    justReplied.length > 0 &&
+      `You replied to ${justReplied.join(", ")}, no answer yet.`,
+    meetToday.length > 0 &&
+      `${meetToday.join(", ")} are new people you could meet today.`,
   ]
     .filter(Boolean)
     .join(" ");

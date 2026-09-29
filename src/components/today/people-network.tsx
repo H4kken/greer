@@ -210,19 +210,18 @@ export function PeopleNetwork({
                   p.news && "motion-safe:animate-halo",
                 )}
               />
-              {(p.news || p.kind === "new" || p.conversations >= 2) && (
-                <span
-                  className={cn(
-                    "text-xs whitespace-nowrap",
-                    p.news && "text-sm font-medium",
-                    (p.kind === "new" || p.kind === "waiting") &&
-                      "text-muted-foreground",
-                  )}
-                >
-                  {p.handle}
-                  {p.kind === "new" && " · new"}
-                </span>
-              )}
+              {/* Every dot is someone: always say who. */}
+              <span
+                className={cn(
+                  "text-xs whitespace-nowrap",
+                  p.news && "text-sm font-medium",
+                  (p.kind === "new" || p.kind === "waiting") &&
+                    "text-muted-foreground",
+                )}
+              >
+                {p.handle}
+                {p.kind === "new" && " · new"}
+              </span>
             </span>
           </span>
         ))}
@@ -242,6 +241,10 @@ export function PeopleNetwork({
         <li className="flex items-center gap-2">
           <span className="size-3 rounded-full border-2 border-primary bg-primary/30" />
           Talked with you
+        </li>
+        <li className="flex items-center gap-2">
+          <span className="size-3 rounded-full border-2 border-muted-foreground bg-card" />
+          You replied, no answer yet
         </li>
         <li className="flex items-center gap-2">
           <span className="size-3 rounded-full border-2 border-dashed border-primary" />

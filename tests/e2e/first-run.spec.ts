@@ -363,7 +363,12 @@ test.describe("as the owner", () => {
     await page.getByRole("button", { name: /^I replied/ }).click();
     await expect(feed.getByRole("button")).toHaveCount(2);
     await expect(page.getByText("counts in today's progress")).toBeVisible();
-    await page.getByRole("button", { name: "Undo" }).last().click();
+    // They join your people right away, waiting for an answer.
+    await page.keyboard.press("Escape");
+    await expect(
+      page.getByRole("img", { name: /You replied to maker1, no answer yet/ }),
+    ).toBeVisible();
+    await page.keyboard.press("z");
     await expect(feed.getByRole("button")).toHaveCount(3);
 
     // Escape goes back to your people.
