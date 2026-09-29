@@ -2,6 +2,7 @@
 
 import { useId, useState, useTransition } from "react";
 import { toast } from "sonner";
+import { HnGuide } from "@/components/hn-guide";
 import { HnLogo } from "@/components/logos/hn-logo";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -222,6 +223,8 @@ function HnCard({
           </form>
         )}
       </div>
+
+      <HnGuide />
     </section>
   );
 }

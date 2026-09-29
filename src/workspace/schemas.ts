@@ -49,14 +49,16 @@ export const SECTION_LABELS: Record<(typeof KEYWORD_SECTIONS)[number], string> =
 // What each option searches, and what kind of keyword works there.
 export const SECTION_HINTS: Record<
   (typeof KEYWORD_SECTIONS)[number],
-  { hint: string; example: string }
+  { hint: string; tip: string; example: string }
 > = {
   ask_hn: {
     hint: "Only questions people post as “Ask HN”. There are few, so one broad word works.",
+    tip: "One broad word works best (e.g. “customers”, “cybersecurity”, “traction”).",
     example: "e.g. customers",
   },
   story_comment: {
     hint: "Every post and comment on Hacker News, where most people mention being stuck. Use a specific phrase of 2 or 3 words.",
+    tip: "Phrases of 2 or 3 words (e.g. “no paying customers”).",
     example: "e.g. no paying customers",
   },
 };

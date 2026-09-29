@@ -165,9 +165,14 @@ export function KeywordPicker({ initialKeywords, initialShowHn }: Props) {
               if (!list.length) return null;
               return (
                 <div key={section} className="flex flex-col gap-2">
-                  <h3 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                    {SECTION_LABELS[section]}
-                  </h3>
+                  <div>
+                    <h3 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                      {SECTION_LABELS[section]}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      {SECTION_HINTS[section].tip}
+                    </p>
+                  </div>
                   <ul className="flex flex-col divide-y rounded-xl border bg-card">
                     {list.map((k) => (
                       <li

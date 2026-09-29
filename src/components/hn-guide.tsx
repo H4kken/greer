@@ -40,6 +40,13 @@ export function HnGuide() {
           unrelated comments a week.
         </p>
         <p>
+          Your account earns <strong className="text-foreground">karma</strong>{" "}
+          when people upvote what you write. New accounts with little karma are
+          watched more closely for spam, so Greer suggests a gentler pace until
+          yours grows. Replies that genuinely help earn karma; self-promotion
+          loses it.
+        </p>
+        <p>
           A keyword matches when a post or comment contains every one of its
           words. Greer checks every 15 minutes, keeps what fits your product,
           and never posts: you reply yourself, on Hacker News.
