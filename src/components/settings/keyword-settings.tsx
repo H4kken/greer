@@ -3,7 +3,6 @@
 import { Trash2Icon } from "lucide-react";
 import { useId, useState, useTransition } from "react";
 import { toast } from "sonner";
-import { HnGuide } from "@/components/hn-guide";
 import { Button } from "@/components/ui/button";
 import {
   Field,
@@ -273,8 +272,6 @@ export function KeywordSettings({
           </section>
         );
       })}
-
-      <HnGuide />
 
       <form onSubmit={add} noValidate>
         <Field data-invalid={!!error}>

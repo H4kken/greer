@@ -2,7 +2,6 @@
 
 import { SparklesIcon, XIcon } from "lucide-react";
 import Link from "next/link";
-import { HnGuide } from "@/components/hn-guide";
 import { useEffect, useId, useRef, useState, useTransition } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
@@ -10,14 +9,8 @@ import {
   FieldDescription,
   FieldError,
   FieldLabel,
-  FieldLegend,
-  FieldSet,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import {
-  NativeSelect,
-  NativeSelectOption,
-} from "@/components/ui/native-select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -48,9 +41,14 @@ export function KeywordPicker({ initialKeywords, initialShowHn }: Props) {
   const [showHn, setShowHn] = useState(initialShowHn);
   // Why suggestions switched Show HN on or off, for this product.
   const [showHnWhy, setShowHnWhy] = useState<string | null>(null);
-  const [draft, setDraft] = useState("");
-  const [draftSection, setDraftSection] = useState<Section>("ask_hn");
-  const [draftError, setDraftError] = useState<string | null>(null);
+  // One add field per group, so a keyword lands where it belongs.
+  const [drafts, setDrafts] = useState<Record<Section, string>>({
+    ask_hn: "",
+    story_comment: "",
+  });
+  const [draftErrors, setDraftErrors] = useState<
+    Partial<Record<Section, string>>
+  >({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const requested = useRef(false);
@@ -72,23 +70,22 @@ export function KeywordPicker({ initialKeywords, initialShowHn }: Props) {
       .finally(() => setLoading(false));
   }, [initialKeywords]);
 
-  function add() {
-    const parsed = keywordSchema.safeParse({
-      query: draft,
-      section: draftSection,
-    });
+  function add(section: Section) {
+    const fail = (message: string) =>
+      setDraftErrors((e) => ({ ...e, [section]: message }));
+    const parsed = keywordSchema.safeParse({ query: drafts[section], section });
     if (!parsed.success) {
-      setDraftError(parsed.error.issues[0]?.message ?? "Check the keyword.");
+      fail(parsed.error.issues[0]?.message ?? "Check the keyword.");
       return;
     }
     const k = parsed.data;
     if (keywords.some((x) => x.query === k.query && x.section === k.section)) {
-      setDraftError("That keyword is already in this section.");
+      fail("That keyword is already here.");
       return;
     }
     setKeywords([...keywords, k]);
-    setDraft("");
-    setDraftError(null);
+    setDrafts((d) => ({ ...d, [section]: "" }));
+    setDraftErrors((e) => ({ ...e, [section]: undefined }));
   }
 
   function remove(k: Keyword) {
@@ -108,153 +105,153 @@ export function KeywordPicker({ initialKeywords, initialShowHn }: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-8">
-      <FieldSet>
-        <FieldLegend>Show HN launches</FieldLegend>
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-1">
+        <h2 className="text-xl font-medium">Keywords</h2>
+        <p className="text-sm text-muted-foreground">
+          {initialKeywords === null && (
+            <>
+              <SparklesIcon className="inline size-3.5" aria-hidden /> Suggested
+              from your product.{" "}
+            </>
+          )}
+          A post or comment matches when it contains every word of a keyword.
+        </p>
+        {notice && (
+          <p role="status" className="text-sm text-muted-foreground">
+            {notice}
+          </p>
+        )}
+      </div>
+
+      {(Object.keys(SECTION_LABELS) as Section[]).map((section) => {
+        const list = keywords.filter((k) => k.section === section);
+        const headingId = `${id}-${section}`;
+        const error = draftErrors[section];
+        return (
+          <section
+            key={section}
+            aria-labelledby={headingId}
+            className="flex flex-col gap-3 rounded-2xl border bg-card p-4 sm:p-5"
+          >
+            <div>
+              <h3 id={headingId} className="font-sans font-medium">
+                {SECTION_LABELS[section]}
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                {SECTION_HINTS[section].tip}
+              </p>
+            </div>
+
+            {loading ? (
+              <div
+                aria-busy="true"
+                aria-label="Suggesting keywords"
+                className="flex flex-col gap-2"
+              >
+                <Skeleton className="h-8 w-full" />
+                <Skeleton className="h-8 w-2/3" />
+              </div>
+            ) : (
+              list.length > 0 && (
+                <ul className="flex flex-col divide-y">
+                  {list.map((k) => (
+                    <li
+                      key={`${k.section}:${k.query}`}
+                      className="flex items-center justify-between gap-2 py-1.5"
+                    >
+                      <div className="min-w-0">
+                        <span className="font-medium">{k.query}</span>
+                        {k.why && (
+                          <span className="ml-2 text-sm text-muted-foreground">
+                            {k.why}
+                          </span>
+                        )}
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label={`Remove keyword ${k.query}`}
+                        onClick={() => remove(k)}
+                      >
+                        <XIcon />
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              )
+            )}
+
+            <Field data-invalid={!!error}>
+              <FieldLabel htmlFor={`${headingId}-add`} className="sr-only">
+                Add to {SECTION_LABELS[section]}
+              </FieldLabel>
+              <div className="flex gap-2">
+                <Input
+                  id={`${headingId}-add`}
+                  value={drafts[section]}
+                  onChange={(e) =>
+                    setDrafts((d) => ({ ...d, [section]: e.target.value }))
+                  }
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      add(section);
+                    }
+                  }}
+                  placeholder={SECTION_HINTS[section].example}
+                  aria-invalid={!!error}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => add(section)}
+                >
+                  Add
+                </Button>
+              </div>
+              <FieldError>{error}</FieldError>
+            </Field>
+          </section>
+        );
+      })}
+
+      <section
+        aria-labelledby={`${id}-launches`}
+        className="flex flex-col gap-3 rounded-2xl border bg-card p-4 sm:p-5"
+      >
         <Field orientation="horizontal" className="items-start">
+          <div className="flex flex-1 flex-col gap-1">
+            <h3 id={`${id}-launches`} className="font-sans font-medium">
+              <FieldLabel htmlFor={`${id}-show-hn`} className="text-base">
+                Launches (Show HN)
+              </FieldLabel>
+            </h3>
+            <FieldDescription id={`${id}-show-hn-help`}>
+              Founders posting what they built and asking for feedback, about 50
+              a day.{" "}
+              <strong className="font-medium text-foreground">
+                Worth it when makers are your audience
+              </strong>
+              ; otherwise they&apos;d bury the few people who matter.
+            </FieldDescription>
+            {showHnWhy && (
+              <p className="text-sm text-muted-foreground">
+                <SparklesIcon className="inline size-3.5" aria-hidden />{" "}
+                Suggested {showHn ? "on" : "off"}: {showHnWhy}.
+              </p>
+            )}
+          </div>
           <Switch
             id={`${id}-show-hn`}
-            className="mt-0.5"
+            className="mt-1"
             checked={showHn}
             onCheckedChange={setShowHn}
             aria-describedby={`${id}-show-hn-help`}
           />
-          <div className="flex flex-col gap-1">
-            <FieldLabel htmlFor={`${id}-show-hn`}>
-              Also watch Show HN
-            </FieldLabel>
-            <FieldDescription id={`${id}-show-hn-help`}>
-              Founders posting what they built and asking for feedback, about 50
-              a day. Worth it when makers are your audience; otherwise
-              they&apos;d bury the few people who matter. The best ones join
-              Today as people asking for feedback.
-              {showHnWhy && (
-                <span className="mt-1 block">
-                  <SparklesIcon className="inline size-3.5" aria-hidden />{" "}
-                  Suggested {showHn ? "on" : "off"}: {showHnWhy}.
-                </span>
-              )}
-            </FieldDescription>
-          </div>
         </Field>
-      </FieldSet>
-
-      <FieldSet>
-        <FieldLegend>Keywords</FieldLegend>
-        <FieldDescription>
-          {initialKeywords === null ? (
-            <>
-              <SparklesIcon className="inline size-3.5" aria-hidden /> Suggested
-              from your product. A post matches when it contains every word of a
-              keyword.
-            </>
-          ) : (
-            "A post matches when it contains every word of a keyword."
-          )}
-        </FieldDescription>
-        <HnGuide />
-
-        {loading ? (
-          <div
-            aria-busy="true"
-            aria-label="Suggesting keywords"
-            className="flex flex-col gap-2"
-          >
-            {[0, 1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-9 w-full" />
-            ))}
-          </div>
-        ) : (
-          <>
-            {notice && (
-              <p role="status" className="text-sm text-muted-foreground">
-                {notice}
-              </p>
-            )}
-            {(Object.keys(SECTION_LABELS) as Section[]).map((section) => {
-              const list = keywords.filter((k) => k.section === section);
-              if (!list.length) return null;
-              return (
-                <div key={section} className="flex flex-col gap-2">
-                  <div>
-                    <h3 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                      {SECTION_LABELS[section]}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      {SECTION_HINTS[section].tip}
-                    </p>
-                  </div>
-                  <ul className="flex flex-col divide-y rounded-xl border bg-card">
-                    {list.map((k) => (
-                      <li
-                        key={`${k.section}:${k.query}`}
-                        className="flex items-center justify-between gap-2 py-1.5 pr-1.5 pl-3"
-                      >
-                        <div className="min-w-0">
-                          <span className="font-medium">{k.query}</span>
-                          {k.why && (
-                            <span className="ml-2 text-sm text-muted-foreground">
-                              {k.why}
-                            </span>
-                          )}
-                        </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon-sm"
-                          aria-label={`Remove keyword ${k.query}`}
-                          onClick={() => remove(k)}
-                        >
-                          <XIcon />
-                        </Button>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              );
-            })}
-          </>
-        )}
-
-        <Field data-invalid={!!draftError}>
-          <FieldLabel htmlFor={`${id}-draft`}>Add a keyword</FieldLabel>
-          <div className="flex flex-wrap gap-2">
-            <Input
-              id={`${id}-draft`}
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  add();
-                }
-              }}
-              placeholder={SECTION_HINTS[draftSection].example}
-              className="max-w-60"
-              aria-invalid={!!draftError}
-            />
-            <NativeSelect
-              aria-label="Where to search"
-              aria-describedby={`${id}-where-help`}
-              value={draftSection}
-              onChange={(e) => setDraftSection(e.target.value as Section)}
-            >
-              {Object.entries(SECTION_LABELS).map(([value, label]) => (
-                <NativeSelectOption key={value} value={value}>
-                  {label}
-                </NativeSelectOption>
-              ))}
-            </NativeSelect>
-            <Button type="button" variant="outline" onClick={add}>
-              Add
-            </Button>
-          </div>
-          <FieldDescription id={`${id}-where-help`}>
-            {SECTION_HINTS[draftSection].hint}
-          </FieldDescription>
-          <FieldError>{draftError}</FieldError>
-        </Field>
-      </FieldSet>
+      </section>
 
       {submitError && <FieldError>{submitError}</FieldError>}
       <div className="flex items-center justify-between gap-2">

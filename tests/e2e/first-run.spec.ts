@@ -134,10 +134,21 @@ test.describe("as the owner", () => {
 
     await page.getByRole("button", { name: "Remove keyword outreach" }).click();
     await expect(page.getByText("outreach", { exact: true })).toHaveCount(0);
-    await page.getByLabel("Add a keyword").fill("First Users");
-    await page.getByLabel("Where to search").selectOption("story_comment");
-    await page.getByRole("button", { name: "Add", exact: true }).click();
-    await expect(page.getByText("first users", { exact: true })).toBeVisible();
+    // Each group has its own add field.
+    const comments = page.getByRole("region", {
+      name: "All stories and comments",
+    });
+    await comments
+      .getByLabel("Add to All stories and comments")
+      .fill("First Users");
+    await comments.getByRole("button", { name: "Add", exact: true }).click();
+    await expect(
+      comments.getByText("first users", { exact: true }),
+    ).toBeVisible();
+    // Suggested on: the mock sees builders in the product profile.
+    await expect(
+      page.getByRole("switch", { name: "Launches (Show HN)" }),
+    ).toBeChecked();
 
     await page.getByRole("button", { name: "Start the first scan" }).click();
     await expect(page).toHaveURL(/\/onboarding\/scan$/);
