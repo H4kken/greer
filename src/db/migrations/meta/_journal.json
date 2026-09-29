@@ -113,6 +113,13 @@
       "when": 1790721712325,
       "tag": "0015_item_activity",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1790723351988,
+      "tag": "0016_seen_news",
+      "breakpoints": true
     }
   ]
 }

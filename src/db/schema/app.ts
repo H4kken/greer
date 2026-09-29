@@ -407,6 +407,24 @@ export const replyAnswer = pgTable(
 // What only the user knows about someone they talked with: for now, whether
 // that person tried their product. People themselves are derived from
 // replies and answers (src/people), not stored.
+// News from someone the user knows (an answer, a launch) that the user has
+// read on Today: it isn't news anymore. `subject` names it, e.g.
+// "answer:<external id>" or "item:<item id>". Questions to the user stay
+// until answered, seen or not.
+export const seenNews = pgTable(
+  "seen_news",
+  {
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspace.id, { onDelete: "cascade" }),
+    platform: platform("platform").notNull(),
+    subject: text("subject").notNull(),
+    seenAt: timestamp("seen_at", { withTimezone: true }).notNull(),
+    ...timestamps,
+  },
+  (t) => [primaryKey({ columns: [t.workspaceId, t.platform, t.subject] })],
+);
+
 export const personMark = pgTable(
   "person_mark",
   {

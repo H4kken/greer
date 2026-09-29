@@ -23,7 +23,7 @@ import { formatAbsolute, formatRelative } from "@/lib/time";
 import { getWorkerHealth } from "@/lib/health";
 import { getAiStatus } from "@/llm/settings";
 import { explainCriteria, fitLine } from "@/scoring/explain";
-import type { TodayEntry } from "@/today/build";
+import { seenSubjectsOf, type TodayEntry } from "@/today/build";
 import { sameDayAs, TIME_ZONE_COOKIE } from "@/today/progress";
 import {
   activityLine,
@@ -125,6 +125,7 @@ export default async function TodayPage({ searchParams }: PageProps<"/today">) {
         ? (fitLine(thread.category, thread.criteria, problems) ??
           matchLabel(thread.score))
         : null,
+      seen: seenSubjectsOf(e),
       activity: thread
         ? activityLine({ ...thread, checkedAt: thread.activityCheckedAt }, now)
         : null,

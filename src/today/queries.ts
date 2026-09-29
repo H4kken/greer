@@ -20,6 +20,7 @@ import {
   itemScore,
   platformAccount,
   reply,
+  seenNews,
   sourceQuery,
 } from "@/db/schema";
 import { buildPeople } from "@/people/build";
@@ -64,7 +65,7 @@ export async function loadToday(
     eq(item.filterStatus, "kept"),
   );
   const HOUR = 60 * 60 * 1000;
-  const [facts, threads, launches, marked] = await Promise.all([
+  const [facts, threads, launches, marked, seenRows] = await Promise.all([
     loadPeopleFacts(db, workspaceId, platform, now),
     db
       .select({
@@ -145,6 +146,18 @@ export async function loadToday(
           gte(item.triagedAt, new Date(now.getTime() - 48 * HOUR)),
         ),
       ),
+    // News already read. News is at most a week old, so older reads can't
+    // matter.
+    db
+      .select({ subject: seenNews.subject })
+      .from(seenNews)
+      .where(
+        and(
+          eq(seenNews.workspaceId, workspaceId),
+          eq(seenNews.platform, platform),
+          gte(seenNews.seenAt, new Date(now.getTime() - 8 * 24 * HOUR)),
+        ),
+      ),
   ]);
 
   const { me, replies, answers, tried, marked: markedFacts } = facts;
@@ -202,6 +215,7 @@ export async function loadToday(
     answers,
     threads,
     launches,
+    seen: new Set(seenRows.map((r) => r.subject)),
     marks: marked.flatMap((m) =>
       m.at ? [{ author: m.author, at: m.at }] : [],
     ),

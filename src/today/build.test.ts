@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { type AnswerFact, buildPeople, type ReplyFact } from "@/people/build";
-import { buildToday, type HelpThread, type Launch, type Mark } from "./build";
+import {
+  buildToday,
+  type HelpThread,
+  type Launch,
+  type Mark,
+  seenSubjectsOf,
+} from "./build";
 
 const NOW = new Date("2026-09-28T12:00:00Z");
 const hoursAgo = (h: number) => new Date(NOW.getTime() - h * 3_600_000);
@@ -63,6 +69,7 @@ function today({
   threads = [] as HelpThread[],
   launches = [] as Launch[],
   marks = [] as Mark[],
+  seen = new Set<string>(),
   pace = 3,
 } = {}) {
   const people = buildPeople({
@@ -79,6 +86,7 @@ function today({
     threads,
     launches,
     marks,
+    seen,
     pace,
     now: NOW,
   });
@@ -195,6 +203,50 @@ describe("buildToday", () => {
     });
     expect(summary(entries)).toEqual(["answer:sarahk", "launch:rhea"]);
     expect(entries[0]).toMatchObject({ launch: { id: "l-sarahk" } });
+  });
+
+  it("drops news the user already read, but keeps questions to answer", () => {
+    const facts = {
+      replies: [reply("1"), reply("2"), reply("3", { parentAuthor: "rhea" })],
+      answers: [
+        answer("1", { author: "sarahk" }),
+        answer("2", { author: "devon_b", tone: "question" }),
+      ],
+      launches: [launch("rhea")],
+    };
+    const before = today(facts).entries;
+    expect(summary(before)).toEqual([
+      "answer:devon_b",
+      "answer:sarahk",
+      "launch:rhea",
+    ]);
+    // Each card says what it shows; a question to the user says nothing.
+    expect(before.map(seenSubjectsOf)).toEqual([
+      [],
+      ["answer:a1"],
+      ["item:l-rhea"],
+    ]);
+
+    const seen = new Set([...before.flatMap(seenSubjectsOf), "answer:a2"]);
+    expect(summary(today({ ...facts, seen }).entries)).toEqual([
+      "answer:devon_b",
+    ]);
+  });
+
+  it("brings a known person back when something new comes after what was read", () => {
+    const facts = {
+      replies: [reply("1"), reply("2")],
+      answers: [
+        answer("1", { author: "sarahk", postedAt: hoursAgo(20) }),
+        answer("2", {
+          author: "sarahk",
+          tone: "neutral",
+          postedAt: hoursAgo(2),
+        }),
+      ],
+    };
+    const { entries } = today({ ...facts, seen: new Set(["answer:a1"]) });
+    expect(entries[0]).toMatchObject({ answer: { externalId: "a2" } });
   });
 
   it("shows one card per person, and paces people rather than threads", () => {

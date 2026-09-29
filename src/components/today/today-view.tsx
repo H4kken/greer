@@ -14,7 +14,12 @@ import {
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/kbd";
-import { dismissAction, repliedAction, restoreAction } from "@/today/actions";
+import {
+  dismissAction,
+  markSeenAction,
+  repliedAction,
+  restoreAction,
+} from "@/today/actions";
 import { cn } from "@/lib/utils";
 import { EntryPanel } from "./entry-panel";
 import { PersonTag } from "./person-tag";
@@ -34,6 +39,9 @@ type SetAside = { entry: EntryView; ids: string[] };
 // The card's last line: how you know someone, else why they fit. "You
 // replied once, no answer yet" would only repeat the tag.
 const foot = (e: EntryView) => (e.known && !e.waiting ? e.history : e.fit);
+
+// How long a card is open before its news counts as read.
+const SEEN_AFTER_MS = 1500;
 
 // Where "o" and the card's main button go.
 const linkOf = (e: EntryView) =>
@@ -113,6 +121,25 @@ export function TodayView({
     };
   }, [picked]);
   const extra = showMore ? more.filter((e) => !hidden.has(e.key)) : [];
+
+  // News from someone you know is read once its card has been open a
+  // moment (not while skimming with j/k): next visit, it isn't news anymore.
+  const seenSent = useRef(new Set<string>());
+  useEffect(() => {
+    const subjects = selected?.seen.filter((s) => !seenSent.current.has(s));
+    if (!subjects?.length) return;
+    const timer = setTimeout(() => {
+      for (const s of subjects) seenSent.current.add(s);
+      // Not worth a toast if it fails: it's asked again next time.
+      const retry = () => {
+        for (const s of subjects) seenSent.current.delete(s);
+      };
+      markSeenAction(subjects)
+        .then((result) => !result.ok && retry())
+        .catch(retry);
+    }, SEEN_AFTER_MS);
+    return () => clearTimeout(timer);
+  }, [selected]);
 
   // ?p= keeps the picked person across reloads and shared links.
   useEffect(() => {

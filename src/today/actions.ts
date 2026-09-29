@@ -4,7 +4,7 @@
 import { and, eq, isNotNull } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
-import { sourceQuery } from "@/db/schema";
+import { seenNews, sourceQuery } from "@/db/schema";
 import { requireWorkspace } from "@/lib/session";
 import { QUEUES, repliesKey, trySendFromWeb } from "@/worker/queue";
 import { dismissItem, markReplied, restoreItem } from "./triage";
@@ -95,4 +95,30 @@ export async function retryFailedSearchesAction(): Promise<Result> {
         ok: false,
         error: "The background worker isn't reachable. Is it running?",
       };
+}
+
+// News from someone the user knows, read on Today: it won't show as news
+// again. Quiet by design: no toast, nothing to undo (it only leaves Today on
+// the next visit, and People keeps everything).
+export async function markSeenAction(subjects: unknown): Promise<Result> {
+  const { workspace } = await requireWorkspace();
+  const parsed = z
+    .array(z.string().regex(/^(answer|item):[\w-]{1,64}$/))
+    .min(1)
+    .max(4)
+    .safeParse(subjects);
+  if (!parsed.success) return { ok: false, error: "Invalid input." };
+  const seenAt = new Date();
+  await db
+    .insert(seenNews)
+    .values(
+      parsed.data.map((subject) => ({
+        workspaceId: workspace.id,
+        platform: "hn" as const,
+        subject,
+        seenAt,
+      })),
+    )
+    .onConflictDoNothing();
+  return { ok: true };
 }

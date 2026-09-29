@@ -41,6 +41,7 @@ export type TodayEntry =
       handle: string;
       at: Date;
       answer: {
+        externalId: string;
         tone: AnswerTone;
         text: string;
         url: string;
@@ -84,6 +85,23 @@ export const entryKey = {
   person: (handle: string) => `person:${handle}`,
 };
 
+// What a piece of news is, for "seen" (see seen_news).
+export const newsSubject = {
+  answer: (externalId: string) => `answer:${externalId}`,
+  launch: (itemId: string) => `item:${itemId}`,
+};
+
+// The news a card shows, to mark it seen once read. Questions to the user
+// aren't included: they stay until answered.
+export function seenSubjectsOf(entry: TodayEntry): string[] {
+  if (entry.kind === "launch") return [newsSubject.launch(entry.launch.id)];
+  if (entry.kind !== "answer" || entry.answer.open) return [];
+  return [
+    newsSubject.answer(entry.answer.externalId),
+    ...(entry.launch ? [newsSubject.launch(entry.launch.id)] : []),
+  ];
+}
+
 // A thread marked "I replied" that Greer hasn't matched to a reply yet.
 export type Mark = { author: string; at: Date };
 
@@ -101,6 +119,7 @@ export function buildToday({
   threads,
   launches,
   marks = [],
+  seen = new Set(),
   pace,
   now = new Date(),
 }: {
@@ -110,6 +129,8 @@ export function buildToday({
   answers: AnswerFact[];
   // "I replied" marks, which count like replies until Greer finds them.
   marks?: Mark[];
+  // News the user already read (newsSubject): not news anymore.
+  seen?: Set<string>;
   // Scored threads worth a reply (help and launches), best first.
   threads: HelpThread[];
   // Recent Show HN posts, newest first.
@@ -155,7 +176,9 @@ export function buildToday({
       a.tone === "question" &&
       !answeredByMe.has(a.externalId) &&
       a.postedAt.getTime() >= since(QUESTION_DAYS);
-    const recent = a.postedAt.getTime() >= since(NEWS_DAYS);
+    const recent =
+      a.postedAt.getTime() >= since(NEWS_DAYS) &&
+      !seen.has(newsSubject.answer(a.externalId));
     const current = newsFrom.get(person.handle);
     if (!(open || recent) || (current && (current.answer.open || !open)))
       continue;
@@ -166,6 +189,7 @@ export function buildToday({
       person,
       at: a.postedAt,
       answer: {
+        externalId: a.externalId,
         tone: a.tone ?? "neutral",
         text: a.text,
         url: a.url,
@@ -181,6 +205,7 @@ export function buildToday({
     const person = known.get(lower(l.author));
     if (!person || l.postedAt.getTime() < since(NEWS_DAYS)) continue;
     if (repliedIn.has(l.threadId) || seenBefore(l.author, l.postedAt)) continue;
+    if (seen.has(newsSubject.launch(l.id))) continue;
     const news = newsFrom.get(person.handle);
     if (news) news.launch ??= l;
     else if (!launchedOnly.some((e) => e.handle === person.handle))

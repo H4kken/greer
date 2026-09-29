@@ -485,6 +485,20 @@ test.describe("as the owner", () => {
     ).toHaveAttribute("href", "https://news.ycombinator.com/item?id=80002");
     await expectNoSeriousA11yViolations(page);
 
+    // A thank-you is news until it's been read: open, then gone next visit.
+    // A question to the owner stays until answered.
+    await seedAnswer(
+      { author: "sarahk", text: "Thanks, trying it tonight!", tone: "thanks" },
+      { n: 1, parentAuthor: "sarahk", topic: "Pricing" },
+    );
+    await page.goto("/today");
+    const thanks = feed.getByRole("button", { name: /Thanks, trying it/ });
+    await thanks.click();
+    await page.waitForTimeout(2000); // read for a moment
+    await page.goto("/today");
+    await expect(feed.getByRole("button", { name: /devon_b/ })).toBeVisible();
+    await expect(thanks).toHaveCount(0);
+
     // A reply marked by hand that Greer never found: Today asks, quietly.
     await seedMissingReply("Is my pricing page confusing?");
     await page.goto("/today");
@@ -505,11 +519,8 @@ test.describe("as the owner", () => {
   test("people shows who the owner talked with, and takes a 'tried it' mark", async ({
     page,
   }) => {
-    // The account and devon_b (question) are already there from Today's test.
-    await seedAnswer(
-      { author: "sarahk", text: "Thanks, trying it tonight!", tone: "thanks" },
-      { n: 1, parentAuthor: "sarahk", topic: "Pricing" },
-    );
+    // The account, devon_b (question) and sarahk (thanks) are already there
+    // from Today's test.
     await page.goto("/people");
 
     // Nobody is picked at first; who waits on you is one click away.
