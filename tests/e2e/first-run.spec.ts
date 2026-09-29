@@ -577,6 +577,7 @@ test.describe("as the owner", () => {
     await resetZoom.click();
     await expect(resetZoom).toBeHidden();
     // Past the resting view, it zooms out too.
+    await page.mouse.move(box.x + box.width / 3, box.y + box.height / 2);
     await page.mouse.wheel(0, 400);
     await resetZoom.click();
     await expect(resetZoom).toBeHidden();
