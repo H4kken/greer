@@ -32,7 +32,9 @@ import {
   summaryLine,
 } from "@/today/present";
 import {
+  hnReach,
   loadToday,
+  QUIET_REACH,
   missingReplies,
   sourceHealth,
   unscoredCount,
@@ -52,7 +54,7 @@ export default async function TodayPage({ searchParams }: PageProps<"/today">) {
   const account = await getAccountSummary(db, workspace.id, "hn");
   const tier = account?.tier ?? "new";
   const pace = MATURITY_ADVICE[tier].repliesPerDay;
-  const [today, profile, health, unscored, ai, worker, missing] =
+  const [today, profile, health, unscored, reach, ai, worker, missing] =
     await Promise.all([
       loadToday(db, workspace.id, {
         platform: "hn",
@@ -63,6 +65,7 @@ export default async function TodayPage({ searchParams }: PageProps<"/today">) {
       getProductProfile(db, workspace.id),
       sourceHealth(db, workspace.id),
       unscoredCount(db, workspace.id),
+      hnReach(db, workspace.id, { onboardedAt: workspace.onboardedAt, now }),
       getAiStatus(workspace.id),
       getWorkerHealth(now),
       missingReplies(db, workspace.id, "hn", now),
@@ -242,6 +245,20 @@ export default async function TodayPage({ searchParams }: PageProps<"/today">) {
             />
           </div>
         </div>
+
+        {reach && reach.people <= QUIET_REACH && (
+          <p className="rounded-2xl border border-dashed px-4 py-3 text-sm text-muted-foreground">
+            Hacker News rarely talks about what{" "}
+            {profile?.productName ?? "your product"} solves:{" "}
+            {reach.people === 0
+              ? "nobody"
+              : `${reach.people} ${reach.people === 1 ? "person" : "people"}`}{" "}
+            in the last {reach.days} days. That&apos;s normal for a focused
+            product: Greer only shows people who fit, and your audience may
+            mostly be elsewhere (Reddit comes next). Meanwhile, you can{" "}
+            <Link href="/settings#keywords">try other keywords</Link>.
+          </p>
+        )}
 
         <MissingReplies
           rows={missing.map((m) => ({

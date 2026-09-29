@@ -30,11 +30,24 @@ describe("suggest-keywords prompt", () => {
     );
   });
 
+  it("watches Show HN only when makers are the audience", () => {
+    expect(suggestKeywords.mock({ product }).show_hn.watch).toBe(true);
+    const shop = {
+      ...product,
+      description: "Virtual try-on for online clothing stores",
+      audience: "Fashion e-commerce brands",
+    };
+    expect(suggestKeywords.mock({ product: shop }).show_hn.watch).toBe(false);
+  });
+
   it("rejects long keyword lists and sentence-length keywords", () => {
     const keyword = { query: "saas", section: "ask_hn", why: "w" };
+    const show_hn = { watch: false, why: "w" };
     expect(
-      suggestKeywords.schema.safeParse({ keywords: Array(9).fill(keyword) })
-        .success,
+      suggestKeywords.schema.safeParse({
+        keywords: Array(9).fill(keyword),
+        show_hn,
+      }).success,
     ).toBe(false);
     expect(
       suggestKeywords.schema.safeParse({
@@ -43,6 +56,7 @@ describe("suggest-keywords prompt", () => {
           keyword,
           { ...keyword, query: "how do i find my first customers for my saas" },
         ],
+        show_hn,
       }).success,
     ).toBe(false);
   });

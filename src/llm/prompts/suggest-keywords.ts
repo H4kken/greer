@@ -31,6 +31,17 @@ const schema = z.object({
     )
     .min(3)
     .max(8),
+  show_hn: z.object({
+    watch: z
+      .boolean()
+      .describe(
+        "True only if the people who post Show HN launches (founders, developers, indie makers showing what they built) are part of the builder's audience.",
+      ),
+    why: z
+      .string()
+      .max(100)
+      .describe("A few words: why launches fit this audience, or don't."),
+  }),
 });
 
 export type SuggestKeywordsOutput = z.infer<typeof schema>;
@@ -40,7 +51,7 @@ export const suggestKeywords = definePrompt<
   SuggestKeywordsOutput
 >({
   name: "suggest-keywords",
-  version: "suggest-keywords-v2",
+  version: "suggest-keywords-v3",
   job: "writing",
   system: `You help a SaaS builder choose Hacker News search keywords that find people facing the problems their product solves, so they can help them.
 
@@ -48,7 +59,9 @@ Search matches posts that contain every word of a keyword (Algolia, newest first
 - At least 4 story_comment phrases of two or three words, in the words people use about their own situation, first person: e.g. "no paying customers", "struggling to get users", "first 100 users", "zero signups". Single words there return thousands of unrelated comments.
 - 2 or 3 ask_hn keywords with one broad word (e.g. "customers", "marketing"): Ask HN posts are few, and the scorer filters them later.
 - Never the product's marketing words or its category name.
-- Cover different problems from the list; no near-duplicates.`,
+- Cover different problems from the list; no near-duplicates.
+
+Also say whether to watch Show HN, where makers post what they built and ask for feedback: hundreds of launches a week. Watch it only if those makers are the builder's audience (e.g. a tool for indie founders or developers). For a product whose customers are not software makers (shops, agencies, consumers, a specific industry), don't: launches would bury the few people who matter.`,
   build: ({ product }) => productSection(product),
   schema,
   // Deterministic stand-in: the longest word of each problem in Ask HN, and
@@ -76,7 +89,17 @@ Search matches posts that contain every word of a keyword (Algolia, newest first
           .filter((p) => p.includes(" ")),
       ),
     ];
+    const builders =
+      /founder|builder|developer|maker|indie|startup|saas|engineer/i.test(
+        `${product.audience} ${product.description}`,
+      );
     return {
+      show_hn: {
+        watch: builders,
+        why: builders
+          ? "Your audience builds products"
+          : "Your audience doesn't build software",
+      },
       keywords: [
         ...broad.slice(0, 3).map((query) => ({
           query,

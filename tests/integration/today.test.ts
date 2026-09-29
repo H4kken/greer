@@ -13,6 +13,7 @@ import {
 import { dismissItem, markReplied, restoreItem } from "@/today/triage";
 import {
   hiddenThreads,
+  hnReach,
   loadToday,
   MIN_SCORE,
   missingReplies,
@@ -382,6 +383,20 @@ describe("Today", () => {
       { id: r!.id, at: hoursAgo(30), handle: "sarahk" },
     ]);
     expect(today.day.answers).toEqual([{ at: hoursAgo(3), author: "sarahk" }]);
+  });
+
+  it("says how many people HN brought lately, once past the first week", async () => {
+    const reach = (onboardedAt: Date | null) =>
+      hnReach(db, ws, { onboardedAt, now });
+    await addItem({ author: "kvn", postedAt: hoursAgo(24) });
+    await addItem({ author: "KVN", postedAt: hoursAgo(48) }); // same person
+    await addItem({ author: "lena", postedAt: hoursAgo(72) });
+    await addItem({ author: "old", postedAt: hoursAgo(24 * 20) }); // too old
+    await addItem({ author: "meh", score: MIN_SCORE - 1 }); // not a fit
+
+    expect(await reach(null)).toBeNull(); // still onboarding
+    expect(await reach(hoursAgo(24 * 3))).toBeNull(); // too early to tell
+    expect(await reach(hoursAgo(24 * 30))).toEqual({ people: 2, days: 14 });
   });
 
   it("never shows or touches another workspace's threads", async () => {

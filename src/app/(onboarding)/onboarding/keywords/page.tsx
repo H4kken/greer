@@ -47,7 +47,8 @@ export default async function KeywordsStepPage() {
           initialShowHn={
             queries.length
               ? queries.some((q) => q.section === SHOW_HN_SECTION)
-              : true
+              : // Off until suggestions say launches fit this audience.
+                false
           }
         />
       </section>

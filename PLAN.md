@@ -265,6 +265,8 @@ Built ahead of Milestone 3, from principle 7:
   - "Not for me" hides a person's threads, with undo; **Hidden threads** lists them to bring one back. Snooze, tabs, keyword filters and the lower-matches toggle are gone. `/inbox` redirects to Today.
   - Deferred: watching known people's own new posts beyond what keyword searches find (one Algolia call per person), and a "seen" marker so news from people you know leaves once read.
 
+**Focused communities are the norm.** Greer is for meeting the people who fit a product, not everyone: a niche product may get a few people a week on HN, or none, and that's correct. So precision beats volume (don't lower the bar to fill the feed), Show HN is off unless makers are the audience (keyword suggestions decide and say why), and after the first week Today says honestly when HN brought 3 people or fewer in 14 days, pointing to other keywords and to other platforms coming next.
+
 Out of scope for now: **product mentions** (searching HN for the product's name). Mentions can take months to appear, and other features matter more first.
 
 ## Milestones

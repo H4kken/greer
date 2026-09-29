@@ -84,6 +84,28 @@ export async function syncHnQueries(
   return after.filter((q) => q.enabled).map((q) => q.id);
 }
 
+// Starts watching Show HN (every launch, no keyword), or returns the row
+// that already does.
+export async function watchShowHn(
+  db: Tx,
+  workspaceId: string,
+): Promise<SavedQuery> {
+  const existing = await listHnQueries(db, workspaceId);
+  const found = existing.find((q) => q.section === SHOW_HN_SECTION);
+  if (found) return found;
+  const [row] = await db
+    .insert(sourceQuery)
+    .values({
+      workspaceId,
+      platform: "hn",
+      query: "",
+      section: SHOW_HN_SECTION,
+      label: SHOW_HN_LABEL,
+    })
+    .returning();
+  return row!;
+}
+
 export async function addHnKeyword(
   db: Tx,
   workspaceId: string,

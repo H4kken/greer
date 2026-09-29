@@ -46,6 +46,8 @@ export function KeywordPicker({ initialKeywords, initialShowHn }: Props) {
   const [loading, setLoading] = useState(initialKeywords === null);
   const [notice, setNotice] = useState<string | null>(null);
   const [showHn, setShowHn] = useState(initialShowHn);
+  // Why suggestions switched Show HN on or off, for this product.
+  const [showHnWhy, setShowHnWhy] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [draftSection, setDraftSection] = useState<Section>("ask_hn");
   const [draftError, setDraftError] = useState<string | null>(null);
@@ -58,8 +60,11 @@ export function KeywordPicker({ initialKeywords, initialShowHn }: Props) {
     requested.current = true;
     suggestKeywordsAction()
       .then((result) => {
-        if (result.ok) setKeywords(result.data.keywords);
-        else setNotice(result.error);
+        if (result.ok) {
+          setKeywords(result.data.keywords);
+          setShowHn(result.data.showHn.watch);
+          setShowHnWhy(result.data.showHn.why);
+        } else setNotice(result.error);
       })
       .catch(() =>
         setNotice("Couldn't load suggestions. Add your own keywords below."),
@@ -119,10 +124,16 @@ export function KeywordPicker({ initialKeywords, initialShowHn }: Props) {
               Also watch Show HN
             </FieldLabel>
             <FieldDescription id={`${id}-show-hn-help`}>
-              Founders posting what they built and asking for feedback: a good
-              way to help and meet builders in your audience. The best ones join
-              Today as people asking for feedback. Adds about 50 posts a day to
-              score.
+              Founders posting what they built and asking for feedback, about 50
+              a day. Worth it when makers are your audience; otherwise
+              they&apos;d bury the few people who matter. The best ones join
+              Today as people asking for feedback.
+              {showHnWhy && (
+                <span className="mt-1 block">
+                  <SparklesIcon className="inline size-3.5" aria-hidden />{" "}
+                  Suggested {showHn ? "on" : "off"}: {showHnWhy}.
+                </span>
+              )}
             </FieldDescription>
           </div>
         </Field>

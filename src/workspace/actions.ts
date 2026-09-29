@@ -35,6 +35,7 @@ import {
   restoreQuery,
   type SavedQuery,
   setQueryEnabled,
+  watchShowHn,
 } from "./keywords";
 import { getProductProfile, saveProductProfile } from "./profile";
 import {
@@ -146,7 +147,10 @@ export type KeywordSuggestion = KeywordInput & { why: string };
 // Suggestions from the product profile. Without an LLM, returns none and the
 // user adds keywords by hand.
 export async function suggestKeywordsAction(): Promise<
-  ActionResult<{ keywords: KeywordSuggestion[] }>
+  ActionResult<{
+    keywords: KeywordSuggestion[];
+    showHn: { watch: boolean; why: string };
+  }>
 > {
   const { workspace } = await requireWorkspace();
   const profile = await getProductProfile(db, workspace.id);
@@ -171,7 +175,7 @@ export async function suggestKeywordsAction(): Promise<
         seen.add(key);
         return true;
       });
-    return { ok: true, data: { keywords } };
+    return { ok: true, data: { keywords, showHn: output.show_hn } };
   } catch (error) {
     if (error instanceof LlmNotConfiguredError) {
       return {
@@ -239,6 +243,23 @@ export async function addKeywordAction(
   ]);
   revalidatePath("/settings");
   return { ok: true, data: { query: row } };
+}
+
+export async function watchShowHnAction(): Promise<
+  ActionResult<{ query: SavedQuery }>
+> {
+  const { workspace } = await requireWorkspace();
+  const row = await watchShowHn(db, workspace.id);
+  if (!row.enabled) await setQueryEnabled(db, workspace.id, row.id, true);
+  await trySendFromWeb([
+    {
+      name: QUEUES.ingestPoll,
+      data: { queryId: row.id },
+      singletonKey: row.id,
+    },
+  ]);
+  revalidatePath("/settings");
+  return { ok: true, data: { query: { ...row, enabled: true } } };
 }
 
 export async function setKeywordEnabledAction(

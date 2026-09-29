@@ -17,11 +17,13 @@ import {
   NativeSelectOption,
 } from "@/components/ui/native-select";
 import { Switch } from "@/components/ui/switch";
+import { formatRelative } from "@/lib/time";
 import {
   addKeywordAction,
   deleteKeywordAction,
   restoreKeywordAction,
   setKeywordEnabledAction,
+  watchShowHnAction,
 } from "@/workspace/actions";
 import {
   type KeywordInput,
@@ -41,19 +43,47 @@ export type KeywordRow = {
 
 type Section = KeywordInput["section"];
 
-const SECTION_NAMES: Record<string, string> = {
-  ...SECTION_LABELS,
-  show_hn: "Launches",
-};
+const SHOW_HN = "show_hn";
 
-function status(row: KeywordRow): string {
+// Keywords grouped by where they search, each group saying what works there.
+const GROUPS: {
+  section: string;
+  title: string;
+  tip: string;
+}[] = [
+  {
+    section: "ask_hn",
+    title: SECTION_LABELS.ask_hn,
+    tip: SECTION_HINTS.ask_hn.tip,
+  },
+  {
+    section: "story_comment",
+    title: SECTION_LABELS.story_comment,
+    tip: SECTION_HINTS.story_comment.tip,
+  },
+  {
+    section: SHOW_HN,
+    title: "Launches (Show HN)",
+    tip: "Every Show HN post, no keyword needed. Worth it when makers are your audience; otherwise leave it off.",
+  },
+];
+
+// Relative to the server's clock, so server and browser render the same text.
+function status(row: KeywordRow, now: Date): string {
   if (row.lastError) return `Last search failed: ${row.lastError}`;
   if (!row.enabled) return "Paused";
   if (!row.lastPolledAt) return "Waiting for the first search";
-  return `Last searched ${new Date(row.lastPolledAt).toLocaleString()}`;
+  return `Last searched ${formatRelative(new Date(row.lastPolledAt), now)}`;
 }
 
-export function KeywordSettings({ initial }: { initial: KeywordRow[] }) {
+export function KeywordSettings({
+  initial,
+  serverNow,
+}: {
+  initial: KeywordRow[];
+  serverNow: number;
+}) {
+  const now = new Date(serverNow);
   const id = useId();
   const [rows, setRows] = useState(initial);
   const [draft, setDraft] = useState("");
@@ -106,6 +136,30 @@ export function KeywordSettings({ initial }: { initial: KeywordRow[] }) {
     });
   }
 
+  function watchShowHn() {
+    startTransition(async () => {
+      const result = await watchShowHnAction();
+      if (!result.ok) {
+        toast.error(result.error);
+        return;
+      }
+      const q = result.data.query;
+      setRows((rs) => [
+        ...rs,
+        {
+          id: q.id,
+          query: q.query,
+          section: q.section,
+          label: q.label,
+          enabled: q.enabled,
+          lastPolledAt: null,
+          lastError: null,
+        },
+      ]);
+      toast.success("Watching Show HN. Collecting the last 7 days now.");
+    });
+  }
+
   function add(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
@@ -138,54 +192,87 @@ export function KeywordSettings({ initial }: { initial: KeywordRow[] }) {
 
   return (
     <div className="flex flex-col gap-4">
-      {rows.length === 0 ? (
-        <p className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
-          No keywords yet. Add one below so Greer knows what to look for.
-        </p>
-      ) : (
-        <ul className="flex flex-col divide-y rounded-xl border bg-card">
-          {rows.map((row) => (
-            <li
-              key={row.id}
-              className="flex items-center justify-between gap-3 py-2 pr-2 pl-3"
-            >
-              <div className="min-w-0">
-                <p>
-                  <span className="font-medium">{row.label}</span>{" "}
-                  <span className="text-sm text-muted-foreground">
-                    · {SECTION_NAMES[row.section] ?? row.section}
-                  </span>
-                </p>
-                <p
-                  className={
-                    row.lastError
-                      ? "text-xs text-destructive"
-                      : "text-xs text-muted-foreground"
-                  }
-                >
-                  {status(row)}
-                </p>
-              </div>
-              <div className="flex shrink-0 items-center gap-2">
-                <Switch
-                  checked={row.enabled}
-                  onCheckedChange={(on) => toggle(row, on)}
-                  aria-label={`Search "${row.label}"`}
-                />
+      {GROUPS.map((group) => {
+        const list = rows.filter((r) => r.section === group.section);
+        const launches = group.section === SHOW_HN;
+        const headingId = `${id}-${group.section}`;
+        return (
+          <section
+            key={group.section}
+            aria-labelledby={headingId}
+            className="flex flex-col gap-2"
+          >
+            <div>
+              <h3 id={headingId} className="font-sans text-sm font-medium">
+                {group.title}
+              </h3>
+              <p className="text-sm text-muted-foreground">{group.tip}</p>
+            </div>
+            {list.length > 0 ? (
+              <ul className="flex flex-col divide-y rounded-xl border bg-card">
+                {list.map((row) => (
+                  <li
+                    key={row.id}
+                    className="flex items-center justify-between gap-3 py-2 pr-2 pl-3"
+                  >
+                    <div className="min-w-0">
+                      <p className="font-medium">{row.label}</p>
+                      <p
+                        className={
+                          row.lastError
+                            ? "text-xs text-destructive"
+                            : "text-xs text-muted-foreground"
+                        }
+                      >
+                        {status(row, now)}
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <Switch
+                        checked={row.enabled}
+                        onCheckedChange={(on) => toggle(row, on)}
+                        aria-label={
+                          launches
+                            ? "Watch Show HN launches"
+                            : `Search "${row.label}"`
+                        }
+                      />
+                      {/* Launches are switched on and off, not removed. */}
+                      {!launches && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-sm"
+                          aria-label={`Remove "${row.label}"`}
+                          onClick={() => remove(row)}
+                        >
+                          <Trash2Icon />
+                        </Button>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : launches ? (
+              <div>
                 <Button
                   type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  aria-label={`Remove "${row.label}"`}
-                  onClick={() => remove(row)}
+                  variant="outline"
+                  size="sm"
+                  disabled={pending}
+                  onClick={watchShowHn}
                 >
-                  <Trash2Icon />
+                  Watch Show HN launches
                 </Button>
               </div>
-            </li>
-          ))}
-        </ul>
-      )}
+            ) : (
+              <p className="rounded-xl border border-dashed p-3 text-sm text-muted-foreground">
+                None yet. Add one below.
+              </p>
+            )}
+          </section>
+        );
+      })}
 
       <HnGuide />
 

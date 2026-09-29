@@ -44,6 +44,7 @@ function Section({
 
 export default async function SettingsPage() {
   const { workspace } = await requireWorkspace();
+  const now = new Date();
   const [profile, account, queries, ai, usage] = await Promise.all([
     getProductProfile(db, workspace.id),
     getAccountSummary(db, workspace.id, "hn"),
@@ -93,6 +94,7 @@ export default async function SettingsPage() {
         description="What Greer searches for on Hacker News, every 15 minutes."
       >
         <KeywordSettings
+          serverNow={now.getTime()}
           initial={queries.map((q) => ({
             id: q.id,
             query: q.query,

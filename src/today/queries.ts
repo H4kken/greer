@@ -241,6 +241,38 @@ export async function hiddenThreads(
     .limit(limit);
 }
 
+export const REACH_DAYS = 14;
+// At most this many people worth a reply in REACH_DAYS: Today says so.
+export const QUIET_REACH = 3;
+
+// How many people worth a reply Hacker News brought lately. For a focused
+// product that can be very few; after the first week, Today says so honestly
+// instead of looking broken. Null while it's too early to tell.
+export async function hnReach(
+  db: Db,
+  workspaceId: string,
+  { onboardedAt, now = new Date() }: { onboardedAt: Date | null; now?: Date },
+): Promise<{ people: number; days: number } | null> {
+  const DAY = 24 * 60 * 60 * 1000;
+  if (!onboardedAt || onboardedAt.getTime() > now.getTime() - 7 * DAY) {
+    return null;
+  }
+  const [row] = await db
+    .select({ people: sql<number>`count(distinct lower(${item.author}))::int` })
+    .from(item)
+    .innerJoin(itemScore, eq(itemScore.itemId, item.id))
+    .where(
+      and(
+        eq(item.workspaceId, workspaceId),
+        eq(item.platform, "hn"),
+        eq(item.filterStatus, "kept"),
+        gte(itemScore.score, MIN_SCORE),
+        gte(item.postedAt, new Date(now.getTime() - REACH_DAYS * DAY)),
+      ),
+    );
+  return { people: row?.people ?? 0, days: REACH_DAYS };
+}
+
 // Threads found but not scored yet: Today says reading is still going.
 export async function unscoredCount(
   db: Db,
