@@ -256,7 +256,7 @@ export function KeywordPicker({ initialKeywords, initialShowHn }: Props) {
       {submitError && <FieldError>{submitError}</FieldError>}
       <div className="flex items-center justify-between gap-2">
         <Link
-          href="/onboarding/product"
+          href="/onboarding/accounts"
           className={buttonVariants({ variant: "ghost" })}
         >
           Back

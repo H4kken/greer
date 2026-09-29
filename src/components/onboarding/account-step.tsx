@@ -15,12 +15,18 @@ export function AccountStep({ initial }: { initial: AccountSummary | null }) {
         hn={initial}
         onChange={(_, account) => setConnected(!!account)}
       />
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <p className="text-sm text-muted-foreground">
-          {connected
-            ? "You can change this later in Accounts."
-            : "No account yet, or rather not? Connect it later in Accounts."}
-        </p>
+      <p className="text-sm text-muted-foreground">
+        {connected
+          ? "You can change this later in Accounts."
+          : "No account yet, or rather not? Connect it later in Accounts."}
+      </p>
+      <div className="flex items-center justify-between gap-2">
+        <Link
+          href="/onboarding/product"
+          className={buttonVariants({ variant: "ghost" })}
+        >
+          Back
+        </Link>
         <Link
           href="/onboarding/keywords"
           className={buttonVariants({
