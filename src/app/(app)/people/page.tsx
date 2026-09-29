@@ -82,6 +82,18 @@ export default async function PeoplePage() {
     tried: !!p.triedAt,
   }));
 
+  // The map is the page: it fills everything below the header.
+  if (me && views.length > 0) {
+    return (
+      <PeopleView
+        people={views}
+        topics={topicViews}
+        path={pathOf(people)}
+        productName={profile?.productName || "your product"}
+      />
+    );
+  }
+
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-8">
       <div className="flex flex-col gap-2">
@@ -91,7 +103,6 @@ export default async function PeoplePage() {
           talked, the closer and bigger they get.
         </p>
       </div>
-
       {!me ? (
         <Empty title="Connect your account first">
           <p>
@@ -105,18 +116,11 @@ export default async function PeoplePage() {
             Connect Hacker News
           </Link>
         </Empty>
-      ) : views.length === 0 ? (
+      ) : (
         <Empty title="No one here yet">
           Once you reply to someone on Hacker News as {me}, they show up here.
           Greer checks every 15 minutes.
         </Empty>
-      ) : (
-        <PeopleView
-          people={views}
-          topics={topicViews}
-          path={pathOf(people)}
-          productName={profile?.productName || "your product"}
-        />
       )}
     </div>
   );

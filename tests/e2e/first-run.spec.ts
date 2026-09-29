@@ -508,7 +508,9 @@ test.describe("as the owner", () => {
     );
     await page.goto("/people");
 
-    // The open question comes first.
+    // Nobody is picked at first; who waits on you is one click away.
+    await expect(page.getByRole("region", { name: "devon_b" })).toHaveCount(0);
+    await page.getByRole("button", { name: /Waiting on you · 1/ }).click();
     const panel = page.getByRole("region", { name: "devon_b" });
     await expect(panel.getByText("Asked you something")).toBeVisible();
     await expect(
@@ -542,16 +544,19 @@ test.describe("as the owner", () => {
         .getByRole("button", { name: "They tried Greer" }),
     ).toBeVisible();
 
-    // Topics: picking one shows its stage and the people in it.
-    const topics = page.getByRole("region", {
+    // Topics: picking one shows how it's going and the people in it.
+    const topics = page.getByRole("list", {
       name: "What you help people with",
     });
-    await topics.getByRole("button", { name: /Pricing/ }).click();
-    const card = page.getByRole("region", { name: "Pricing" });
-    await expect(card.getByText("Growing")).toBeVisible();
-    await expect(
-      card.getByText("You talked with 1 person about it"),
-    ).toBeVisible();
+    const pricing = topics.getByRole("button", { name: /Pricing/ });
+    await expect(pricing).toContainText("Growing");
+    await pricing.click();
+    await expect(pricing).toHaveAttribute("aria-pressed", "true");
+    // (The phone layout's copy is in the page too, hidden.)
+    const line = page
+      .getByText(/You talked with 1 person about it/)
+      .filter({ visible: true });
+    await expect(line).toBeVisible();
     await expect(
       page
         .getByRole("region", { name: "sarahk" })
@@ -559,7 +564,23 @@ test.describe("as the owner", () => {
     ).toBeVisible();
     await expectNoSeriousA11yViolations(page);
     await topics.getByRole("button", { name: "Everyone" }).click();
-    await expect(card).toBeHidden();
+    await expect(line).toBeHidden();
+
+    // Escape puts the picked person away.
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("region", { name: "sarahk" })).toHaveCount(0);
+
+    // Phones get a list; picking someone opens a sheet.
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page
+      .getByRole("list", { name: "Everyone you've talked with" })
+      .getByRole("button", { name: /devon_b/ })
+      .click();
+    const sheet = page.getByRole("dialog", { name: "devon_b" });
+    await expect(sheet.getByText("Asked you something")).toBeVisible();
+    await expectNoSeriousA11yViolations(page);
+    await page.keyboard.press("Escape");
+    await expect(sheet).toBeHidden();
   });
 });
 
