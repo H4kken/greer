@@ -23,6 +23,7 @@ import {
 import { cn } from "@/lib/utils";
 import { EntryPanel } from "./entry-panel";
 import { PersonTag } from "./person-tag";
+import { SeedTag } from "./seed-tag";
 import type { EntryView } from "./types";
 
 function isTyping(target: EventTarget | null): boolean {
@@ -304,7 +305,7 @@ export function TodayView({
             active && "border-primary ring-1 ring-primary",
           )}
         >
-          <span className="flex items-center gap-1.5">
+          <span className="flex flex-wrap items-center gap-1.5">
             <span
               className={cn(
                 "rounded-full border px-2 py-px text-xs font-medium whitespace-nowrap",
@@ -316,6 +317,7 @@ export function TodayView({
               {e.tag}
             </span>
             <PersonTag entry={e} />
+            {e.seed && <SeedTag seed={e.seed} />}
             <span className="ml-auto truncate pl-2 text-xs whitespace-nowrap text-muted-foreground">
               {e.handle} ·{" "}
               <time title={e.whenTitle} className="font-mono">

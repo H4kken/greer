@@ -9,6 +9,7 @@ const help = (over: Partial<ScoreHelpOutput> = {}): ScoreHelpOutput => ({
   matched_problem: 1,
   specific: true,
   reply_welcome: true,
+  author_in_audience: true,
   intent: "asking_for_help",
   reason: "r",
   ...over,

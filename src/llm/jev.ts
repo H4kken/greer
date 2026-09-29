@@ -14,7 +14,7 @@ export const JEV_URL = "https://api.typesafe.ai/v1/systemone";
 export const JEV_MODEL = "jev-latest";
 // USD per million input tokens; output tokens are free.
 export const JEV_PRICE_PER_MTOK = 0.042;
-export const JEV_HELP_VERSION = "jev-help-v1";
+export const JEV_HELP_VERSION = "jev-help-v2";
 export const JEV_LAUNCH_VERSION = "jev-launch-v1";
 const TIMEOUT_MS = 30_000;
 
@@ -140,6 +140,19 @@ export function helpQuestions(
         false: "Hostile, already resolved or rhetorical",
       },
     },
+    // Who they are, apart from what they ask: someone who could become a
+    // user (a carrot) or someone to help in public (a dandelion). Not part
+    // of the score.
+    author_in_audience: {
+      type: "noul",
+      instructions:
+        "Is the author of `post` themself one of the people described in `builder.audience`?",
+      criteria: {
+        true: "The author matches that description",
+        false:
+          "The author doesn't match it (e.g. an employee of a large company, a hobbyist, an investor), even if their question relates",
+      },
+    },
     intent: {
       type: "choice",
       instructions: "What is the author of `post` doing?",
@@ -247,6 +260,7 @@ export function jevHelpScore(a: Answers, problemCount: number) {
     matched_problem: best >= 0.4 && matched >= 0 ? matched + 1 : null,
     specific: p.specific >= 0.5,
     reply_welcome: p.welcome >= 0.5,
+    author_in_audience: noul(a, "author_in_audience") >= 0.5,
     intent: (intent?.choice ?? "other") as ScoreHelpOutput["intent"],
   };
   return { score, criteria, problems };

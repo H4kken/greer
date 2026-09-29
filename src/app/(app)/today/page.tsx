@@ -22,7 +22,7 @@ import { requireWorkspace } from "@/lib/session";
 import { formatAbsolute, formatRelative } from "@/lib/time";
 import { getWorkerHealth } from "@/lib/health";
 import { getAiStatus } from "@/llm/settings";
-import { explainCriteria, fitLine } from "@/scoring/explain";
+import { explainCriteria, fitLine, seedOf } from "@/scoring/explain";
 import { seenSubjectsOf, type TodayEntry } from "@/today/build";
 import { sameDayAs, TIME_ZONE_COOKIE } from "@/today/progress";
 import {
@@ -126,6 +126,7 @@ export default async function TodayPage({ searchParams }: PageProps<"/today">) {
           matchLabel(thread.score))
         : null,
       seen: seenSubjectsOf(e),
+      seed: thread ? seedOf(thread.category, thread.criteria) : null,
       activity: thread
         ? activityLine({ ...thread, checkedAt: thread.activityCheckedAt }, now)
         : null,

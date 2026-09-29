@@ -327,6 +327,10 @@ test.describe("as the owner", () => {
     await expect(
       feed.getByRole("button", { name: /Zero paying customers/ }),
     ).toContainText("+1 more thread");
+    // Someone in the builder's audience, facing their problem: a carrot.
+    await expect(
+      feed.getByRole("button", { name: /Zero paying customers/ }),
+    ).toContainText("Could become a user");
     // How the conversation is going, once Greer has checked.
     await expect(
       feed.getByRole("button", { name: /Zero paying customers/ }),

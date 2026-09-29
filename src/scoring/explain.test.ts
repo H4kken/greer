@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { explainCriteria, fitLine, intentLabel } from "./explain";
+import { explainCriteria, fitLine, intentLabel, seedOf } from "./explain";
 
 describe("explainCriteria", () => {
   it("names the matched problem from the builder's list", () => {
@@ -97,5 +97,38 @@ describe("fitLine", () => {
   it("is null when the criteria say nothing", () => {
     expect(fitLine("help", null, problems)).toBeNull();
     expect(fitLine("feedback", { early_stage: false }, [])).toBeNull();
+  });
+});
+
+describe("seedOf", () => {
+  const help = {
+    own_situation: true,
+    problem_match: "strong",
+    author_in_audience: true,
+  };
+
+  it("calls someone in your audience, facing your problem, a carrot", () => {
+    expect(seedOf("help", help)).toBe("carrot");
+    expect(seedOf("help", { ...help, problem_match: "clear" })).toBe("carrot");
+  });
+
+  it("calls everything else worth a reply help in public", () => {
+    expect(seedOf("help", { ...help, author_in_audience: false })).toBe(
+      "dandelion",
+    );
+    expect(seedOf("help", { ...help, problem_match: "weak" })).toBe(
+      "dandelion",
+    );
+    expect(seedOf("help", { ...help, own_situation: false })).toBe("dandelion");
+  });
+
+  it("follows the maker for launches", () => {
+    expect(seedOf("feedback", { maker_in_audience: true })).toBe("carrot");
+    expect(seedOf("feedback", { maker_in_audience: false })).toBe("dandelion");
+  });
+
+  it("says nothing for scores made before the question existed", () => {
+    expect(seedOf("help", { own_situation: true })).toBeNull();
+    expect(seedOf("feedback", {})).toBeNull();
   });
 });

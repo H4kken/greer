@@ -43,6 +43,11 @@ const schema = z.object({
     .describe(
       "A thoughtful reply from a fellow builder would be welcome (not hostile, resolved or rhetorical).",
     ),
+  author_in_audience: z
+    .boolean()
+    .describe(
+      "The author is themself one of the people in the builder's audience (who could use the product), not only someone with a related question.",
+    ),
   intent: z.enum([
     "asking_for_help",
     "describing_pain",
@@ -61,7 +66,7 @@ export type ScoreHelpOutput = z.infer<typeof schema>;
 
 export const scoreHelp = definePrompt<ScoreHelpInput, ScoreHelpOutput>({
   name: "score-help",
-  version: "score-help-v2",
+  version: "score-help-v3",
   job: "sorting",
   system: `You help a SaaS builder find Hacker News conversations where they could genuinely help someone, as a real person. For one post or comment, answer the criteria precisely; the builder's software turns your answers into a score.
 
@@ -88,6 +93,7 @@ ${UNTRUSTED_RULE}`,
       matched_problem: matched >= 0 ? matched + 1 : null,
       specific: item.text.length > 200,
       reply_welcome: true,
+      author_in_audience: /\b(my|our) (saas|startup|product|app)\b/.test(text),
       intent: seeking ? "asking_for_help" : "discussion",
       reason:
         matched >= 0

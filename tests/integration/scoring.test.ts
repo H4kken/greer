@@ -89,7 +89,7 @@ describe("scoreItem (mock LLM)", () => {
       criteriaMet: 4,
       criteriaTotal: 5,
       intent: "asking_for_help",
-      promptVersion: "score-help-v2",
+      promptVersion: "score-help-v3",
       model: "mock-fast",
     });
     expect(row!.reason).toContain("Getting the first paying customers");
@@ -171,6 +171,7 @@ function jevReplies(status = 200) {
         seeking_help: noul(0.9),
         specific: noul(0.2),
         reply_welcome: noul(0.9),
+        author_in_audience: noul(0.7),
         intent: {
           type: "choice",
           choice: "asking_for_help",
@@ -212,7 +213,7 @@ describe("scoreItem with Jev", () => {
       criteriaTotal: 5,
       intent: "asking_for_help",
       reason: "",
-      promptVersion: "jev-help-v1",
+      promptVersion: "jev-help-v2",
       model: "jev-1.13.0",
     });
     // Same criteria as the LLM's, plus the raw probabilities for tuning.

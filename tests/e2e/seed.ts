@@ -57,6 +57,7 @@ export async function seedThreads(threads: SeedThread[]): Promise<void> {
             matched_problem: 1,
             specific: true,
             reply_welcome: false,
+            author_in_audience: true,
           }),
           `Seeded: ${t.title}`,
         ],

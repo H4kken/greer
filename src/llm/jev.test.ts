@@ -58,6 +58,7 @@ describe("jevHelpScore", () => {
         seeking_help: n(1),
         specific: n(1),
         reply_welcome: n(1),
+        author_in_audience: n(0.8),
         intent: intent({ asking_for_help: 0.9, other: 0.1 }),
         problem_0: n(0.1),
         problem_1: n(0.9),
@@ -69,6 +70,8 @@ describe("jevHelpScore", () => {
       problem_match: "strong",
       matched_problem: 2,
       intent: "asking_for_help",
+      // Asked, but not part of the score: it only names the seed.
+      author_in_audience: true,
     });
     // The "why" checklist still reads these criteria.
     expect(
@@ -83,6 +86,7 @@ describe("jevHelpScore", () => {
         seeking_help: n(0.2),
         specific: n(1),
         reply_welcome: n(1),
+        author_in_audience: n(0.8),
         intent: intent({ discussion: 0.8, describing_pain: 0.2 }),
         problem_0: n(0.3),
         problem_1: n(0.1),
@@ -103,6 +107,7 @@ describe("jevHelpScore", () => {
         seeking_help: n(0.1),
         specific: n(0),
         reply_welcome: n(1),
+        author_in_audience: n(0.8),
         intent: intent({ describing_pain: 0.7, discussion: 0.3 }),
         problem_0: n(1),
         problem_1: n(0),

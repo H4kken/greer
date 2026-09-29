@@ -1,6 +1,6 @@
 import type { PersonKind } from "@/people/build";
 import type { AnswerTone } from "@/replies/classify";
-import type { CriterionLine } from "@/scoring/explain";
+import type { CriterionLine, Seed } from "@/scoring/explain";
 
 // One card of Today's feed as the client sees it: dates and labels already
 // turned into text on the server, so server and client render the same.
@@ -24,6 +24,8 @@ export type EntryView = {
   context: string | null; // "in “The hardest part of…”"
   fit: string | null; // "No paying customers yet · a reply is welcome"
   activity: string | null;
+  // A carrot (could become a user) or a dandelion (help in public).
+  seed: Seed | null;
   // The news this card shows, marked seen once it's been open a moment.
   seen: string[]; // "No replies yet · active in the thread 20 min ago"
   history: string | null; // "Talked twice · pricing"

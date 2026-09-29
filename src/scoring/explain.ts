@@ -13,6 +13,7 @@ const helpCriteria = z
     matched_problem: z.number().nullable(),
     specific: z.boolean(),
     reply_welcome: z.boolean(),
+    author_in_audience: z.boolean(),
   })
   .partial();
 
@@ -84,7 +85,32 @@ export function explainCriteria(
     "A reply would be welcome",
     "A reply may not be welcome",
   );
+  add(c.author_in_audience, "One of your audience", "Not one of your audience");
   return lines;
+}
+
+// Two kinds of conversation worth having. A carrot is someone who could
+// become a user: one of your audience, facing one of your problems
+// themselves; a 1:1 conversation, worth following up. A dandelion is help
+// in public: the thread's readers are the audience. Null for scores made
+// before the question existed.
+export type Seed = "carrot" | "dandelion";
+
+export function seedOf(
+  category: "help" | "feedback",
+  criteria: unknown,
+): Seed | null {
+  if (category === "feedback") {
+    const c = launchCriteria.safeParse(criteria).data ?? {};
+    if (c.maker_in_audience === undefined) return null;
+    return c.maker_in_audience ? "carrot" : "dandelion";
+  }
+  const c = helpCriteria.safeParse(criteria).data ?? {};
+  if (c.author_in_audience === undefined) return null;
+  const close = c.problem_match === "clear" || c.problem_match === "strong";
+  return c.author_in_audience && close && c.own_situation
+    ? "carrot"
+    : "dandelion";
 }
 
 // The one line on a Today card saying why this person fits, from the same
