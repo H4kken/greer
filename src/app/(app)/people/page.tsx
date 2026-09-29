@@ -90,6 +90,7 @@ export default async function PeoplePage() {
         topics={topicViews}
         path={pathOf(people)}
         productName={profile?.productName || "your product"}
+        serverNow={now.getTime()}
       />
     );
   }

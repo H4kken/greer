@@ -357,6 +357,7 @@ export default async function TodayPage({ searchParams }: PageProps<"/today">) {
               people={network}
               summary={networkSummary}
               connected={!!today.me}
+              serverNow={now.getTime()}
             />
           }
         />

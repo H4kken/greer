@@ -31,11 +31,32 @@ function smoothstep(near: number, far: number, d: number) {
   return t * t * (3 - 2 * t);
 }
 
+// Where a dot is `t` seconds (of the shared clock) into its orbit, in % of
+// the box. Pure, so the server can draw the same moment the browser moves on
+// from: every map (Today's, People) shows people where they are right now.
+export function orbitPoint(node: OrbitNode, i: number, t: number) {
+  const r0 = Math.hypot(node.x - 50, node.y - 50);
+  const angle =
+    Math.atan2(node.y - 50, node.x - 50) + (2 * Math.PI * t) / node.turn;
+  const r = r0 + DRIFT * Math.sin((2 * Math.PI * t) / breathOf(i) + i);
+  return {
+    x: Number((50 + r * Math.cos(angle)).toFixed(2)),
+    y: Number((50 + r * Math.sin(angle)).toFixed(2)),
+  };
+}
+
+// Each dot drifts in and out at one of four paces.
+const breathOf = (i: number) => 6 + (i % 4) * 1.5;
+
+// The shared clock, in seconds: wall time, so every map agrees.
+export const orbitNow = (ms = Date.now()) => ms / 1000;
+
 // Slowly turns a network map around "You": each dot orbits at its own
 // `turn` (seconds per turn; negative turns the other way) and drifts in and
-// out. Moves the DOM directly each frame, with transforms (no layout, no
-// pixel snapping) rather than a React render per frame. The first paint
-// (server and browser) is the resting layout; reduced motion keeps it.
+// out, on the shared clock. Moves the DOM directly each frame, with
+// transforms (no layout, no pixel snapping) rather than a React render per
+// frame. The first paint (server and browser) draws `orbitPoint` at the
+// server's time; reduced motion stays there.
 // Mark the i-th person's dot with `data-orbit-dot={i}` and their line to
 // you with `data-orbit-line={i}`, inside the element given `ref={box}`.
 // Dots near the pointer slow right down, each at its own pace, and the
@@ -65,13 +86,7 @@ export function useOrbit(
     const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     // Reduced motion keeps the resting layout, zoom aside.
     if (!el || (still && !zoomable)) return;
-    const layout = nodes.map((n, i) => ({
-      r: Math.hypot(n.x - 50, n.y - 50),
-      angle: Math.atan2(n.y - 50, n.x - 50),
-      turn: n.turn,
-      breath: 6 + (i % 4) * 1.5,
-      size: n.size,
-    }));
+    const layout = nodes.map((n) => ({ node: n, size: n.size }));
     let { width, height } = el.getBoundingClientRect();
     const resized = new ResizeObserver(([entry]) => {
       ({ width, height } = entry!.contentRect);
@@ -161,8 +176,9 @@ export function useOrbit(
     }
     let frame = 0;
     let last: number | null = null;
-    // Each dot keeps its own clock (seconds of motion) and speed (0 to 1).
-    const clocks = layout.map(() => 0);
+    // Each dot keeps its own clock (seconds of motion, from the shared one;
+    // slowing near the pointer holds it back) and speed (0 to 1).
+    const clocks = layout.map(() => orbitNow());
     const speeds = layout.map(() => (still ? 0 : 1));
     const tick = (ms: number) => {
       const dt = last === null ? 0 : Math.min(0.1, (ms - last) / 1000);
@@ -181,11 +197,7 @@ export function useOrbit(
         `translate3d(${cx - width / 2}px, ${cy - height / 2}px, 0)`,
       );
       layout.forEach((l, i) => {
-        const t = clocks[i]!;
-        const angle = l.angle + (2 * Math.PI * t) / l.turn;
-        const r = l.r + DRIFT * Math.sin((2 * Math.PI * t) / l.breath + i);
-        const x = 50 + r * Math.cos(angle);
-        const y = 50 + r * Math.sin(angle);
+        const { x, y } = orbitPoint(l.node, i, clocks[i]!);
         const left = sx(x) - l.size / 2;
         const top = sy(y);
         dots[i]?.style.setProperty(

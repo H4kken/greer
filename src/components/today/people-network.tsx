@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useOrbit } from "@/components/use-orbit";
+import { orbitNow, orbitPoint, useOrbit } from "@/components/use-orbit";
 import { cn } from "@/lib/utils";
 import { placePeople } from "@/people/layout";
 import type { NetworkPerson } from "./types";
@@ -39,16 +39,23 @@ export function PeopleNetwork({
   people,
   summary,
   connected,
+  serverNow,
 }: {
   people: NetworkPerson[];
   summary: string;
   connected: boolean;
+  // Draws the first frame at the server's time, like the People map.
+  serverNow: number;
 }) {
-  const placed = place(people);
+  const nodes = place(people).map((p) => ({
+    ...p,
+    turn: p.kind === "new" ? NEW_TURN_S : TURN_S,
+  }));
+  const t0 = orbitNow(serverNow);
+  // Where everyone is now, on the clock both maps share.
+  const placed = nodes.map((n, i) => ({ ...n, ...orbitPoint(n, i, t0) }));
   const knownCount = people.filter((p) => p.kind !== "new").length;
-  const { box: orbitBox } = useOrbit(
-    placed.map((p) => ({ ...p, turn: p.kind === "new" ? NEW_TURN_S : TURN_S })),
-  );
+  const { box: orbitBox } = useOrbit(nodes);
 
   return (
     <section

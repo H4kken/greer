@@ -8,7 +8,7 @@ import {
   useTransition,
 } from "react";
 import { toast } from "sonner";
-import { useOrbit } from "@/components/use-orbit";
+import { orbitNow, orbitPoint, useOrbit } from "@/components/use-orbit";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Sheet,
@@ -136,11 +136,14 @@ export function PeopleView({
   topics,
   path: initialPath,
   productName,
+  serverNow,
 }: {
   people: PersonView[];
   topics: TopicView[];
   path: PathCounts;
   productName: string;
+  // Draws the first frame at the server's time, like Today's network.
+  serverNow: number;
 }) {
   const [people, setPeople] = useState(initial);
   // Nobody is picked at first: the map is the page.
@@ -152,12 +155,15 @@ export function PeopleView({
   const inTopic = (p: PersonView) => !topic || p.topicIds.includes(topic.id);
   const person = people.find((p) => p.handle === selected) ?? null;
   const waiting = people.filter((p) => p.openQuestion);
-  const placed = placePeople(people);
+  const nodes = placePeople(people).map((p) => ({ ...p, turn: TURN_S }));
+  const t0 = orbitNow(serverNow);
+  // Where everyone is now, on the clock both maps share.
+  const placed = nodes.map((n, i) => ({ ...n, ...orbitPoint(n, i, t0) }));
   const [zoomed, setZoomed] = useState(false);
-  const { box: orbitBox, reset: zoomOut } = useOrbit(
-    placed.map((p) => ({ ...p, turn: TURN_S })),
-    { zoomable: true, onZoom: setZoomed },
-  );
+  const { box: orbitBox, reset: zoomOut } = useOrbit(nodes, {
+    zoomable: true,
+    onZoom: setZoomed,
+  });
   const path = {
     ...initialPath,
     tried: people.filter((p) => p.tried).length,
