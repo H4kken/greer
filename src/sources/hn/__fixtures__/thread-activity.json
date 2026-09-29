@@ -1,0 +1,113 @@
+{
+  "nbHits": 186,
+  "hits": [
+    {
+      "objectID": "49895998",
+      "_tags": ["comment", "author_zahlman", "story_49853137"],
+      "author": "zahlman",
+      "created_at_i": 1790699232,
+      "story_id": 49853137,
+      "parent_id": 49878789,
+      "comment_text": "Based on our existing understanding of the software, yes."
+    },
+    {
+      "objectID": "49894709",
+      "_tags": ["comment", "author_jacquesm", "story_49853137"],
+      "author": "jacquesm",
+      "created_at_i": 1790694707,
+      "story_id": 49853137,
+      "parent_id": 49866677,
+      "comment_text": "Who would build up files like this in a private context?"
+    },
+    {
+      "objectID": "49893122",
+      "_tags": ["comment", "author_hodgehog11", "story_49853137"],
+      "author": "hodgehog11",
+      "created_at_i": 1790689368,
+      "story_id": 49853137,
+      "parent_id": 49879278,
+      "comment_text": "I&#x27;ve spoken to researchers at both OpenAI and Anthropic. They are not &quot"
+    },
+    {
+      "objectID": "49892572",
+      "_tags": ["comment", "author_sejje", "story_49853137"],
+      "author": "sejje",
+      "created_at_i": 1790687224,
+      "story_id": 49853137,
+      "parent_id": 49875909,
+      "comment_text": "I just didn&#x27;t believe him, actually."
+    },
+    {
+      "objectID": "49885897",
+      "_tags": ["comment", "author_rnd0", "story_49853137"],
+      "author": "rnd0",
+      "created_at_i": 1790638045,
+      "story_id": 49853137,
+      "parent_id": 49868158,
+      "comment_text": "You&#x27;re missing the forest for the trees. The underlying point is that serio"
+    },
+    {
+      "objectID": "49879278",
+      "_tags": ["comment", "author_simoncion", "story_49853137"],
+      "author": "simoncion",
+      "created_at_i": 1790608143,
+      "story_id": 49853137,
+      "parent_id": 49871672,
+      "comment_text": "&gt;  I&#x27;m suggesting that many more of these issues are likely to come from"
+    },
+    {
+      "objectID": "49878931",
+      "_tags": ["comment", "author_trollbridge", "story_49853137"],
+      "author": "trollbridge",
+      "created_at_i": 1790607017,
+      "story_id": 49853137,
+      "parent_id": 49863832,
+      "comment_text": "Well, agents are intentionally trained with RLHF to solve captchas that say “pro"
+    },
+    {
+      "objectID": "49878820",
+      "_tags": ["comment", "author_trollbridge", "story_49853137"],
+      "author": "trollbridge",
+      "created_at_i": 1790606647,
+      "story_id": 49853137,
+      "parent_id": 49868158,
+      "comment_text": "It indeed is and points to serious problems in the criminal justice system that "
+    },
+    {
+      "objectID": "49878789",
+      "_tags": ["comment", "author_trollbridge", "story_49853137"],
+      "author": "trollbridge",
+      "created_at_i": 1790606564,
+      "story_id": 49853137,
+      "parent_id": 49871361,
+      "comment_text": "Well:<p>1. Park your Python or whatever code inside a VM with no connectivity to"
+    },
+    {
+      "objectID": "49878716",
+      "_tags": ["comment", "author_trollbridge", "story_49853137"],
+      "author": "trollbridge",
+      "created_at_i": 1790606298,
+      "story_id": 49853137,
+      "parent_id": 49874404,
+      "comment_text": "It’s beyond absurdity at this point, but the marketing plan of “describe our poo"
+    },
+    {
+      "objectID": "49877810",
+      "_tags": ["comment", "author_gregw2", "story_49853137"],
+      "author": "gregw2",
+      "created_at_i": 1790602817,
+      "story_id": 49853137,
+      "parent_id": 49868142,
+      "comment_text": "Hadn&#x27;t seen that link. Thanks!<p>Protecting against an AI convincing  the h"
+    },
+    {
+      "objectID": "49877757",
+      "_tags": ["comment", "author_NexRebular", "story_49853137"],
+      "author": "NexRebular",
+      "created_at_i": 1790602598,
+      "story_id": 49853137,
+      "parent_id": 49870487,
+      "comment_text": "Maybe they are not that smart, after all?"
+    }
+  ]
+}

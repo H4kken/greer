@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { Person } from "@/people/build";
 import type { TodayEntry } from "./build";
 import {
+  activityLine,
   eventLine,
   historyLine,
   matchLabel,
@@ -111,5 +112,37 @@ describe("Today's words", () => {
       "1 person you know has news, 1 person you replied to has news, and 2 new people could use your help.",
     );
     expect(summaryLine(0, 0, 2)).toBe("2 people you replied to have news.");
+  });
+
+  it("says how the conversation is going", () => {
+    const now = new Date("2026-09-30T12:00:00Z");
+    const ago = (min: number) => new Date(now.getTime() - min * 60_000);
+    const story = {
+      type: "story" as const,
+      postedAt: ago(180),
+      commentCount: 0,
+      repliesToItem: 0,
+      authorActiveAt: null,
+      checkedAt: ago(5),
+    };
+    expect(activityLine({ ...story, checkedAt: null }, now)).toBeNull();
+    expect(activityLine(story, now)).toBe("No replies yet");
+    expect(activityLine({ ...story, commentCount: 1 }, now)).toBe("1 comment");
+    expect(activityLine({ ...story, commentCount: 84 }, now)).toBe(
+      "Busy thread, 84 comments",
+    );
+    expect(
+      activityLine({ ...story, commentCount: 6, authorActiveAt: ago(20) }, now),
+    ).toBe("6 comments · active in the thread 20 min ago");
+    // Before posting, or more than a day ago: not a sign they're listening.
+    expect(activityLine({ ...story, authorActiveAt: ago(60 * 26) }, now)).toBe(
+      "No replies yet",
+    );
+
+    const comment = { ...story, type: "comment" as const, commentCount: 40 };
+    expect(activityLine(comment, now)).toBe("No replies to them yet");
+    expect(activityLine({ ...comment, repliesToItem: 3 }, now)).toBe(
+      "3 replies to them",
+    );
   });
 });

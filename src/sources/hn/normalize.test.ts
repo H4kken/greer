@@ -2,11 +2,13 @@ import { describe, expect, it } from "vitest";
 import askHn from "./__fixtures__/search-ask-hn.json";
 import storyComment from "./__fixtures__/search-story-comment.json";
 import thread from "./__fixtures__/thread.json";
+import threadActivity from "./__fixtures__/thread-activity.json";
 import user from "./__fixtures__/firebase-user.json";
 import userComments from "./__fixtures__/search-user-comments.json";
 import {
   type AlgoliaHit,
   type AlgoliaItem,
+  activityOf,
   htmlToText,
   itemStatusOf,
   normalizeHit,
@@ -88,5 +90,35 @@ describe("HN normalization (recorded responses)", () => {
         'Docs: <a href="https:&#x2F;&#x2F;example.com&#x2F;docs&#x2F;getting-started?ref=hn&amp;x=1" rel="nofollow">https:&#x2F;&#x2F;example.com&#x2F;docs&#x2F;gett...</a>.',
       ),
     ).toBe("Docs: https://example.com/docs/getting-started?ref=hn&x=1.");
+  });
+});
+
+describe("activityOf", () => {
+  const page = threadActivity as Parameters<typeof activityOf>[0];
+
+  it("counts the thread, replies to the item and when its author was last there", () => {
+    expect(
+      activityOf(page, { externalId: "49868158", author: "Trollbridge" }),
+    ).toEqual({
+      comments: 186,
+      repliesToItem: 2,
+      authorActiveAt: new Date(
+        Math.max(
+          ...page.hits
+            .filter((h) => h.author === "trollbridge")
+            .map((h) => h.created_at_i),
+        ) * 1000,
+      ),
+    });
+  });
+
+  it("says nobody replied and the author hasn't been back", () => {
+    expect(
+      activityOf(page, { externalId: "1", author: "someone_else" }),
+    ).toEqual({
+      comments: 186,
+      repliesToItem: 0,
+      authorActiveAt: null,
+    });
   });
 });

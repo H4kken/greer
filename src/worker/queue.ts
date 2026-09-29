@@ -17,6 +17,9 @@ export const QUEUES = {
   classifyAnswer: "classify-answer",
   // One of the user's replies: name the topic it helped with.
   nameTopic: "name-topic",
+  // Every 15 minutes: how the conversations on Today are going (comments,
+  // replies to the person, whether they're still around).
+  refreshActivity: "refresh-activity",
 } as const;
 export type QueueName = (typeof QUEUES)[keyof typeof QUEUES];
 
@@ -52,6 +55,8 @@ const QUEUE_OPTIONS: Partial<
     retryDelay: 60,
     retryBackoff: true,
   },
+  // One sweep at a time; a failed one waits for the next check.
+  [QUEUES.refreshActivity]: { policy: "stately", retryLimit: 0 },
   // One waiting and one running job per item (singletonKey = item id).
   [QUEUES.scoreItem]: {
     policy: "stately",

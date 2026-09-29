@@ -26,6 +26,7 @@ import { explainCriteria, fitLine } from "@/scoring/explain";
 import type { TodayEntry } from "@/today/build";
 import { sameDayAs, TIME_ZONE_COOKIE } from "@/today/progress";
 import {
+  activityLine,
   eventLine,
   historyLine,
   matchLabel,
@@ -123,6 +124,9 @@ export default async function TodayPage({ searchParams }: PageProps<"/today">) {
       fit: thread
         ? (fitLine(thread.category, thread.criteria, problems) ??
           matchLabel(thread.score))
+        : null,
+      activity: thread
+        ? activityLine({ ...thread, checkedAt: thread.activityCheckedAt }, now)
         : null,
       history: person
         ? historyLine(

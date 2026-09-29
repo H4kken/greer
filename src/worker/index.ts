@@ -9,6 +9,7 @@ import { linkedAccounts, pollReplies } from "@/replies/poll";
 import { nameReplyTopic, unnamedReplyIds } from "@/replies/topics";
 import { scoreItem, unscoredItemIds } from "@/scoring/score";
 import { getSource } from "@/sources/registry";
+import { refreshActivity } from "@/today/activity";
 import {
   HEARTBEAT_CRON,
   recordHeartbeat,
@@ -71,8 +72,13 @@ async function main() {
     await queueScoring(await unscoredItemIds(db));
     await queueClassifying(await unclassifiedAnswerIds(db));
     await queueTopics(await unnamedReplyIds(db));
+    await boss.send(QUEUES.refreshActivity, {}, { singletonKey: "sweep" });
   });
   await boss.schedule(QUEUES.ingestSchedule, INGEST_CRON);
+
+  await boss.work(QUEUES.refreshActivity, async () => {
+    console.log("[activity]", await refreshActivity(db, getSource));
+  });
 
   await boss.work<{ queryId: string }>(QUEUES.ingestPoll, async ([job]) => {
     const { newKeptIds, ...counts } = await pollQuery(

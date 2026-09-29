@@ -23,6 +23,7 @@ export type EntryView = {
   topicQuote: boolean; // topic is their words
   context: string | null; // "in “The hardest part of…”"
   fit: string | null; // "No paying customers yet · a reply is welcome"
+  activity: string | null; // "No replies yet · active in the thread 20 min ago"
   history: string | null; // "Talked twice · pricing"
   match: string | null; // "Strong match"
   // Stuck, asks and launched: the thread, with why Greer picked it.

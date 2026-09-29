@@ -1,5 +1,6 @@
 "use client";
 
+import { MessagesSquareIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -306,6 +307,12 @@ export function TodayView({
           {e.context && (
             <span className="line-clamp-1 text-sm text-muted-foreground">
               {e.context}
+            </span>
+          )}
+          {e.activity && (
+            <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <MessagesSquareIcon aria-hidden className="size-3.5 shrink-0" />
+              {e.activity}
             </span>
           )}
           {(foot(e) || e.also.length > 0) && (

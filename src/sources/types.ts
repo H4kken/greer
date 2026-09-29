@@ -60,6 +60,14 @@ export type UserComment = {
   raw: unknown;
 };
 
+// How the conversation around one post or comment is going: enough to tell
+// whether a reply there is still worth it, without reading the thread.
+export type ThreadActivity = {
+  comments: number; // in the whole thread
+  repliesToItem: number; // direct replies to the item (among recent comments)
+  authorActiveAt: Date | null; // the item's author's latest comment there
+};
+
 export interface Source {
   platform: Platform;
   fetchNew(query: SourceQuery, since: Date): Promise<RawItem[]>;
@@ -71,4 +79,10 @@ export interface Source {
   fetchUserComments?(handle: string, since: Date): Promise<UserComment[]>;
   // Who wrote a post or comment; null when it's gone (deleted or missing).
   fetchAuthor?(externalId: string): Promise<string | null>;
+  // One request's worth of how a thread is going around an item.
+  fetchActivity?(item: {
+    externalId: string;
+    threadId: string;
+    author: string;
+  }): Promise<ThreadActivity>;
 }

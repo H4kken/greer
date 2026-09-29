@@ -81,6 +81,10 @@ export async function loadToday(
         score: itemScore.score,
         criteria: itemScore.criteria,
         reason: itemScore.reason,
+        commentCount: item.commentCount,
+        repliesToItem: item.repliesToItem,
+        authorActiveAt: item.authorActiveAt,
+        activityCheckedAt: item.activityCheckedAt,
       })
       .from(item)
       .innerJoin(itemScore, eq(itemScore.itemId, item.id))

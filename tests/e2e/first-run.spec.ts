@@ -276,7 +276,7 @@ test.describe("as the owner", () => {
     page,
   }) => {
     await seedThreads([
-      { title: "Zero paying customers after a month", score: 92 },
+      { title: "Zero paying customers after a month", score: 92, comments: 0 },
       { title: "How to do outreach without spam", score: 81 },
       { title: "Where do I find beta testers", score: 70 },
       { title: "Pricing a tool for developers", score: 65 },
@@ -327,6 +327,10 @@ test.describe("as the owner", () => {
     await expect(
       feed.getByRole("button", { name: /Zero paying customers/ }),
     ).toContainText("+1 more thread");
+    // How the conversation is going, once Greer has checked.
+    await expect(
+      feed.getByRole("button", { name: /Zero paying customers/ }),
+    ).toContainText("No replies yet");
     await expect(
       page.getByRole("heading", { level: 2, name: "Your people" }),
     ).toBeVisible();

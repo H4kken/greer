@@ -1,6 +1,7 @@
 import { createHttpClient, type HttpClient } from "../http";
 import type { Source, SourceQuery } from "../types";
 import {
+  activityOf,
   type AlgoliaHit,
   type AlgoliaItem,
   type FirebaseItem,
@@ -94,6 +95,21 @@ export function createHnSource(http: HttpClient = createHttpClient()): Source {
         await http.getJson<FirebaseItem | null>(
           `${FIREBASE}/item/${externalId}.json`,
         ),
+      );
+    },
+
+    // The thread's newest comments, one page: its size, the item's direct
+    // replies and its author's latest comment.
+    async fetchActivity(item) {
+      const params = new URLSearchParams({
+        tags: `comment,story_${item.threadId}`,
+        hitsPerPage: String(HITS_PER_PAGE),
+      });
+      return activityOf(
+        await http.getJson<{ nbHits: number; hits: AlgoliaHit[] }>(
+          `${ALGOLIA}/search_by_date?${params}`,
+        ),
+        item,
       );
     },
 

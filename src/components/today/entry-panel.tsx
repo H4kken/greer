@@ -4,6 +4,7 @@ import {
   ArrowLeftIcon,
   ArrowUpRightIcon,
   CheckIcon,
+  MessagesSquareIcon,
   MinusIcon,
 } from "lucide-react";
 import { useId, useState } from "react";
@@ -87,6 +88,12 @@ export function EntryPanel({
         </h2>
         {entry.history && (
           <p className="text-sm text-muted-foreground">{entry.history}</p>
+        )}
+        {entry.activity && (
+          <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+            <MessagesSquareIcon aria-hidden className="size-4 shrink-0" />
+            {entry.activity}
+          </p>
         )}
       </header>
 

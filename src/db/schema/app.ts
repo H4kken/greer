@@ -237,6 +237,13 @@ export const item = pgTable(
     triagedAt: timestamp("triaged_at", { withTimezone: true }),
     // Optional "not relevant because…" from the user, to tune scoring later.
     dismissReason: text("dismiss_reason"),
+    // How the conversation is going, checked while the item could show on
+    // Today (src/today/activity.ts): comments in the thread, direct replies
+    // to this item, and when its author last wrote there. Null until checked.
+    commentCount: integer("comment_count"),
+    repliesToItem: integer("replies_to_item"),
+    authorActiveAt: timestamp("author_active_at", { withTimezone: true }),
+    activityCheckedAt: timestamp("activity_checked_at", { withTimezone: true }),
   },
   (t) => [
     uniqueIndex("item_workspace_platform_external_idx").on(

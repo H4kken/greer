@@ -1,6 +1,7 @@
 // Words for Today's cards. Pure, so the phrasing is unit-tested and stays
 // the same on the server and in tests.
 import type { Person } from "@/people/build";
+import { formatRelative } from "@/lib/time";
 import type { TodayEntry } from "./build";
 
 const TIMES = ["", "once", "twice"];
@@ -97,4 +98,54 @@ export function summaryLine(
   if (!parts.length) return "Nobody new today. Greer keeps listening.";
   const last = parts.pop()!;
   return `${parts.length ? `${parts.join(", ")}, and ` : ""}${last}.`;
+}
+
+// From this many comments, a reply lands far down the thread.
+export const BUSY_THREAD = 50;
+
+// How the conversation is going, in one line under a card: "No replies yet
+// · active in the thread 20 min ago". Null until Greer has checked.
+export function activityLine(
+  a: {
+    type: "story" | "comment";
+    postedAt: Date;
+    commentCount: number | null;
+    repliesToItem: number | null;
+    authorActiveAt: Date | null;
+    checkedAt: Date | null;
+  },
+  now = new Date(),
+): string | null {
+  if (!a.checkedAt) return null;
+  const parts: string[] = [];
+  const n = (k: number, one: string, many: string) =>
+    `${k} ${k === 1 ? one : many}`;
+  if (a.type === "comment") {
+    const r = a.repliesToItem ?? 0;
+    parts.push(
+      r === 0
+        ? "no replies to them yet"
+        : n(r, "reply", "replies") + " to them",
+    );
+  } else {
+    const c = a.commentCount ?? 0;
+    parts.push(
+      c === 0
+        ? "no replies yet"
+        : c >= BUSY_THREAD
+          ? `busy thread, ${c} comments`
+          : n(c, "comment", "comments"),
+    );
+  }
+  // They came back to the thread after posting, lately: they're listening.
+  const DAY = 24 * 60 * 60 * 1000;
+  if (
+    a.authorActiveAt &&
+    a.authorActiveAt > a.postedAt &&
+    now.getTime() - a.authorActiveAt.getTime() < DAY
+  ) {
+    parts.push(`active in the thread ${formatRelative(a.authorActiveAt, now)}`);
+  }
+  const line = parts.join(" · ");
+  return line.charAt(0).toUpperCase() + line.slice(1);
 }

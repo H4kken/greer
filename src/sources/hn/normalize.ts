@@ -3,6 +3,7 @@ import type {
   AccountProfile,
   ItemStatus,
   RawItem,
+  ThreadActivity,
   ThreadNode,
   UserComment,
 } from "../types";
@@ -115,4 +116,30 @@ export function itemStatusOf(item: FirebaseItem | null): ItemStatus {
   if (item.deleted) return "deleted";
   if (item.dead) return "dead";
   return "live";
+}
+
+// How a thread is going around one item, from its newest comments (one
+// Algolia page) and the thread's comment count. Replies to the item are
+// counted among those comments: enough to tell "none yet" from "plenty".
+export function activityOf(
+  page: { nbHits: number; hits: AlgoliaHit[] },
+  item: { externalId: string; author: string },
+): ThreadActivity {
+  const author = item.author.toLowerCase();
+  let authorAt = 0;
+  let replies = 0;
+  for (const hit of page.hits) {
+    if (String(hit.parent_id) === item.externalId) replies++;
+    if (
+      hit.objectID !== item.externalId &&
+      hit.author?.toLowerCase() === author
+    ) {
+      authorAt = Math.max(authorAt, hit.created_at_i);
+    }
+  }
+  return {
+    comments: page.nbHits,
+    repliesToItem: replies,
+    authorActiveAt: authorAt ? new Date(authorAt * 1000) : null,
+  };
 }

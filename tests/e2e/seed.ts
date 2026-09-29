@@ -9,6 +9,8 @@ export type SeedThread = {
   category?: "help" | "feedback";
   // Each thread has its own author unless two share one.
   author?: string;
+  // As the activity sweep would store it; unchecked when left out.
+  comments?: number;
 };
 
 export async function seedThreads(threads: SeedThread[]): Promise<void> {
@@ -35,6 +37,12 @@ export async function seedThreads(threads: SeedThread[]): Promise<void> {
           t.author ?? `maker${i}`,
         ],
       );
+      if (t.comments !== undefined) {
+        await client.query(
+          `update item set comment_count = $2, replies_to_item = 0, activity_checked_at = now() where id = $1`,
+          [id, t.comments],
+        );
+      }
       await client.query(
         `insert into item_score (item_id, workspace_id, score, criteria_met, criteria_total, criteria, intent, reason, prompt_version, model)
          values ($1, $2, $3, 4, 5, $4, 'asking_for_help', $5, 'seed', 'mock-fast')`,
