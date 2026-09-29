@@ -62,7 +62,7 @@ export type ScoreHelpOutput = z.infer<typeof schema>;
 export const scoreHelp = definePrompt<ScoreHelpInput, ScoreHelpOutput>({
   name: "score-help",
   version: "score-help-v2",
-  slot: "fast",
+  job: "sorting",
   system: `You help a SaaS builder find Hacker News conversations where they could genuinely help someone, as a real person. For one post or comment, answer the criteria precisely; the builder's software turns your answers into a score.
 
 Judge the person's actual situation, not keyword matches: "first users" of a programming language, or a news story about a company, is not a match. A strong match is someone personally facing one of the builder's problems right now. Most good conversations are ones where the builder simply helps, without mentioning their product.

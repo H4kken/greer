@@ -71,45 +71,31 @@ export const firstScanSchema = z.object({
 });
 export type FirstScanInput = z.infer<typeof firstScanSchema>;
 
-export const jevKeySchema = z.object({
-  apiKey: z
-    .string()
-    .trim()
-    .min(1, "Paste your TypeSafe API key.")
-    .max(500, "That's too long for an API key."),
-});
-
-export const llmSettingsSchema = z
+// One AI job's model (see src/llm/config.ts). Empty key or URL = keep the
+// saved one, or use the server's.
+export const aiJobSchema = z
   .object({
-    provider: z.enum(["anthropic", "openai", "ollama"]),
-    // Empty = keep the saved key.
-    apiKey: z.string().trim().max(500),
+    job: z.enum(["sorting", "writing"]),
+    provider: z.enum(["typesafe", "anthropic", "openai", "ollama"]),
+    apiKey: z.string().trim().max(500, "That's too long for an API key."),
     baseUrl: z
       .union([
         z.literal(""),
         z.url("Enter a full URL, like http://ollama:11434/v1"),
       ])
       .transform((v) => v || null),
-    fastModel: z
-      .string()
-      .trim()
-      .max(100)
-      .transform((v) => v || null),
-    qualityModel: z
+    model: z
       .string()
       .trim()
       .max(100)
       .transform((v) => v || null),
   })
-  .refine((s) => s.provider !== "ollama" || s.baseUrl, {
-    path: ["baseUrl"],
-    message: "Ollama needs the server URL.",
+  .refine((s) => s.job === "sorting" || s.provider !== "typesafe", {
+    path: ["provider"],
+    message: "TypeSafe Jev only sorts threads; pick an LLM for writing help.",
   })
   .refine(
-    (s) => s.provider === "anthropic" || (s.fastModel && s.qualityModel),
-    {
-      path: ["fastModel"],
-      message: "Name both models for this provider.",
-    },
+    (s) => s.provider === "typesafe" || s.provider === "anthropic" || s.model,
+    { path: ["model"], message: "Name the model to use with this provider." },
   );
-export type LlmSettingsInput = z.input<typeof llmSettingsSchema>;
+export type AiJobInput = z.input<typeof aiJobSchema>;

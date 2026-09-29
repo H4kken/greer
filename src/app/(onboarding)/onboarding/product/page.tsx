@@ -3,11 +3,7 @@ import { OnboardingSteps } from "@/components/onboarding/onboarding-steps";
 import { ProductStep } from "@/components/onboarding/product-step";
 import { AiSetup } from "@/components/onboarding/ai-setup";
 import { db } from "@/db";
-import {
-  describeJevKey,
-  describeLlmSettings,
-  getScoringStatus,
-} from "@/llm/settings";
+import { getAiSettingsView } from "@/llm/settings";
 import { requireWorkspace } from "@/lib/session";
 import { getProductProfile } from "@/workspace/profile";
 
@@ -15,11 +11,9 @@ export const metadata: Metadata = { title: "Your product · Greer" };
 
 export default async function ProductStepPage() {
   const { workspace } = await requireWorkspace();
-  const [profile, scoring, stored, jevKey] = await Promise.all([
+  const [profile, ai] = await Promise.all([
     getProductProfile(db, workspace.id),
-    getScoringStatus(workspace.id),
-    describeLlmSettings(workspace.id),
-    describeJevKey(workspace.id),
+    getAiSettingsView(workspace.id),
   ]);
 
   return (
@@ -30,12 +24,8 @@ export default async function ProductStepPage() {
         anywhere: Greer only reads.
       </p>
 
-      {!scoring.configured && (
-        <AiSetup
-          intro="Greer uses it to read each thread and judge whether you can help."
-          jevKey={jevKey}
-          stored={stored}
-        />
+      {!(ai.status.sorting.configured && ai.status.writing.configured) && (
+        <AiSetup view={ai} />
       )}
 
       <section

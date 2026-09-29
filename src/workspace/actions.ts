@@ -6,15 +6,14 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/db";
 import { checkConnection, generateStructured } from "@/llm/client";
-import { LlmNotConfiguredError, resolveLlmConfig } from "@/llm/config";
+import {
+  LlmNotConfiguredError,
+  resolveAiConfig,
+  type StoredAiSettings,
+} from "@/llm/config";
 import { suggestKeywords } from "@/llm/prompts/suggest-keywords";
 import { checkJevKey } from "@/llm/jev";
-import {
-  clearJevKey,
-  loadStoredSettings,
-  saveJevKey,
-  saveLlmSettings,
-} from "@/llm/settings";
+import { clearAiJob, loadStoredAiSettings, saveAiJob } from "@/llm/settings";
 import { requireWorkspace } from "@/lib/session";
 import { startFirstScan } from "@/onboarding/scan";
 import { unclassifiedAnswerIds } from "@/replies/classify";
@@ -43,8 +42,7 @@ import {
   hnHandleSchema,
   type KeywordInput,
   keywordSchema,
-  jevKeySchema,
-  llmSettingsSchema,
+  aiJobSchema,
   productProfileSchema,
 } from "./schemas";
 
@@ -179,7 +177,7 @@ export async function suggestKeywordsAction(): Promise<
       return {
         ok: false,
         error:
-          "Suggestions need an AI provider (Anthropic, OpenAI or Ollama), which you can add in Settings. Add your own keywords below for now.",
+          "Suggestions need a model for writing help (step 1, or Settings → AI). Add your own keywords below for now.",
       };
     }
     console.warn("[onboarding] keyword suggestions failed", error);
@@ -287,61 +285,7 @@ export async function restoreKeywordAction(
   return { ok: true };
 }
 
-// ---- AI model ----
-
-export async function saveLlmSettingsAction(
-  input: unknown,
-): Promise<ActionResult> {
-  const { workspace } = await requireWorkspace();
-  const parsed = llmSettingsSchema.safeParse(input);
-  if (!parsed.success) return invalid(parsed.error);
-  const { apiKey, ...rest } = parsed.data;
-
-  // An empty key field keeps the saved key, if it's for the same provider.
-  const stored = await loadStoredSettings(workspace.id);
-  const key =
-    apiKey ||
-    (stored?.provider === rest.provider ? stored.apiKey : null) ||
-    null;
-  if (rest.provider !== "ollama" && !key) {
-    return {
-      ok: false,
-      error: "Paste an API key.",
-      fieldErrors: { apiKey: "Paste an API key." },
-    };
-  }
-
-  let config;
-  try {
-    // Only the mock setting (tests, demos) carries over from the environment.
-    config = resolveLlmConfig(
-      { ...rest, apiKey: key },
-      {
-        LLM_PROVIDER: process.env.LLM_PROVIDER === "mock" ? "mock" : undefined,
-      },
-    );
-  } catch (error) {
-    return { ok: false, error: (error as Error).message };
-  }
-  const check = await checkConnection(config);
-  if (!check.ok) {
-    return {
-      ok: false,
-      error: `The provider rejected the test call. ${check.error}`,
-    };
-  }
-
-  await saveLlmSettings(workspace.id, {
-    ...rest,
-    // Ollama has no key: drop any key saved for another provider.
-    ...(apiKey ? { apiKey } : rest.provider === "ollama" ? { apiKey: "" } : {}),
-  });
-  await queueWaitingAiWork(workspace.id);
-  revalidatePath("/settings");
-  revalidatePath("/onboarding/product");
-  refresh();
-  return { ok: true };
-}
+// ---- AI (two jobs: sorting threads, writing help) ----
 
 // Threads collected while no model was set wait for the 15-minute sweep;
 // score them now instead, so the first scan carries on right away.
@@ -368,35 +312,80 @@ async function queueWaitingAiWork(workspaceId: string) {
   ]);
 }
 
-// ---- TypeSafe (Jev), the preferred scorer ----
+function revalidateAi() {
+  revalidatePath("/settings");
+  revalidatePath("/onboarding/product");
+  revalidatePath("/onboarding/scan");
+  refresh();
+}
 
-export async function saveJevKeyAction(input: unknown): Promise<ActionResult> {
+// Picks a job's provider and model. The key is stored once per provider, so
+// an empty key field reuses the saved one, or the server's.
+export async function saveAiJobAction(input: unknown): Promise<ActionResult> {
   const { workspace } = await requireWorkspace();
-  const parsed = jevKeySchema.safeParse(input);
+  const parsed = aiJobSchema.safeParse(input);
   if (!parsed.success) return invalid(parsed.error);
-  // Tests and demos (mock mode) never call TypeSafe.
+  const { job, provider, apiKey, baseUrl, model } = parsed.data;
+
+  const stored = await loadStoredAiSettings(workspace.id);
+  const trial: StoredAiSettings = {
+    sorting: stored?.sorting ?? null,
+    writing: stored?.writing ?? null,
+    keys: {
+      ...stored?.keys,
+      [provider]: {
+        apiKey: apiKey || stored?.keys[provider]?.apiKey || null,
+        baseUrl: baseUrl ?? stored?.keys[provider]?.baseUrl ?? null,
+      },
+    },
+    [job]: { provider, model },
+  };
+  // Only the mock setting (tests, demos) comes from the environment's
+  // provider choice; keys still may.
+  const env = { ...process.env, LLM_PROVIDER: undefined };
+  const choice = resolveAiConfig(trial, env)[job];
+  if (!choice) {
+    const field = provider === "ollama" ? "baseUrl" : "apiKey";
+    const error =
+      provider === "ollama"
+        ? "Enter the Ollama server URL."
+        : "Paste an API key.";
+    return { ok: false, error, fieldErrors: { [field]: error } };
+  }
+
   if (process.env.LLM_PROVIDER !== "mock") {
-    const check = await checkJevKey(parsed.data.apiKey);
+    const check =
+      provider === "typesafe"
+        ? await checkJevKey(choice.apiKey!)
+        : await checkConnection(choice);
     if (!check.ok) {
       return {
         ok: false,
-        error: check.error,
-        fieldErrors: { apiKey: check.error },
+        error: `The test call failed. ${check.error}`,
+        fieldErrors:
+          provider === "typesafe" ? { apiKey: check.error } : undefined,
       };
     }
   }
-  await saveJevKey(workspace.id, parsed.data.apiKey);
+
+  await saveAiJob(workspace.id, job, {
+    provider,
+    model,
+    ...(apiKey && { apiKey }),
+    ...(baseUrl !== null && { baseUrl }),
+  });
   await queueWaitingAiWork(workspace.id);
-  revalidatePath("/settings");
-  revalidatePath("/onboarding/product");
-  refresh();
+  revalidateAi();
   return { ok: true };
 }
 
-export async function removeJevKeyAction(): Promise<ActionResult> {
+// Stop using the saved choice for a job: the server's environment decides
+// again, or nothing. Saved keys stay.
+export async function clearAiJobAction(input: unknown): Promise<ActionResult> {
   const { workspace } = await requireWorkspace();
-  await clearJevKey(workspace.id);
-  revalidatePath("/settings");
-  refresh();
+  const job = z.enum(["sorting", "writing"]).safeParse(input);
+  if (!job.success) return { ok: false, error: "Unknown AI job." };
+  await clearAiJob(workspace.id, job.data);
+  revalidateAi();
   return { ok: true };
 }

@@ -3,7 +3,7 @@ import {
   firstScanSchema,
   hnHandleSchema,
   keywordSchema,
-  llmSettingsSchema,
+  aiJobSchema,
   productProfileSchema,
 } from "./schemas";
 
@@ -55,31 +55,36 @@ describe("keywords", () => {
   });
 });
 
-describe("llmSettingsSchema", () => {
+describe("aiJobSchema", () => {
   const base = {
+    job: "sorting",
     provider: "anthropic",
     apiKey: "",
     baseUrl: "",
-    fastModel: "",
-    qualityModel: "",
+    model: "",
   };
 
-  it("lets Anthropic use default models", () => {
-    expect(llmSettingsSchema.parse(base)).toMatchObject({
-      fastModel: null,
+  it("lets TypeSafe and Anthropic use their default models", () => {
+    expect(aiJobSchema.parse(base)).toMatchObject({
+      model: null,
       baseUrl: null,
     });
+    expect(
+      aiJobSchema.safeParse({ ...base, provider: "typesafe" }).success,
+    ).toBe(true);
   });
 
-  it("needs a URL for Ollama and model names for other providers", () => {
-    const ollama = llmSettingsSchema.safeParse({
+  it("needs a model name for OpenAI and Ollama", () => {
+    const openai = aiJobSchema.safeParse({ ...base, provider: "openai" });
+    expect(openai.error?.issues[0]?.path).toEqual(["model"]);
+  });
+
+  it("keeps TypeSafe to sorting", () => {
+    const writing = aiJobSchema.safeParse({
       ...base,
-      provider: "ollama",
-      fastModel: "llama3",
-      qualityModel: "llama3",
+      job: "writing",
+      provider: "typesafe",
     });
-    expect(ollama.error?.issues[0]?.path).toEqual(["baseUrl"]);
-    const openai = llmSettingsSchema.safeParse({ ...base, provider: "openai" });
-    expect(openai.error?.issues[0]?.path).toEqual(["fastModel"]);
+    expect(writing.error?.issues[0]?.path).toEqual(["provider"]);
   });
 });

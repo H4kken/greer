@@ -1,18 +1,18 @@
-// The only entry point for model calls (see the llm-prompt skill). Picks the
-// provider and model for the prompt's slot, validates the output against the
-// prompt's schema and records every call in llm_call.
+// The only entry point for LLM calls (see the llm-prompt skill). Picks the
+// model set for the prompt's job, validates the output against the prompt's
+// schema and records every call in llm_call.
 import { generateText, type LanguageModel, Output } from "ai";
 import { db } from "@/db";
 import { llmCall } from "@/db/schema";
-import type { LlmConfig } from "./config";
+import { LlmNotConfiguredError, type ModelChoice } from "./config";
 import type { PromptDef } from "./prompt";
 import { languageModel } from "./provider";
-import { getLlmConfig } from "./settings";
+import { getAiConfig } from "./settings";
 
 export type StructuredResult<Output> = {
   output: Output;
   model: string;
-  provider: LlmConfig["provider"];
+  provider: ModelChoice["provider"];
   inputTokens: number | null;
   outputTokens: number | null;
 };
@@ -21,11 +21,20 @@ export async function generateStructured<Input, Output>(
   workspaceId: string,
   prompt: PromptDef<Input, Output>,
   input: Input,
-  // Tests inject a config and/or an AI SDK mock model; evals skip recording.
-  options: { config?: LlmConfig; model?: LanguageModel; record?: boolean } = {},
+  // Scoring passes the model it picked (e.g. the fallback when Jev fails);
+  // tests inject an AI SDK mock model; evals skip recording.
+  options: {
+    config?: ModelChoice;
+    model?: LanguageModel;
+    record?: boolean;
+  } = {},
 ): Promise<StructuredResult<Output>> {
-  const config = options.config ?? (await getLlmConfig(workspaceId));
-  const modelId = config.models[prompt.slot];
+  const config = options.config ?? (await getAiConfig(workspaceId))[prompt.job];
+  if (!config) throw new LlmNotConfiguredError(prompt.job);
+  if (config.provider === "typesafe") {
+    throw new Error(`TypeSafe can't run the ${prompt.name} prompt`);
+  }
+  const modelId = config.model;
   const started = Date.now();
 
   const record = async (fields: {
@@ -37,7 +46,7 @@ export async function generateStructured<Input, Output>(
     if (options.record === false) return;
     await db.insert(llmCall).values({
       workspaceId,
-      slot: prompt.slot,
+      slot: prompt.job, // the column predates jobs; values: sorting, writing
       provider: config.provider,
       model: modelId,
       promptName: prompt.name,
@@ -64,7 +73,7 @@ export async function generateStructured<Input, Output>(
 
   try {
     const result = await generateText({
-      model: options.model ?? languageModel(config, prompt.slot),
+      model: options.model ?? languageModel(config),
       system: prompt.system,
       prompt: prompt.build(input),
       output: Output.object({ schema: prompt.schema }),
@@ -89,27 +98,24 @@ export async function generateStructured<Input, Output>(
   }
 }
 
-// A tiny call per model, made before saving settings, so a wrong key or model
-// name is caught in the form rather than by the worker later.
+// A tiny call made before saving a job's model, so a wrong key or model name
+// is caught in the form rather than by the worker later.
 export async function checkConnection(
-  config: LlmConfig,
+  choice: ModelChoice,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
-  if (config.provider === "mock") return { ok: true };
-  for (const slot of ["fast", "quality"] as const) {
-    try {
-      await generateText({
-        model: languageModel(config, slot),
-        prompt: "Reply with the word OK.",
-        maxOutputTokens: 5,
-        maxRetries: 0,
-      });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      return {
-        ok: false,
-        error: `${config.models[slot]}: ${message.slice(0, 200)}`,
-      };
-    }
+  if (choice.provider === "mock" || choice.provider === "typesafe") {
+    return { ok: true }; // TypeSafe keys are checked with checkJevKey
   }
-  return { ok: true };
+  try {
+    await generateText({
+      model: languageModel(choice),
+      prompt: "Reply with the word OK.",
+      maxOutputTokens: 5,
+      maxRetries: 0,
+    });
+    return { ok: true };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return { ok: false, error: `${choice.model}: ${message.slice(0, 200)}` };
+  }
 }

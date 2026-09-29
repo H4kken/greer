@@ -11,7 +11,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { parseArgs } from "node:util";
 import { Client } from "pg";
 import { generateStructured } from "@/llm/client";
-import { resolveLlmConfig } from "@/llm/config";
+import { envChoice, llmSortingChoice } from "@/llm/config";
 import { evalMetrics, rankAuc } from "@/llm/eval";
 import {
   askJev,
@@ -59,7 +59,7 @@ async function jevScore(
   return { ...r, ...jevHelpScore(r.answers, product.problems.length) };
 }
 
-const llmConfig = resolveLlmConfig(null, process.env);
+const llmConfig = envChoice("sorting", process.env, llmSortingChoice);
 async function llmScore(
   category: Category,
   product: ProductProfile,

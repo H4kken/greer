@@ -3,7 +3,7 @@
 // Needs an LLM key in the environment. Nothing is written to the database.
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { generateStructured } from "@/llm/client";
-import { resolveLlmConfig } from "@/llm/config";
+import { envChoice } from "@/llm/config";
 import { estimateCostUsd } from "@/llm/pricing";
 import { classifyAnswer } from "@/llm/prompts/classify-answer";
 import { type AnswerTone, toneOf } from "@/replies/classify";
@@ -19,7 +19,7 @@ const set = JSON.parse(
   readFileSync("src/llm/prompts/__evals__/classify-answer.json", "utf8"),
 ) as { cases: Case[] };
 
-const config = resolveLlmConfig(null, process.env);
+const config = envChoice("writing", process.env);
 let cost = 0;
 const results = [];
 for (const c of set.cases) {

@@ -27,7 +27,7 @@ export const topicOfReply = definePrompt<TopicOfReplyInput, TopicOfReplyOutput>(
   {
     name: "topic-of-reply",
     version: "topic-of-reply-v1",
-    slot: "fast",
+    job: "writing",
     system: `A builder replied to someone on Hacker News. Name the topic they helped with: the subject of the person's need, not the builder's product. Use 1-3 plain words in sentence case.
 
 Reuse one of the builder's existing topics, spelled exactly the same, whenever it fits reasonably well; a broad existing topic beats a new narrow one. Only create a new topic when none fits.

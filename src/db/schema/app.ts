@@ -68,35 +68,42 @@ export const workerStatus = pgTable("worker_status", {
   lastSeenAt: timestamp("last_seen_at", { withTimezone: true }).notNull(),
 });
 
-export const llmProvider = pgEnum("llm_provider", [
+// ---- AI settings (src/llm/config.ts) ----
+// Greer uses AI for two jobs: sorting threads (every thread, fast and cheap)
+// and writing help (keywords, reading answers, reply ideas). Each job picks a
+// provider and model; keys are stored once per provider, so one Claude key
+// can serve both. Anything not saved here falls back to environment variables.
+
+export const aiProvider = pgEnum("ai_provider", [
+  "typesafe",
   "anthropic",
   "openai",
   "ollama",
 ]);
 
-// LLM configuration saved from Settings. When absent, Greer falls back to
-// environment variables (see src/llm/config.ts).
-export const llmSettings = pgTable("llm_settings", {
-  workspaceId: text("workspace_id")
-    .primaryKey()
-    .references(() => workspace.id, { onDelete: "cascade" }),
-  provider: llmProvider("provider").notNull(),
-  fastModel: text("fast_model"),
-  qualityModel: text("quality_model"),
-  baseUrl: text("base_url"),
-  // Encrypted with src/lib/crypto.ts, never stored in plain text.
-  apiKeyEncrypted: text("api_key_encrypted"),
-  ...timestamps,
-});
+export const aiKey = pgTable(
+  "ai_key",
+  {
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspace.id, { onDelete: "cascade" }),
+    provider: aiProvider("provider").notNull(),
+    // Encrypted with src/lib/crypto.ts, never stored in plain text.
+    apiKeyEncrypted: text("api_key_encrypted"),
+    baseUrl: text("base_url"),
+    ...timestamps,
+  },
+  (t) => [primaryKey({ columns: [t.workspaceId, t.provider] })],
+);
 
-// TypeSafe key saved from Settings. When set (here or TYPESAFE_API_KEY),
-// Jev scores threads and the LLM above is the fallback (src/llm/scorer.ts).
-export const jevSettings = pgTable("jev_settings", {
+export const aiSettings = pgTable("ai_settings", {
   workspaceId: text("workspace_id")
     .primaryKey()
     .references(() => workspace.id, { onDelete: "cascade" }),
-  // Encrypted with src/lib/crypto.ts, never stored in plain text.
-  apiKeyEncrypted: text("api_key_encrypted").notNull(),
+  sortingProvider: aiProvider("sorting_provider"),
+  sortingModel: text("sorting_model"), // null: the provider's default
+  writingProvider: aiProvider("writing_provider"),
+  writingModel: text("writing_model"),
   ...timestamps,
 });
 

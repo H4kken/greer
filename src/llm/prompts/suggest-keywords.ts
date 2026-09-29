@@ -41,7 +41,7 @@ export const suggestKeywords = definePrompt<
 >({
   name: "suggest-keywords",
   version: "suggest-keywords-v1",
-  slot: "fast",
+  job: "writing",
   system: `You help a SaaS builder choose Hacker News search keywords that find people facing the problems their product solves, so they can help them.
 
 Search matches posts that contain every word of a keyword (Algolia, newest first). Suggest 5 to 8 keywords:

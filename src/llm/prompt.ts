@@ -1,14 +1,14 @@
 import type { z } from "zod";
-
-// "fast": cheap, high-volume (scoring). "quality": judgment-heavy (briefs).
-export type ModelSlot = "fast" | "quality";
+import type { AiJob } from "./config";
 
 // Every prompt lives in src/llm/prompts/<name>.ts and exports one of these.
 // Bump `version` whenever the text or schema changes (see the llm-prompt skill).
 export type PromptDef<Input, Output> = {
   name: string;
   version: string;
-  slot: ModelSlot;
+  // Which job's model runs it (see config.ts): "sorting" for scoring,
+  // "writing" for everything that needs judgment.
+  job: AiJob;
   system: string;
   build: (input: Input) => string;
   schema: z.ZodType<Output>;

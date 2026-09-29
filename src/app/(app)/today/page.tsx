@@ -20,7 +20,7 @@ import { MATURITY_ADVICE } from "@/guardrails/maturity";
 import { requireWorkspace } from "@/lib/session";
 import { formatAbsolute, formatRelative } from "@/lib/time";
 import { getWorkerHealth } from "@/lib/health";
-import { getScoringStatus } from "@/llm/settings";
+import { getAiStatus } from "@/llm/settings";
 import { explainCriteria } from "@/scoring/explain";
 import type { TodayEntry } from "@/today/build";
 import {
@@ -48,13 +48,13 @@ export default async function TodayPage({ searchParams }: PageProps<"/today">) {
   const account = await getAccountSummary(db, workspace.id, "hn");
   const tier = account?.tier ?? "new";
   const pace = MATURITY_ADVICE[tier].repliesPerDay;
-  const [today, profile, health, unscored, scoring, worker, missing] =
+  const [today, profile, health, unscored, ai, worker, missing] =
     await Promise.all([
       loadToday(db, workspace.id, { platform: "hn", pace, now }),
       getProductProfile(db, workspace.id),
       sourceHealth(db, workspace.id),
       unscoredCount(db, workspace.id),
-      getScoringStatus(workspace.id),
+      getAiStatus(workspace.id),
       getWorkerHealth(now),
       missingReplies(db, workspace.id, "hn", now),
     ]);
@@ -255,16 +255,14 @@ export default async function TodayPage({ searchParams }: PageProps<"/today">) {
             </AlertAction>
           </Alert>
         )}
-        {!scoring.configured && unscored > 0 && (
+        {!ai.sorting.configured && unscored > 0 && (
           <Alert>
             <AlertTriangleIcon aria-hidden />
             <AlertTitle>{unscored} threads are waiting to be read</AlertTitle>
             <AlertDescription>
               <p>
-                Greer needs an AI model to tell who could use your help.{" "}
-                <Link href="/settings#ai">
-                  Add a TypeSafe or AI provider key in Settings
-                </Link>
+                Greer needs a model for sorting threads to tell who could use
+                your help. <Link href="/settings#ai">Pick one in Settings</Link>
                 .
               </p>
             </AlertDescription>

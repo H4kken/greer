@@ -44,7 +44,7 @@ export type ScoreLaunchOutput = z.infer<typeof schema>;
 export const scoreLaunch = definePrompt<ScoreLaunchInput, ScoreLaunchOutput>({
   name: "score-launch",
   version: "score-launch-v2",
-  slot: "fast",
+  job: "sorting",
   system: `You help a SaaS builder find Hacker News launch posts (Show HN) where genuine feedback from a fellow builder would be welcome and worthwhile. Answer the criteria precisely; the builder's software turns your answers into a score.
 
 ${UNTRUSTED_RULE}`,

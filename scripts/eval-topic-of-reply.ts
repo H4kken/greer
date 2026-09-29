@@ -3,7 +3,7 @@
 // fits? Usage: pnpm eval topic-of-reply. Nothing is written to the database.
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { generateStructured } from "@/llm/client";
-import { resolveLlmConfig } from "@/llm/config";
+import { envChoice } from "@/llm/config";
 import { estimateCostUsd } from "@/llm/pricing";
 import { topicOfReply } from "@/llm/prompts/topic-of-reply";
 import { normalizeTopic } from "@/replies/topics";
@@ -20,7 +20,7 @@ const set = JSON.parse(
 ) as { cases: Case[] };
 
 const same = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
-const config = resolveLlmConfig(null, process.env);
+const config = envChoice("writing", process.env);
 let cost = 0;
 const results = [];
 for (const c of set.cases) {

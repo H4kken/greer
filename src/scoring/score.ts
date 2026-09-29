@@ -2,7 +2,11 @@ import { and, desc, eq, isNull, sql } from "drizzle-orm";
 import type { Db } from "@/db";
 import { item, itemScore, llmCall, workspace } from "@/db/schema";
 import { generateStructured } from "@/llm/client";
-import type { LlmConfig } from "@/llm/config";
+import {
+  LlmNotConfiguredError,
+  type ModelChoice,
+  sortingFallback,
+} from "@/llm/config";
 import {
   askJev,
   helpQuestions,
@@ -17,8 +21,7 @@ import {
 import { scoreHelp } from "@/llm/prompts/score-help";
 import { scoreLaunch } from "@/llm/prompts/score-launch";
 import type { ItemForScoring, ProductProfile } from "@/llm/prompts/shared";
-import { ScorerNotConfiguredError } from "@/llm/scorer";
-import { getScorer } from "@/llm/settings";
+import { getAiConfig } from "@/llm/settings";
 import { computeHelpScore, computeLaunchScore } from "./compute";
 
 export type ScoreOutcome =
@@ -61,35 +64,39 @@ export async function scoreItem(db: Db, itemId: string): Promise<ScoreOutcome> {
     text: row.item.text,
   };
   const { workspaceId, category } = row.item;
-  const scorer = await getScorer(workspaceId);
+  const config = await getAiConfig(workspaceId);
+  const sorting = config.sorting;
+  if (!sorting) throw new LlmNotConfiguredError("sorting");
   let scored: Scored;
-  if (scorer.kind === "jev") {
+  if (sorting.provider === "typesafe") {
     try {
       scored = await scoreWithJev(
         db,
         workspaceId,
-        scorer.apiKey,
+        sorting.apiKey!,
         category,
         product,
         itemIn,
       );
     } catch (error) {
       if (!(error instanceof JevError)) throw error;
-      if (scorer.fallback) {
+      const fallback = sortingFallback(config);
+      if (fallback) {
         console.warn(
-          `[score] Jev failed, using ${scorer.fallback.provider}: ${error.message}`,
+          `[score] Jev failed, using ${fallback.provider}: ${error.message}`,
         );
         scored = await scoreWithLlm(
           workspaceId,
-          scorer.fallback,
+          fallback,
           category,
           product,
           itemIn,
         );
       } else if (error.badKey) {
         // Retrying won't help: wait for a new key, like with no key at all.
-        throw new ScorerNotConfiguredError(
-          "TypeSafe rejected the API key. Update it in Settings.",
+        throw new LlmNotConfiguredError(
+          "sorting",
+          "TypeSafe rejected the API key. Update it in Settings → AI.",
         );
       } else {
         throw error;
@@ -98,7 +105,7 @@ export async function scoreItem(db: Db, itemId: string): Promise<ScoreOutcome> {
   } else {
     scored = await scoreWithLlm(
       workspaceId,
-      scorer.config,
+      sorting,
       category,
       product,
       itemIn,
@@ -131,7 +138,7 @@ type Scored = {
 
 async function scoreWithLlm(
   workspaceId: string,
-  config: LlmConfig,
+  config: ModelChoice,
   category: "help" | "feedback",
   product: ProductProfile,
   itemIn: ItemForScoring,
@@ -184,7 +191,7 @@ async function scoreWithJev(
   }) =>
     db.insert(llmCall).values({
       workspaceId,
-      slot: "fast",
+      slot: "sorting",
       provider: "typesafe",
       model: fields.model,
       promptName: launch ? "score-launch" : "score-help",

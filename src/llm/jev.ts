@@ -1,6 +1,6 @@
 // Scoring threads with TypeSafe's Jev (https://docs.typesafe.ai), a model
 // that answers typed questions (yes/no, pick one) with probabilities instead
-// of generating text: the preferred scorer (see scorer.ts). `pnpm eval jev`
+// of generating text: the preferred sorting model (see config.ts). `pnpm eval jev`
 // compares it with the LLM scorer on accuracy, speed and cost.
 //
 // Same criteria as score-help / score-launch, asked as separate questions,

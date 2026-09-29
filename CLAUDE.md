@@ -33,7 +33,7 @@ Build something that works and people can use now. Keep scaling in mind when des
 - Postgres 16 + Drizzle ORM (`src/db`)
 - pg-boss for jobs and cron (`src/worker`)
 - Better Auth (email + password)
-- Vercel AI SDK + zod for LLM calls (`src/llm`); TypeSafe's Jev (plain HTTP, `src/llm/jev.ts`) is the preferred thread scorer, with the LLM as fallback
+- Vercel AI SDK + zod for LLM calls (`src/llm`). AI does two jobs, each with its own model ([src/llm/config.ts](src/llm/config.ts)): sorting threads (TypeSafe's Jev preferred, plain HTTP in `src/llm/jev.ts`) and writing help (an LLM)
 - Vitest (unit + integration), Playwright (end-to-end + axe accessibility checks)
 - Prettier (+ `prettier-plugin-tailwindcss` for class sorting), ESLint, pnpm as package manager
 - simple-git-hooks + lint-staged run Prettier and ESLint on staged files; GitHub Actions CI runs everything below

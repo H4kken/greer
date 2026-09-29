@@ -6,16 +6,17 @@ x-app-env: &app-env
   DATABASE_URL: postgres://greer:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@postgres:5432/greer
   # Also decrypts the keys saved in Settings, so the worker needs it too.
   BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?Set BETTER_AUTH_SECRET}
-  # AI: a TypeSafe key (scoring, recommended) and/or one LLM provider here,
-  # or save keys in Settings instead.
+  # AI (two jobs, see .env.example): a TypeSafe key sorts threads cheaply; an
+  # LLM provider does writing help, and sorting without TypeSafe. Or pick them
+  # in Settings → AI instead.
   TYPESAFE_API_KEY: ${TYPESAFE_API_KEY:-}
   ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
   OPENAI_API_KEY: ${OPENAI_API_KEY:-}
   OPENAI_BASE_URL: ${OPENAI_BASE_URL:-}
   OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-}
   LLM_PROVIDER: ${LLM_PROVIDER:-}
-  LLM_FAST_MODEL: ${LLM_FAST_MODEL:-}
-  LLM_QUALITY_MODEL: ${LLM_QUALITY_MODEL:-}
+  LLM_SORTING_MODEL: ${LLM_SORTING_MODEL:-}
+  LLM_WRITING_MODEL: ${LLM_WRITING_MODEL:-}
 
 services:
   postgres:

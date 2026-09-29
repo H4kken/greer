@@ -11,11 +11,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { db } from "@/db";
 import { getWorkerHealth } from "@/lib/health";
 import { requireWorkspace } from "@/lib/session";
-import {
-  describeJevKey,
-  describeLlmSettings,
-  getScoringStatus,
-} from "@/llm/settings";
+import { getAiSettingsView } from "@/llm/settings";
 import { getScanProgress } from "@/onboarding/scan";
 import { describeScan } from "@/onboarding/scan-copy";
 
@@ -25,15 +21,15 @@ export default async function ScanStepPage() {
   const { workspace } = await requireWorkspace();
   if (!workspace.onboardedAt) redirect("/onboarding");
 
-  const [progress, worker, scoring, stored, jevKey] = await Promise.all([
+  const [progress, worker, ai] = await Promise.all([
     getScanProgress(db, workspace.id),
     getWorkerHealth(),
-    getScoringStatus(workspace.id),
-    describeLlmSettings(workspace.id),
-    describeJevKey(workspace.id),
+    getAiSettingsView(workspace.id),
   ]);
   const { done, needsModel, ratio, progressLabel, headline, subline } =
-    describeScan(progress, { modelConfigured: scoring.configured });
+    describeScan(progress, {
+      modelConfigured: ai.status.sorting.configured,
+    });
   const waiting = !worker.healthy || needsModel;
   const { people, top } = progress;
 
@@ -85,13 +81,7 @@ export default async function ScanStepPage() {
           </AlertDescription>
         </Alert>
       )}
-      {needsModel && (
-        <AiSetup
-          intro="Greer uses it to read each thread and judge whether you can help. The scan carries on as soon as it's saved."
-          jevKey={jevKey}
-          stored={stored}
-        />
-      )}
+      {needsModel && <AiSetup view={ai} />}
       {progress.queries.failed > 0 && (
         <Alert>
           <AlertTriangleIcon aria-hidden />

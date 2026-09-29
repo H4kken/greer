@@ -73,10 +73,10 @@ test.describe("as the owner", () => {
     await page.goto("/today");
     await expect(page).toHaveURL(/\/onboarding\/product$/);
 
-    // The mock LLM counts as configured, so no key form here.
-    await expect(
-      page.getByRole("heading", { name: "Connect an AI model" }),
-    ).toHaveCount(0);
+    // The mock model does both AI jobs, so no AI setup here.
+    await expect(page.getByRole("heading", { name: "Connect AI" })).toHaveCount(
+      0,
+    );
 
     await page.getByRole("button", { name: "Continue" }).click();
     await expect(page.getByText("Give your product a name.")).toBeVisible();
@@ -189,24 +189,42 @@ test.describe("as the owner", () => {
     await expect(page.getByText("Mock (test mode)").first()).toBeVisible();
     await expectNoSeriousA11yViolations(page);
 
-    // A TypeSafe key makes Jev the scorer, with the AI provider as fallback
-    // (mock mode skips the test call). Removing it goes back.
-    const ai = page.getByRole("region", { name: "AI models" });
-    await ai.getByLabel("TypeSafe API key").fill("ts-e2e-key");
-    await ai.getByRole("button", { name: "Test and save" }).first().click();
-    await expect(page.getByText("TypeSafe key saved.")).toBeVisible();
+    // AI is explained as two jobs. Picking TypeSafe Jev for sorting (mock
+    // mode skips the test call) shows the fallback; clearing it goes back.
+    const sorting = page.getByRole("region", { name: "Sorting threads" });
+    const writing = page.getByRole("region", { name: "Writing help" });
+    // A job that's set folds its form behind "Change".
+    const openForm = async (card: typeof sorting) => {
+      if ((await card.locator("details").getAttribute("open")) === null) {
+        await card.getByText("Change", { exact: true }).click();
+      }
+    };
     await expect(
-      ai.getByText(
-        "Scoring threads with TypeSafe Jev, or Mock (test mode) when Jev is unavailable.",
-      ),
+      writing.getByText("Now: Mock (test mode) mock-quality"),
     ).toBeVisible();
-    await expect(ai.getByLabel("TypeSafe API key")).toHaveAttribute(
+    await openForm(sorting);
+    await expect(sorting.getByLabel("Provider")).toHaveValue("typesafe");
+    await sorting.getByLabel("API key").fill("ts-e2e-key");
+    await sorting.getByRole("button", { name: "Test and save" }).click();
+    await expect(
+      page.getByText("TypeSafe Jev now does the sorting."),
+    ).toBeVisible();
+    await expect(sorting.getByText("Now: TypeSafe Jev.")).toBeVisible();
+    await expect(
+      sorting.getByText(/If Jev is unavailable, Mock \(test mode\)/),
+    ).toBeVisible();
+    await openForm(sorting);
+    await expect(sorting.getByLabel("API key")).toHaveAttribute(
       "placeholder",
       /^Saved: /,
     );
-    await ai.getByRole("button", { name: "Remove key" }).click();
-    await expect(ai.getByText(/Scoring threads with Mock/)).toBeVisible();
-    await expect(ai.getByRole("button", { name: "Remove key" })).toHaveCount(0);
+    await expectNoSeriousA11yViolations(page);
+    await sorting.getByRole("button", { name: "Clear choice" }).click();
+    await expect(sorting.getByText(/Now: Mock \(test mode\)/)).toBeVisible();
+    await openForm(sorting);
+    await expect(
+      sorting.getByRole("button", { name: "Clear choice" }),
+    ).toHaveCount(0);
 
     const keywords = page.getByRole("region", { name: "Keywords" });
     await expect(keywords.getByText("first users")).toBeVisible();
@@ -368,6 +386,8 @@ test.describe("as the owner", () => {
     await expect(
       page.getByRole("heading", { name: "Nothing hidden" }),
     ).toBeVisible();
+    // The row hides right away; the toast means the server has it.
+    await expect(page.getByText(/^Back on Today:/)).toBeVisible();
     await page.goto("/today");
     await page.getByRole("button", { name: "Show 2 more new people" }).click();
     await expect(

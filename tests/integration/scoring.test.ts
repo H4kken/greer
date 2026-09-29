@@ -11,8 +11,8 @@ import {
 } from "vitest";
 import { db } from "@/db";
 import { item, itemScore, llmCall, workspace } from "@/db/schema";
-import { ScorerNotConfiguredError } from "@/llm/scorer";
-import { saveJevKey } from "@/llm/settings";
+import { LlmNotConfiguredError } from "@/llm/config";
+import { saveAiJob } from "@/llm/settings";
 import { scoreItem, unscoredItemIds } from "@/scoring/score";
 import { truncateAll } from "../helpers/truncate";
 
@@ -155,6 +155,9 @@ describe("scoreItem (mock LLM)", () => {
   });
 });
 
+const saveJevSorting = (ws: string, apiKey: string) =>
+  saveAiJob(ws, "sorting", { provider: "typesafe", model: null, apiKey });
+
 // Jev's HTTP API, stubbed: tests never hit the network.
 const noul = (v: number) => ({ type: "noul", noul: v });
 function jevReplies(status = 200) {
@@ -191,7 +194,7 @@ describe("scoreItem with Jev", () => {
 
   it("scores with Jev when a TypeSafe key is saved, and logs the call", async () => {
     const ws = await createWorkspace();
-    await saveJevKey(ws, "ts-test-key");
+    await saveJevSorting(ws, "ts-test-key");
     const fetchSpy = jevReplies();
     const id = await createItem(ws);
 
@@ -231,7 +234,7 @@ describe("scoreItem with Jev", () => {
   it("falls back to the AI provider when Jev fails", async () => {
     process.env.LLM_PROVIDER = "mock";
     const ws = await createWorkspace();
-    await saveJevKey(ws, "ts-test-key");
+    await saveJevSorting(ws, "ts-test-key");
     jevReplies(503);
     const id = await createItem(ws);
 
@@ -249,11 +252,11 @@ describe("scoreItem with Jev", () => {
 
   it("waits for a new key when TypeSafe rejects it and nothing else is set", async () => {
     const ws = await createWorkspace();
-    await saveJevKey(ws, "ts-wrong-key");
+    await saveJevSorting(ws, "ts-wrong-key");
     jevReplies(401);
     const id = await createItem(ws);
 
-    await expect(scoreItem(db, id)).rejects.toThrow(ScorerNotConfiguredError);
+    await expect(scoreItem(db, id)).rejects.toThrow(LlmNotConfiguredError);
     expect(await db.select().from(itemScore)).toHaveLength(0);
     // Still unscored, so the sweep tries again once the key is fixed.
     expect(await unscoredItemIds(db)).toEqual([id]);
@@ -263,7 +266,7 @@ describe("scoreItem with Jev", () => {
     const fetchSpy = vi.spyOn(globalThis, "fetch");
     const id = await createItem(await createWorkspace());
 
-    await expect(scoreItem(db, id)).rejects.toThrow(ScorerNotConfiguredError);
+    await expect(scoreItem(db, id)).rejects.toThrow(LlmNotConfiguredError);
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 });

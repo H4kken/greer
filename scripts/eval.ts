@@ -7,7 +7,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { parseArgs } from "node:util";
 import { generateStructured } from "@/llm/client";
-import { resolveLlmConfig } from "@/llm/config";
+import { envChoice, llmSortingChoice } from "@/llm/config";
 import { evalMetrics } from "@/llm/eval";
 import { estimateCostUsd } from "@/llm/pricing";
 import { scoreHelp } from "@/llm/prompts/score-help";
@@ -57,7 +57,7 @@ const set = JSON.parse(
   cases: Case[];
 };
 
-const config = resolveLlmConfig(null, process.env);
+const config = envChoice("sorting", process.env, llmSortingChoice);
 let cost = 0;
 const results = [];
 for (const c of set.cases) {

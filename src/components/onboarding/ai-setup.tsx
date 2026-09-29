@@ -1,51 +1,25 @@
-import { JevSettingsForm } from "@/components/settings/jev-settings-form";
 import {
-  LlmSettingsForm,
-  type StoredLlmSettings,
-} from "@/components/settings/llm-settings-form";
+  AiSettings,
+  type AiSettingsView,
+} from "@/components/settings/ai-settings";
 
-// Shown in onboarding while nothing can score threads: TypeSafe first (the
-// cheap, fast scorer), any AI provider as the alternative.
-export function AiSetup({
-  intro,
-  jevKey,
-  stored,
-}: {
-  intro: string;
-  jevKey: string | null;
-  stored: StoredLlmSettings;
-}) {
+// Shown in onboarding until both AI jobs are set: sorting is needed for the
+// first scan, writing help for keyword suggestions in step 3.
+export function AiSetup({ view }: { view: AiSettingsView }) {
   return (
-    <section
-      aria-labelledby="ai-heading"
-      className="flex flex-col gap-4 rounded-2xl border bg-card p-6"
-    >
+    <section aria-labelledby="ai-heading" className="flex flex-col gap-4">
       <div>
         <h2 id="ai-heading" className="text-xl font-medium">
-          Connect an AI model
+          Connect AI
         </h2>
-        <p className="mt-1 text-sm text-muted-foreground">{intro}</p>
-      </div>
-      <div className="flex flex-col gap-2">
-        <h3 className="font-medium">TypeSafe Jev (recommended)</h3>
-        <p className="text-sm text-muted-foreground">
-          Reads every thread in a fraction of a second, for about 5 cents per
-          1,000 threads.
+        <p className="mt-1 text-sm text-muted-foreground">
+          Greer uses AI for two jobs. Sorting is needed now: it&apos;s how your
+          first scan finds people. Writing help is optional but recommended: it
+          suggests keywords in step 3. One Claude or OpenAI key can do both, or
+          pair TypeSafe Jev, the cheapest way to sort, with a writing model.
         </p>
       </div>
-      <JevSettingsForm savedKey={jevKey} />
-      <details className="group rounded-xl border px-4 py-3">
-        <summary className="cursor-pointer text-sm font-medium">
-          Or use Anthropic, OpenAI or Ollama
-        </summary>
-        <div className="mt-4 flex flex-col gap-4">
-          <p className="text-sm text-muted-foreground">
-            Also suggests keywords and reads the answers to your replies. You
-            can add one later in Settings, next to a TypeSafe key.
-          </p>
-          <LlmSettingsForm stored={stored} />
-        </div>
-      </details>
+      <AiSettings view={view} />
     </section>
   );
 }
