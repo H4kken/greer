@@ -118,7 +118,10 @@ export function TodayView({
     const url = new URL(window.location.href);
     if (selected) url.searchParams.set("p", selected.key);
     else url.searchParams.delete("p");
-    window.history.replaceState(null, "", url);
+    // Keeps Next's own history state: a plain replaceState makes the router
+    // restore the page as saved in history, undoing any router.refresh()
+    // since (a card just set aside would come back, the network go stale).
+    window.history.replaceState(window.history.state, "", url);
   }, [selected]);
 
   const select = useCallback((key: string | null, focus: boolean) => {
@@ -391,8 +394,8 @@ export function TodayView({
         ref={panelRef}
         className={cn(
           // Sticks while the feed scrolls the page; its height is fitted to
-          // the window above.
-          "min-w-0 lg:sticky lg:top-4 lg:self-start lg:overscroll-contain",
+          // the window above, and a long thread scrolls inside it.
+          "min-w-0 lg:sticky lg:top-4 lg:self-start lg:overflow-y-auto lg:overscroll-contain",
           !selected && "hidden lg:block",
         )}
       >
