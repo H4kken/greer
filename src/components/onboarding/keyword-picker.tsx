@@ -2,6 +2,7 @@
 
 import { SparklesIcon, XIcon } from "lucide-react";
 import Link from "next/link";
+import { HnGuide } from "@/components/hn-guide";
 import { useEffect, useId, useRef, useState, useTransition } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
@@ -26,6 +27,7 @@ import {
 import {
   type KeywordInput,
   keywordSchema,
+  SECTION_HINTS,
   SECTION_LABELS,
 } from "@/workspace/schemas";
 
@@ -139,6 +141,7 @@ export function KeywordPicker({ initialKeywords, initialShowHn }: Props) {
             "A post matches when it contains every word of a keyword."
           )}
         </FieldDescription>
+        <HnGuide />
 
         {loading ? (
           <div
@@ -210,12 +213,13 @@ export function KeywordPicker({ initialKeywords, initialShowHn }: Props) {
                   add();
                 }
               }}
-              placeholder="e.g. first customers"
+              placeholder={SECTION_HINTS[draftSection].example}
               className="max-w-60"
               aria-invalid={!!draftError}
             />
             <NativeSelect
               aria-label="Where to search"
+              aria-describedby={`${id}-where-help`}
               value={draftSection}
               onChange={(e) => setDraftSection(e.target.value as Section)}
             >
@@ -229,6 +233,9 @@ export function KeywordPicker({ initialKeywords, initialShowHn }: Props) {
               Add
             </Button>
           </div>
+          <FieldDescription id={`${id}-where-help`}>
+            {SECTION_HINTS[draftSection].hint}
+          </FieldDescription>
           <FieldError>{draftError}</FieldError>
         </Field>
       </FieldSet>

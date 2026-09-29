@@ -3,8 +3,14 @@
 import { Trash2Icon } from "lucide-react";
 import { useId, useState, useTransition } from "react";
 import { toast } from "sonner";
+import { HnGuide } from "@/components/hn-guide";
 import { Button } from "@/components/ui/button";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
   NativeSelect,
@@ -17,7 +23,11 @@ import {
   restoreKeywordAction,
   setKeywordEnabledAction,
 } from "@/workspace/actions";
-import { type KeywordInput, SECTION_LABELS } from "@/workspace/schemas";
+import {
+  type KeywordInput,
+  SECTION_HINTS,
+  SECTION_LABELS,
+} from "@/workspace/schemas";
 
 export type KeywordRow = {
   id: string;
@@ -177,6 +187,8 @@ export function KeywordSettings({ initial }: { initial: KeywordRow[] }) {
         </ul>
       )}
 
+      <HnGuide />
+
       <form onSubmit={add} noValidate>
         <Field data-invalid={!!error}>
           <FieldLabel htmlFor={`${id}-draft`}>Add a keyword</FieldLabel>
@@ -185,12 +197,13 @@ export function KeywordSettings({ initial }: { initial: KeywordRow[] }) {
               id={`${id}-draft`}
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
-              placeholder="e.g. first customers"
+              placeholder={SECTION_HINTS[draftSection].example}
               className="max-w-60"
               aria-invalid={!!error}
             />
             <NativeSelect
               aria-label="Where to search"
+              aria-describedby={`${id}-where-help`}
               value={draftSection}
               onChange={(e) => setDraftSection(e.target.value as Section)}
             >
@@ -204,6 +217,9 @@ export function KeywordSettings({ initial }: { initial: KeywordRow[] }) {
               Add
             </Button>
           </div>
+          <FieldDescription id={`${id}-where-help`}>
+            {SECTION_HINTS[draftSection].hint}
+          </FieldDescription>
           <FieldError>{error}</FieldError>
         </Field>
       </form>
