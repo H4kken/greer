@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { setTriedProductAction } from "@/people/actions";
 import type { PersonKind, TopicStage } from "@/people/build";
 import { placePeople } from "@/people/layout";
+import { useOrbit } from "@/components/use-orbit";
 
 // A person, ready to render: dates already turned into text on the server.
 export type PersonView = {
@@ -128,6 +129,9 @@ const KIND_LABEL: Record<PersonKind, string> = {
 
 const external = { target: "_blank", rel: "noreferrer" } as const;
 
+// One turn around you, in seconds: as slow as Today's network.
+const TURN_S = 150;
+
 function NewTab() {
   return (
     <>
@@ -181,6 +185,12 @@ export function PeopleView({
   const inTopic = (p: PersonView) => !topic || p.topicIds.includes(topic.id);
   const person = people.find((p) => p.handle === selected) ?? people[0]!;
   const placed = placePeople(people);
+  // The map turns slowly, like Today's; it holds still under the pointer so
+  // a dot is easy to pick.
+  const orbitBox = useOrbit(
+    placed.map((p) => ({ ...p, turn: TURN_S })),
+    { pauseOnHover: true },
+  );
   const path = {
     ...initialPath,
     tried: people.filter((p) => p.tried).length,
@@ -272,16 +282,20 @@ export function PeopleView({
         <section aria-label="Everyone you've talked with" className="min-w-0">
           {/* The map needs room; phones get a list instead. */}
           <div className="hidden md:block">
-            <div className="relative mx-auto aspect-square w-full max-w-[44rem] overflow-hidden rounded-3xl border bg-card">
+            <div
+              ref={orbitBox}
+              className="relative mx-auto aspect-square w-full max-w-[44rem] overflow-hidden rounded-3xl border bg-card"
+            >
               <svg
                 aria-hidden
                 viewBox="0 0 100 100"
                 preserveAspectRatio="none"
                 className="absolute inset-0 size-full"
               >
-                {placed.map((p) => (
+                {placed.map((p, i) => (
                   <line
                     key={p.handle}
+                    data-orbit-line={i}
                     x1="50"
                     y1="50"
                     x2={p.x}
@@ -307,11 +321,12 @@ export function PeopleView({
                 You
               </span>
               <ul>
-                {placed.map((p) => (
+                {placed.map((p, i) => (
                   <li
                     key={p.handle}
+                    data-orbit-dot={i}
                     className={cn(
-                      "absolute transition-opacity",
+                      "absolute transition-opacity will-change-transform",
                       !inTopic(p) && "opacity-20",
                     )}
                     style={{

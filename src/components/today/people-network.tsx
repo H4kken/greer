@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef } from "react";
+import { useOrbit } from "@/components/use-orbit";
 import { cn } from "@/lib/utils";
 import { placePeople } from "@/people/layout";
 import type { NetworkPerson } from "./types";
@@ -27,11 +27,9 @@ function place(people: NetworkPerson[]) {
 }
 
 // One turn around you, in seconds: your people one way, today's new people
-// the other way and slower. Each person also drifts a little closer and
-// further, at their own pace.
+// the other way and slower.
 const TURN_S = 150;
 const NEW_TURN_S = -240;
-const DRIFT = 2; // % of the box
 
 // What fills the space beside the feed when nobody is picked: the people
 // you've talked with, always slowly moving. Who has news glows; the new
@@ -48,62 +46,9 @@ export function PeopleNetwork({
 }) {
   const placed = place(people);
   const knownCount = people.filter((p) => p.kind !== "new").length;
-  const box = useRef<HTMLDivElement>(null);
-  const nodes = useRef<(HTMLSpanElement | null)[]>([]);
-  const lines = useRef<(SVGLineElement | null)[]>([]);
-
-  // Moves the DOM directly each frame, with transforms (no layout, no pixel
-  // snapping) rather than a React render per frame. The first paint (server
-  // and browser) is the resting layout; reduced motion keeps it.
-  const layout = placed.map((p, i) => ({
-    r: Math.hypot(p.x - 50, p.y - 50),
-    angle: Math.atan2(p.y - 50, p.x - 50),
-    turn: p.kind === "new" ? NEW_TURN_S : TURN_S,
-    breath: 6 + (i % 4) * 1.5,
-    size: p.size,
-  }));
-  const key = placed.map((p) => p.handle).join();
-  useEffect(() => {
-    const el = box.current;
-    if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches)
-      return;
-    let { width, height } = el.getBoundingClientRect();
-    const resized = new ResizeObserver(([entry]) => {
-      ({ width, height } = entry!.contentRect);
-    });
-    resized.observe(el);
-    // From now on transforms place the dots, from the box's top-left corner.
-    for (const node of nodes.current) {
-      node?.style.setProperty("left", "0");
-      node?.style.setProperty("top", "0");
-    }
-    let frame = 0;
-    let start: number | null = null;
-    const tick = (ms: number) => {
-      start ??= ms;
-      const t = (ms - start) / 1000;
-      layout.forEach((l, i) => {
-        const angle = l.angle + (2 * Math.PI * t) / l.turn;
-        const r = l.r + DRIFT * Math.sin((2 * Math.PI * t) / l.breath + i);
-        const x = 50 + r * Math.cos(angle);
-        const y = 50 + r * Math.sin(angle);
-        nodes.current[i]?.style.setProperty(
-          "transform",
-          `translate3d(${(x / 100) * width - l.size / 2}px, ${(y / 100) * height}px, 0) translateY(-50%)`,
-        );
-        lines.current[i]?.setAttribute("x2", x.toFixed(3));
-        lines.current[i]?.setAttribute("y2", y.toFixed(3));
-      });
-      frame = requestAnimationFrame(tick);
-    };
-    frame = requestAnimationFrame(tick);
-    return () => {
-      cancelAnimationFrame(frame);
-      resized.disconnect();
-    };
-    // The layout only changes when the people do.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key]);
+  const orbitBox = useOrbit(
+    placed.map((p) => ({ ...p, turn: p.kind === "new" ? NEW_TURN_S : TURN_S })),
+  );
 
   return (
     <section
@@ -133,7 +78,7 @@ export function PeopleNetwork({
       </div>
 
       <div
-        ref={box}
+        ref={orbitBox}
         role="img"
         aria-label={summary}
         className="relative mx-auto aspect-[6/5] w-full max-w-[44rem]"
@@ -147,9 +92,7 @@ export function PeopleNetwork({
           {placed.map((p, i) => (
             <line
               key={p.handle}
-              ref={(el) => {
-                lines.current[i] = el;
-              }}
+              data-orbit-line={i}
               x1="50"
               y1="50"
               x2={p.x}
@@ -179,9 +122,7 @@ export function PeopleNetwork({
         {placed.map((p, i) => (
           <span
             key={p.handle}
-            ref={(el) => {
-              nodes.current[i] = el;
-            }}
+            data-orbit-dot={i}
             aria-hidden
             className="absolute will-change-transform"
             style={{
