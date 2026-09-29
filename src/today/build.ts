@@ -242,7 +242,21 @@ export function buildToday({
       (a, b) => b.at.getTime() - a.at.getTime(),
     ),
   ];
-  const picks = fresh.slice(0, Math.max(0, pace));
+  // Launches are plentiful on HN and people who are stuck are rare, so a
+  // launch takes at most one new-person slot in three; the rest wait behind
+  // Show more with everyone past the pace.
+  const room = Math.max(0, pace);
+  const launchSlots = Math.ceil(room / 3);
+  const picks: TodayEntry[] = [];
+  const waiting: TodayEntry[] = [];
+  let launched = 0;
+  for (const e of fresh) {
+    const launch = e.kind === "launched";
+    if (picks.length < room && (!launch || launched < launchSlots)) {
+      picks.push(e);
+      if (launch) launched++;
+    } else waiting.push(e);
+  }
 
   const recentAnswers = answers.filter(
     (a) => !isMe(a.author) && a.postedAt.getTime() >= since(WEEK_DAYS),
@@ -250,7 +264,7 @@ export function buildToday({
   const distinct = (xs: string[]) => new Set(xs.map(lower)).size;
   return {
     entries: [...questions, ...alternate(picks, others)],
-    more: fresh.slice(picks.length),
+    more: waiting,
     week: {
       thanked: distinct(
         recentAnswers.filter((a) => a.tone === "thanks").map((a) => a.author),

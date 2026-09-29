@@ -232,6 +232,21 @@ describe("buildToday", () => {
     expect(summary(more)).toEqual(["stuck:lena"]);
   });
 
+  it("gives launches at most one new-person slot in three", () => {
+    const { entries, more } = today({
+      threads: [
+        thread("a", "maker_a", 95, "feedback"),
+        thread("b", "maker_b", 90, "feedback"),
+        thread("c", "kvn", 70),
+        thread("d", "maker_d", 65, "feedback"),
+      ],
+      pace: 3,
+    });
+    // One launch, then the stuck person; the other launches wait.
+    expect(summary(entries)).toEqual(["launched:maker_a", "stuck:kvn"]);
+    expect(summary(more)).toEqual(["launched:maker_b", "launched:maker_d"]);
+  });
+
   it("skips the user's own threads and threads they already replied in", () => {
     const { entries } = today({
       replies: [reply("1", { threadExternalId: "hb" })],

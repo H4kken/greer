@@ -21,6 +21,13 @@ describe("suggest-keywords prompt", () => {
     expect(queries).toContain("customers");
     expect(queries).toContain("outreach");
     expect(new Set(queries).size).toBe(queries.length);
+    // Comment phrases too: that's where most people mention a struggle.
+    expect(out.keywords).toContainEqual(
+      expect.objectContaining({
+        query: "paying customers",
+        section: "story_comment",
+      }),
+    );
   });
 
   it("rejects long keyword lists and sentence-length keywords", () => {

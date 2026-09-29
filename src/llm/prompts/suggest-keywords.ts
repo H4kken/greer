@@ -40,35 +40,55 @@ export const suggestKeywords = definePrompt<
   SuggestKeywordsOutput
 >({
   name: "suggest-keywords",
-  version: "suggest-keywords-v1",
+  version: "suggest-keywords-v2",
   job: "writing",
   system: `You help a SaaS builder choose Hacker News search keywords that find people facing the problems their product solves, so they can help them.
 
-Search matches posts that contain every word of a keyword (Algolia, newest first). Suggest 5 to 8 keywords:
-- Use the words people write when they describe their own struggle, not the product's marketing words or its category name.
-- Prefer ask_hn with one broad word (e.g. "customers", "marketing"): Ask HN posts are few, and the scorer filters them later.
-- Use story_comment only for specific phrases of two or three words (e.g. "first paying customers"): single words there return thousands of unrelated comments.
+Search matches posts that contain every word of a keyword (Algolia, newest first). On Hacker News, few people start an Ask HN about their struggle; most mention it in a comment ("we launched three months ago and have 12 users"). Suggest 6 to 8 keywords:
+- At least 4 story_comment phrases of two or three words, in the words people use about their own situation, first person: e.g. "no paying customers", "struggling to get users", "first 100 users", "zero signups". Single words there return thousands of unrelated comments.
+- 2 or 3 ask_hn keywords with one broad word (e.g. "customers", "marketing"): Ask HN posts are few, and the scorer filters them later.
+- Never the product's marketing words or its category name.
 - Cover different problems from the list; no near-duplicates.`,
   build: ({ product }) => productSection(product),
   schema,
-  // Deterministic stand-in: the longest word of each problem, in Ask HN.
+  // Deterministic stand-in: the longest word of each problem in Ask HN, and
+  // its last two words as a comment phrase.
   mock: ({ product }) => {
-    const words = product.problems
-      .map(
-        (p) =>
-          p
-            .toLowerCase()
-            .split(/[^a-z0-9]+/)
-            .sort((a, b) => b.length - a.length)[0],
-      )
-      .filter((w): w is string => !!w && w.length >= 2);
-    const unique = [...new Set([...words, "launch", "feedback", "customers"])];
+    const words = (p: string) =>
+      p
+        .toLowerCase()
+        .split(/[^a-z0-9]+/)
+        .filter((w) => w.length >= 2);
+    const broad = [
+      ...new Set([
+        ...product.problems.map(
+          (p) => [...words(p)].sort((a, b) => b.length - a.length)[0],
+        ),
+        "launch",
+        "feedback",
+        "customers",
+      ]),
+    ].filter((w): w is string => !!w);
+    const phrases = [
+      ...new Set(
+        product.problems
+          .map((p) => words(p).slice(-2).join(" "))
+          .filter((p) => p.includes(" ")),
+      ),
+    ];
     return {
-      keywords: unique.slice(0, 5).map((query) => ({
-        query,
-        section: "ask_hn" as const,
-        why: "From your problems",
-      })),
+      keywords: [
+        ...broad.slice(0, 3).map((query) => ({
+          query,
+          section: "ask_hn" as const,
+          why: "From your problems",
+        })),
+        ...phrases.slice(0, 4).map((query) => ({
+          query,
+          section: "story_comment" as const,
+          why: "How people mention it in comments",
+        })),
+      ],
     };
   },
 });
