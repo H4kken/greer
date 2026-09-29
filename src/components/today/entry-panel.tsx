@@ -10,6 +10,7 @@ import { useId, useState } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/kbd";
 import { Textarea } from "@/components/ui/textarea";
+import { LinkedText } from "@/components/linked-text";
 import { cn } from "@/lib/utils";
 import { PersonTag } from "./person-tag";
 import type { EntryView } from "./types";
@@ -149,7 +150,7 @@ export function EntryPanel({
             </h3>
             {thread.text ? (
               <div className="max-h-80 overflow-y-auto rounded-xl bg-muted p-4 text-[0.9375rem] leading-relaxed whitespace-pre-line lg:max-h-none lg:overflow-visible">
-                {thread.text}
+                <LinkedText text={thread.text} />
               </div>
             ) : (
               <p className="text-sm text-muted-foreground">

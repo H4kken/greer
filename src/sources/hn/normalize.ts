@@ -41,10 +41,13 @@ export type FirebaseItem = {
   deleted?: boolean;
 };
 
-// HN text is HTML with a small set of tags and entities.
+// HN text is HTML with a small set of tags and entities. HN links bare
+// URLs itself and shortens long ones in the link text ("https://x.com/a/
+// very/lo..."), so a link becomes its full address.
 export function htmlToText(html: string | null | undefined): string {
   if (!html) return "";
   return html
+    .replace(/<a\s[^>]*href="([^"]*)"[^>]*>[\s\S]*?<\/a>/gi, "$1")
     .replace(/<p>/gi, "\n\n")
     .replace(/<br\s*\/?>/gi, "\n")
     .replace(/<[^>]+>/g, "")

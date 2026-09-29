@@ -79,6 +79,14 @@ describe("HN normalization (recorded responses)", () => {
       htmlToText(
         'It&#x27;s <i>fine</i><p>See <a href="https:&#x2F;&#x2F;x.com">x.com</a> &amp; more',
       ),
-    ).toBe("It's fine\n\nSee x.com & more");
+    ).toBe("It's fine\n\nSee https://x.com & more");
+  });
+
+  it("keeps a link's full address, not HN's shortened text", () => {
+    expect(
+      htmlToText(
+        'Docs: <a href="https:&#x2F;&#x2F;example.com&#x2F;docs&#x2F;getting-started?ref=hn&amp;x=1" rel="nofollow">https:&#x2F;&#x2F;example.com&#x2F;docs&#x2F;gett...</a>.',
+      ),
+    ).toBe("Docs: https://example.com/docs/getting-started?ref=hn&x=1.");
   });
 });
