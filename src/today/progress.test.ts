@@ -31,11 +31,12 @@ describe("dayProgress", () => {
       reply("4", yesterday, "old"),
     ]);
     expect(p.helped.map((h) => h.handle)).toEqual(["kvn", "ana_r"]);
+    // Two people, three replies: the pace counts people.
     expect(p).toMatchObject({
       replies: 3,
       answeredBy: 1,
-      state: "at",
-      room: 0,
+      state: "under",
+      room: 1,
     });
   });
 
@@ -49,10 +50,10 @@ describe("dayProgress", () => {
 
   it("says where the day stands against the pace, warning past it", () => {
     expect(progressLine(progress([]), 3)).toBe(
-      "No replies yet today. Up to 3 is a good pace for your account.",
+      "No replies yet today. Up to 3 people is a good pace for your account.",
     );
     expect(progressLine(progress([reply("1", today(8), "kvn")]), 3)).toBe(
-      "You helped 1 person today · room for 2 more replies at your pace.",
+      "You helped 1 person today · room for 2 more at your pace.",
     );
     const three = ["a", "b", "c"].map((h, i) => reply(h, today(8 + i), h));
     expect(progressLine(progress(three), 3)).toBe(

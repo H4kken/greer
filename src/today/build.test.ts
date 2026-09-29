@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { type AnswerFact, buildPeople, type ReplyFact } from "@/people/build";
-import { buildToday, type HelpThread, type Launch } from "./build";
+import { buildToday, type HelpThread, type Launch, type Mark } from "./build";
 
 const NOW = new Date("2026-09-28T12:00:00Z");
 const hoursAgo = (h: number) => new Date(NOW.getTime() - h * 3_600_000);
@@ -42,6 +42,7 @@ const thread = (
   id,
   category,
   author,
+  title: `Thread ${id}`,
   threadId: `h${id}`,
   postedAt: hoursAgo(2),
   score,
@@ -49,6 +50,7 @@ const thread = (
 
 const launch = (author: string, h = 4): Launch => ({
   id: `l-${author}`,
+  threadId: `lt-${author}`,
   author,
   title: `Show HN: ${author}'s thing`,
   url: "https://news.ycombinator.com/item?id=1",
@@ -60,6 +62,7 @@ function today({
   answers = [] as AnswerFact[],
   threads = [] as HelpThread[],
   launches = [] as Launch[],
+  marks = [] as Mark[],
   pace = 3,
 } = {}) {
   const people = buildPeople({
@@ -75,6 +78,7 @@ function today({
     answers,
     threads,
     launches,
+    marks,
     pace,
     now: NOW,
   });
@@ -238,6 +242,71 @@ describe("buildToday", () => {
       ],
     });
     expect(summary(entries)).toEqual(["stuck:lena"]);
+  });
+
+  it("takes a person's earlier threads off once you replied to them", () => {
+    const later = { ...thread("c", "kvn"), postedAt: hoursAgo(0.5) };
+    const { entries } = today({
+      // Replied to kvn an hour ago, in another thread of theirs.
+      replies: [
+        reply("1", {
+          parentAuthor: "kvn",
+          threadExternalId: "other",
+          postedAt: hoursAgo(1),
+        }),
+      ],
+      threads: [thread("a", "KVN"), thread("b", "lena"), later],
+    });
+    // Their thread from before the reply is gone; the one after is news
+    // (kvn is someone the user knows now).
+    expect(summary(entries)).toEqual(["stuck:lena", "asks:kvn"]);
+    expect(entries[1]).toMatchObject({ threadId: "c", otherThreadIds: [] });
+  });
+
+  it('does the same for an "I replied" mark Greer hasn\'t matched yet', () => {
+    const { entries, more } = today({
+      marks: [{ author: "kvn", at: hoursAgo(1) }],
+      threads: [
+        thread("a", "kvn"),
+        thread("b", "kvn", 70),
+        thread("c", "lena"),
+      ],
+    });
+    expect(summary([...entries, ...more])).toEqual(["stuck:lena"]);
+  });
+
+  it("treats the same post made twice as one thread", () => {
+    const again = { ...thread("b", "abelop", 75), title: " thread A " };
+    const { entries } = today({
+      threads: [{ ...thread("a", "abelop"), title: "Thread A" }, again],
+    });
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({ threadId: "a", otherThreadIds: [] });
+  });
+
+  it("doesn't bring back a launch the user already replied to as news", () => {
+    const replies = [
+      reply("1", {
+        parentAuthor: "abelop",
+        threadExternalId: "lt-abelop",
+        postedAt: hoursAgo(1),
+      }),
+    ];
+    // Replied in the launch itself, or to the maker after it was posted.
+    expect(today({ replies, launches: [launch("abelop", 6)] }).entries).toEqual(
+      [],
+    );
+    const elsewhere = [{ ...replies[0]!, threadExternalId: "other" }];
+    expect(
+      today({ replies: elsewhere, launches: [launch("abelop", 6)] }).entries,
+    ).toEqual([]);
+    // A launch posted after the reply is news.
+    expect(
+      summary(
+        today({ replies: elsewhere, launches: [launch("abelop", 0.5)] })
+          .entries,
+      ),
+    ).toEqual(["launch:abelop"]);
   });
 
   it("counts the week from what people did, not from replies sent", () => {

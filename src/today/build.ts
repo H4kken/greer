@@ -16,6 +16,7 @@ export type HelpThread = {
   id: string;
   category: "help" | "feedback";
   author: string;
+  title: string;
   threadId: string;
   postedAt: Date;
   score: number;
@@ -23,6 +24,7 @@ export type HelpThread = {
 
 export type Launch = {
   id: string;
+  threadId: string;
   author: string;
   title: string;
   url: string;
@@ -82,6 +84,9 @@ export const entryKey = {
   person: (handle: string) => `person:${handle}`,
 };
 
+// A thread marked "I replied" that Greer hasn't matched to a reply yet.
+export type Mark = { author: string; at: Date };
+
 export type WeekCounts = {
   thanked: number; // people who thanked you
   talking: number; // people who answered you
@@ -95,6 +100,7 @@ export function buildToday({
   answers,
   threads,
   launches,
+  marks = [],
   pace,
   now = new Date(),
 }: {
@@ -102,6 +108,8 @@ export function buildToday({
   people: Person[];
   replies: ReplyFact[];
   answers: AnswerFact[];
+  // "I replied" marks, which count like replies until Greer finds them.
+  marks?: Mark[];
   // Scored threads worth a reply (help and launches), best first.
   threads: HelpThread[];
   // Recent Show HN posts, newest first.
@@ -118,6 +126,20 @@ export function buildToday({
   // Comments the user answered, and threads they already replied in.
   const answeredByMe = new Set(replies.map((r) => r.parentExternalId));
   const repliedIn = new Set(replies.map((r) => r.threadExternalId));
+  // When the user last replied to each person. Their threads and launches
+  // from before that were already in front of the user (a card they replied
+  // from, the same Show HN posted twice): they leave Today. What the person
+  // posts afterwards is news again.
+  const lastReplyTo = new Map<string, number>();
+  const touch = (handle: string | null, at: Date) => {
+    if (!handle) return;
+    const k = lower(handle);
+    lastReplyTo.set(k, Math.max(lastReplyTo.get(k) ?? 0, at.getTime()));
+  };
+  for (const r of replies) touch(r.parentAuthor, r.postedAt);
+  for (const m of marks) touch(m.author, m.at);
+  const seenBefore = (author: string, postedAt: Date) =>
+    (lastReplyTo.get(lower(author)) ?? 0) >= postedAt.getTime();
 
   // Each known person's news from their answers: an open question first,
   // else their latest answer if it's recent.
@@ -158,6 +180,7 @@ export function buildToday({
   for (const l of launches) {
     const person = known.get(lower(l.author));
     if (!person || l.postedAt.getTime() < since(NEWS_DAYS)) continue;
+    if (repliedIn.has(l.threadId) || seenBefore(l.author, l.postedAt)) continue;
     const news = newsFrom.get(person.handle);
     if (news) news.launch ??= l;
     else if (!launchedOnly.some((e) => e.handle === person.handle))
@@ -175,15 +198,22 @@ export function buildToday({
   // New people, stuck or launching, share one pool and one pace.
   const fresh: TodayEntry[] = [];
   // One card per person: their best thread leads, the others come along.
-  const cardOf = new Map<string, { otherThreadIds: string[] }>();
+  // The same title twice (a post made again) is one thread.
+  const cardOf = new Map<
+    string,
+    { otherThreadIds: string[]; titles: Set<string> }
+  >();
   for (const t of threads) {
     if (isMe(t.author) || repliedIn.has(t.threadId)) continue;
+    if (seenBefore(t.author, t.postedAt)) continue;
     const person = known.get(lower(t.author));
     // A launch by someone you know is already their news (see above).
     if (person && t.category === "feedback") continue;
     const card = cardOf.get(lower(t.author));
+    const title = t.title.trim().toLowerCase();
     if (card) {
-      card.otherThreadIds.push(t.id);
+      if (!card.titles.has(title)) card.otherThreadIds.push(t.id);
+      card.titles.add(title);
       continue;
     }
     const base = {
@@ -193,7 +223,7 @@ export function buildToday({
       threadId: t.id,
       otherThreadIds: [] as string[],
     };
-    cardOf.set(lower(t.author), base);
+    cardOf.set(lower(t.author), { ...base, titles: new Set([title]) });
     if (person) asks.push({ ...base, kind: "asks", person });
     else
       fresh.push({

@@ -1,6 +1,7 @@
 // The day so far: who the user helped, measured against the account's safe
-// pace. Pure; the caller says what "today" is, since only the browser knows
-// the user's time zone.
+// pace. Like Today's feed, the pace counts people, not replies: a back and
+// forth with one person is one conversation. Pure; the caller says what
+// "today" is, since only the browser knows the user's time zone.
 
 export type DayReply = { id: string; at: Date; handle: string | null };
 export type DayAnswer = { at: Date; author: string };
@@ -12,7 +13,7 @@ export type DayProgress = {
   // People who answered the user today: what others gave back.
   answeredBy: number;
   state: "none" | "under" | "at" | "over";
-  // Replies left before the pace; 0 at or past it.
+  // People left before the pace; 0 at or past it.
   room: number;
 };
 
@@ -36,10 +37,10 @@ export function dayProgress({
     const key = r.handle ? r.handle.toLowerCase() : `reply:${r.id}`;
     if (!helped.has(key)) helped.set(key, { key, handle: r.handle });
   }
-  const n = todays.length;
+  const n = helped.size;
   return {
     helped: [...helped.values()],
-    replies: n,
+    replies: todays.length,
     answeredBy: new Set(
       answers.filter((a) => isToday(a.at)).map((a) => a.author.toLowerCase()),
     ).size,
@@ -54,9 +55,9 @@ export function progressLine(p: DayProgress, pace: number): string {
   const helped = `You helped ${people} ${people === 1 ? "person" : "people"} today`;
   switch (p.state) {
     case "none":
-      return `No replies yet today. Up to ${pace} is a good pace for your account.`;
+      return `No replies yet today. Up to ${pace} people is a good pace for your account.`;
     case "under":
-      return `${helped} · room for ${p.room} more ${p.room === 1 ? "reply" : "replies"} at your pace.`;
+      return `${helped} · room for ${p.room} more at your pace.`;
     case "at":
       return `${helped}. That's a good day; the rest can wait.`;
     case "over":

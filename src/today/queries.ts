@@ -9,7 +9,6 @@ import {
   isNotNull,
   lte,
   max,
-  ne,
   notExists,
   or,
   type SQL,
@@ -97,6 +96,7 @@ export async function loadToday(
     db
       .select({
         id: item.id,
+        threadId: item.threadId,
         author: item.author,
         title: item.title,
         url: item.url,
@@ -108,7 +108,8 @@ export async function loadToday(
           mine,
           eq(item.category, "feedback"),
           eq(item.type, "story"),
-          ne(item.triageStatus, "dismissed"),
+          // Not dismissed, and not one the user already said they replied to.
+          eq(item.triageStatus, "new"),
           gte(
             item.postedAt,
             new Date(now.getTime() - LAUNCH_DAYS * 24 * 60 * 60 * 1000),
@@ -123,6 +124,7 @@ export async function loadToday(
       .select({
         id: item.id,
         author: item.author,
+        title: item.title,
         threadId: item.threadId,
         at: item.triagedAt,
       })
@@ -146,6 +148,9 @@ export async function loadToday(
     answers,
     threads,
     launches,
+    marks: marked.flatMap((m) =>
+      m.at ? [{ author: m.author, at: m.at }] : [],
+    ),
     pace,
     now,
   });
@@ -153,6 +158,13 @@ export async function loadToday(
   const since = now.getTime() - 48 * HOUR;
   const found = replies.filter((r) => r.postedAt.getTime() >= since);
   const foundIn = new Set(found.map((r) => r.threadExternalId));
+  // The same post made twice is one thread: a reply in either covers a mark
+  // on the other.
+  const sameThread = (author: string | null, title: string) =>
+    `${(author ?? "").toLowerCase()}|${title.trim().toLowerCase()}`;
+  const foundAs = new Set(
+    found.map((r) => sameThread(r.parentAuthor, r.threadTitle)),
+  );
   return {
     me,
     people,
@@ -165,7 +177,12 @@ export async function loadToday(
         })),
         // Marked by hand and not found yet: counted once, not twice.
         ...marked
-          .filter((m) => m.at && !foundIn.has(m.threadId))
+          .filter(
+            (m) =>
+              m.at &&
+              !foundIn.has(m.threadId) &&
+              !foundAs.has(sameThread(m.author, m.title)),
+          )
           .map((m) => ({ id: `mark:${m.id}`, at: m.at!, handle: m.author })),
       ],
       answers: answers
@@ -304,7 +321,14 @@ export async function missingReplies(
               and(
                 eq(reply.workspaceId, item.workspaceId),
                 eq(reply.platform, item.platform),
-                eq(reply.threadExternalId, item.threadId),
+                or(
+                  eq(reply.threadExternalId, item.threadId),
+                  // The same post made twice: a reply in the other copy.
+                  and(
+                    sql`lower(${reply.parentAuthor}) = lower(${item.author})`,
+                    sql`lower(trim(${reply.threadTitle})) = lower(trim(${item.title}))`,
+                  ),
+                ),
               ),
             ),
         ),

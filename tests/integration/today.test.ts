@@ -40,6 +40,7 @@ async function addItem(
     score?: number | null;
     category?: "help" | "feedback";
     author?: string;
+    title?: string;
     postedAt?: Date;
     filterStatus?: "kept" | "too_short";
     workspaceId?: string;
@@ -55,7 +56,7 @@ async function addItem(
       externalId: String(n),
       type: "story",
       author: over.author ?? `person${n}`,
-      title: `Item ${n}`,
+      title: over.title ?? `Item ${n}`,
       text: "text",
       url: `u${n}`,
       threadId: String(n),
@@ -224,6 +225,72 @@ describe("Today", () => {
     // "Forget it" removes the mark.
     await restoreItem(db, ws, lost);
     expect(await missing()).toEqual([]);
+  });
+
+  it("handles the same launch posted twice as one thread", async () => {
+    await saveAccount(db, ws, "hn", {
+      handle: "mathisg",
+      createdAt: new Date("2020-01-01T00:00:00Z"),
+      karma: 212,
+    });
+    const title = "Show HN: Nibia Fabric";
+    const first = await addItem({
+      author: "abelop",
+      title,
+      category: "feedback",
+      postedAt: hoursAgo(6),
+    });
+    const again = await addItem({
+      author: "abelop",
+      title,
+      category: "feedback",
+      postedAt: hoursAgo(5.9),
+    });
+    // One card, not "+1 more thread" with the same title.
+    const before = await load();
+    expect(before.entries).toHaveLength(1);
+    expect(before.entries[0]).toMatchObject({ otherThreadIds: [] });
+    const [lead, copy] =
+      before.entries[0]!.key === key(first) ? [first, again] : [again, first];
+
+    // "I replied" takes the whole person off, the copy included.
+    await markReplied(db, ws, lead, hoursAgo(1));
+    expect([...(await load()).entries, ...(await load()).more]).toEqual([]);
+
+    // Greer finds the reply; a second mark on the copy doesn't count twice,
+    // and abelop's launch isn't news: the user already replied to it.
+    const [t] = await db
+      .select({ threadId: item.threadId })
+      .from(item)
+      .where(eq(item.id, lead));
+    await db.insert(reply).values({
+      workspaceId: ws,
+      platform: "hn",
+      externalId: "c8",
+      parentExternalId: t!.threadId,
+      parentAuthor: "abelop",
+      threadExternalId: t!.threadId,
+      threadTitle: title,
+      text: "x",
+      url: "u",
+      postedAt: hoursAgo(1),
+      raw: {},
+    });
+    await markReplied(db, ws, copy, hoursAgo(1));
+    const today = await load();
+    expect(today.entries).toEqual([]);
+    expect(today.day.replies.map((r) => r.handle)).toEqual(["abelop"]);
+
+    // Nor does Greer ask about the copy's mark later.
+    await db
+      .update(platformAccount)
+      .set({ repliesCheckedAt: hoursAgo(0.25) })
+      .where(eq(platformAccount.workspaceId, ws));
+    await db
+      .update(item)
+      .set({ triagedAt: hoursAgo(3) })
+      .where(eq(item.id, copy));
+    expect(await missingReplies(db, ws, "hn", now)).toEqual([]);
   });
 
   it("brings back threads the old inbox snoozed once the snooze ends", async () => {
