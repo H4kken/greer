@@ -24,6 +24,9 @@ export type AnswerFact = {
   tone: AnswerTone | null;
 };
 
+// A thread the user marked "I replied" to, before Greer finds the reply.
+export type MarkFact = { author: string; title: string; url: string; at: Date };
+
 // thanked: said thanks at least once. talked: answered, no thanks yet.
 // waiting: the user replied to them, no answer yet.
 export type PersonKind = "thanked" | "talked" | "waiting";
@@ -49,11 +52,15 @@ export function buildPeople({
   replies,
   answers,
   tried,
+  marked = [],
 }: {
   me: string;
   replies: ReplyFact[];
   answers: AnswerFact[];
   tried: Map<string, Date>;
+  // "I replied" marks: someone Greer hasn't found a reply to yet is still
+  // someone you replied to, waiting for an answer.
+  marked?: MarkFact[];
 }): Person[] {
   const isMe = (h: string) => h.toLowerCase() === me.toLowerCase();
   const replyById = new Map(replies.map((r) => [r.id, r]));
@@ -100,6 +107,27 @@ export function buildPeople({
     const r = replyById.get(a.replyId);
     if (!r || isMe(a.author)) continue;
     touch(a.author, r, a.postedAt).answers.push(a);
+  }
+
+  const known = new Set([...people.keys()].map((h) => h.toLowerCase()));
+  for (const m of marked) {
+    if (!m.author || isMe(m.author) || known.has(m.author.toLowerCase()))
+      continue;
+    const acc: Acc = people.get(m.author) ?? {
+      threads: new Map(),
+      answers: [],
+      topicIds: new Set(),
+      firstAt: m.at,
+      lastAt: m.at,
+    };
+    acc.threads.set(`mark:${m.title.trim().toLowerCase()}`, {
+      title: m.title,
+      url: m.url,
+      at: m.at,
+    });
+    if (m.at < acc.firstAt) acc.firstAt = m.at;
+    if (m.at > acc.lastAt) acc.lastAt = m.at;
+    people.set(m.author, acc);
   }
 
   return [...people.entries()]

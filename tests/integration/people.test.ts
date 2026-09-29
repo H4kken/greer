@@ -162,4 +162,42 @@ describe("listPeople", () => {
     const again = await listPeople(db, ws, "hn");
     expect(again.people[0]!.triedAt).toBeNull();
   });
+
+  it('counts people marked "I replied" in the last week, before the reply is found', async () => {
+    const ws = await setup();
+    const other = await setup("someone");
+    const DAY = 24 * 60 * 60 * 1000;
+    const mark = (
+      workspaceId: string,
+      id: string,
+      author: string,
+      ago: number,
+    ) =>
+      db.insert(item).values({
+        workspaceId,
+        platform: "hn",
+        externalId: id,
+        type: "story",
+        author,
+        title: `Ask HN: ${id}`,
+        text: "",
+        url: `https://news.ycombinator.com/item?id=${id}`,
+        threadId: id,
+        postedAt: new Date(Date.now() - ago - DAY),
+        category: "help",
+        filterStatus: "kept",
+        matchedQueryIds: [],
+        raw: {},
+        triageStatus: "replied",
+        triagedAt: new Date(Date.now() - ago),
+      });
+    await mark(ws, "m1", "maker1", 60 * 60 * 1000);
+    await mark(ws, "m2", "oldie", 10 * DAY); // never found: Today asks instead
+    await mark(other, "m3", "elsewhere", 0);
+
+    const { people } = await listPeople(db, ws, "hn");
+    expect(people.map((p) => [p.handle, p.kind])).toEqual([
+      ["maker1", "waiting"],
+    ]);
+  });
 });

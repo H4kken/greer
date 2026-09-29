@@ -41,6 +41,39 @@ const build = (replies: ReplyFact[], answers: AnswerFact[] = []) =>
   buildPeople({ me: "mathisg", replies, answers, tried: new Map() });
 
 describe("buildPeople", () => {
+  it('counts someone marked "I replied" before Greer finds the reply', () => {
+    const mark = (author: string, title: string) => ({
+      author,
+      title,
+      url: `https://news.ycombinator.com/item?id=${title.length}`,
+      at: at(3),
+    });
+    const people = buildPeople({
+      me: "mathisg",
+      replies: [reply("1")],
+      answers: [],
+      tried: new Map(),
+      marked: [
+        mark("maker1", "Outreach without spam"),
+        mark("maker1", "Outreach without spam"),
+        // Already found: counted once, from the reply.
+        mark("SarahK", "Thread 1"),
+        mark("mathisg", "My own post"),
+      ],
+    });
+    // Newest first: the mark is more recent than the reply.
+    expect(people.map((p) => [p.handle, p.kind, p.conversations])).toEqual([
+      ["maker1", "waiting", 1],
+      ["sarahk", "waiting", 1],
+    ]);
+    expect(people[0]!.threads).toEqual([
+      {
+        title: "Outreach without spam",
+        url: "https://news.ycombinator.com/item?id=21",
+      },
+    ]);
+  });
+
   it("counts people you replied to and people who answered you", () => {
     const people = build(
       [reply("1"), reply("2", { parentAuthor: "tomw" })],

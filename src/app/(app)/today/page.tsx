@@ -171,8 +171,9 @@ export default async function TodayPage({ searchParams }: PageProps<"/today">) {
   const newcomers = [
     ...new Set(entries.filter((e) => !e.known).map((e) => e.handle)),
   ];
-  // Someone you just replied to (or marked "I replied") is waiting for an
-  // answer, before Greer's next reply check makes them one of your people.
+  // People already counts "I replied" marks (buildPeople); this adds the
+  // day's replies when no account is linked yet, so the network still shows
+  // who you just replied to.
   const inNetwork = new Set(today.people.map((p) => p.handle.toLowerCase()));
   const justReplied = [
     ...new Set(

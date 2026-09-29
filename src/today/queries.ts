@@ -65,7 +65,7 @@ export async function loadToday(
   );
   const HOUR = 60 * 60 * 1000;
   const [facts, threads, launches, marked] = await Promise.all([
-    loadPeopleFacts(db, workspaceId, platform),
+    loadPeopleFacts(db, workspaceId, platform, now),
     db
       .select({
         id: item.id,
@@ -143,8 +143,10 @@ export async function loadToday(
       ),
   ]);
 
-  const { me, replies, answers, tried } = facts;
-  const people = me ? buildPeople({ me, replies, answers, tried }) : [];
+  const { me, replies, answers, tried, marked: markedFacts } = facts;
+  const people = me
+    ? buildPeople({ me, replies, answers, tried, marked: markedFacts })
+    : [];
   // The last two days, enough for "today" in any time zone.
   const since = now.getTime() - 48 * HOUR;
   const found = replies.filter((r) => r.postedAt.getTime() >= since);

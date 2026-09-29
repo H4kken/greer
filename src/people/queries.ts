@@ -1,8 +1,9 @@
 // Loads everything the People page (and Today) need for one workspace and
 // platform.
-import { and, eq, isNotNull } from "drizzle-orm";
+import { and, eq, gte, isNotNull } from "drizzle-orm";
 import type { Db } from "@/db";
 import {
+  item,
   personMark,
   platformAccount,
   reply,
@@ -13,11 +14,16 @@ import type { Platform } from "@/sources/types";
 import {
   type AnswerFact,
   buildPeople,
+  type MarkFact,
   buildTopics,
   type Person,
   type ReplyFact,
   type TopicSummary,
 } from "./build";
+
+// "I replied" marks count this long while Greer looks for the reply; after
+// that Today asks about it instead (see missingReplies).
+export const MARKED_DAYS = 7;
 
 // The raw facts people are derived from: the user's replies, the answers to
 // them, their marks and topics. Today and People both build on these.
@@ -25,11 +31,13 @@ export async function loadPeopleFacts(
   db: Db,
   workspaceId: string,
   platform: Platform,
+  now = new Date(),
 ): Promise<{
   me: string | null;
   replies: ReplyFact[];
   answers: AnswerFact[];
   tried: Map<string, Date>;
+  marked: MarkFact[];
   topics: { id: string; name: string }[];
 }> {
   const [account] = await db
@@ -42,14 +50,21 @@ export async function loadPeopleFacts(
       ),
     );
   if (!account)
-    return { me: null, replies: [], answers: [], tried: new Map(), topics: [] };
+    return {
+      me: null,
+      replies: [],
+      answers: [],
+      tried: new Map(),
+      marked: [],
+      topics: [],
+    };
 
   const where = <
     T extends typeof reply | typeof replyAnswer | typeof personMark,
   >(
     t: T,
   ) => and(eq(t.workspaceId, workspaceId), eq(t.platform, platform));
-  const [replies, answers, marks, topics] = await Promise.all([
+  const [replies, answers, marks, topics, marked] = await Promise.all([
     db
       .select({
         id: reply.id,
@@ -84,12 +99,36 @@ export async function loadPeopleFacts(
       .select({ id: topic.id, name: topic.name })
       .from(topic)
       .where(eq(topic.workspaceId, workspaceId)),
+    db
+      .select({
+        author: item.author,
+        title: item.title,
+        url: item.url,
+        at: item.triagedAt,
+      })
+      .from(item)
+      .where(
+        and(
+          eq(item.workspaceId, workspaceId),
+          eq(item.platform, platform),
+          eq(item.triageStatus, "replied"),
+          gte(
+            item.triagedAt,
+            new Date(now.getTime() - MARKED_DAYS * 24 * 60 * 60 * 1000),
+          ),
+        ),
+      ),
   ]);
   return {
     me: account.handle,
     replies,
     answers,
     tried: new Map(marks.map((m) => [m.handle, m.at!])),
+    marked: marked.flatMap((m) =>
+      m.author && m.at
+        ? [{ author: m.author, title: m.title, url: m.url, at: m.at }]
+        : [],
+    ),
     topics,
   };
 }
@@ -103,7 +142,7 @@ export async function listPeople(
   people: Person[];
   topics: TopicSummary[];
 }> {
-  const { me, replies, answers, tried, topics } = await loadPeopleFacts(
+  const { me, replies, answers, tried, marked, topics } = await loadPeopleFacts(
     db,
     workspaceId,
     platform,
@@ -111,7 +150,7 @@ export async function listPeople(
   if (!me) return { me: null, people: [], topics: [] };
   return {
     me,
-    people: buildPeople({ me, replies, answers, tried }),
+    people: buildPeople({ me, replies, answers, tried, marked }),
     topics: buildTopics({ me, topics, replies, answers }),
   };
 }
