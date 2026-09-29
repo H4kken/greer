@@ -43,6 +43,34 @@ export function eventLine(entry: TodayEntry): string {
   }
 }
 
+// "Ask HN: How do I…" reads as "How do I…": the source shows as a tag.
+const HN_PREFIX = /^(ask|show|tell|launch) hn\s*[:–—-]\s*/i;
+export function topicOf(title: string): string {
+  return title.replace(HN_PREFIX, "").trim() || title;
+}
+
+// Where it happened, as a card's tag: what they did for someone you know,
+// the kind of post for everyone else.
+export function sourceTag(entry: TodayEntry, thread?: SourceThread): string {
+  switch (entry.kind) {
+    case "answer": {
+      const said = eventLine({ ...entry, launch: null });
+      return said.charAt(0).toUpperCase() + said.slice(1);
+    }
+    case "launch":
+    case "launched":
+      return "Show HN";
+    case "asks":
+    case "stuck":
+      if (thread?.type === "comment") return "Comment";
+      if (/^ask hn\b/i.test(thread?.title ?? "")) return "Ask HN";
+      if (/^show hn\b/i.test(thread?.title ?? "")) return "Show HN";
+      return "Post";
+  }
+}
+
+type SourceThread = { type: "story" | "comment"; title: string };
+
 // How well a thread fits, in words rather than a number.
 export function matchLabel(score: number): string {
   if (score >= 80) return "Strong match";

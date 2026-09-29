@@ -16,6 +16,13 @@ export type EntryView = {
   event: string; // "asked you a follow-up", "is stuck"
   headline: string; // their words, or the thread title
   quote: boolean; // headline is their words
+  // The card: a tag for where it happened ("Ask HN", "Thanked you"), the
+  // topic first, and why the person fits.
+  tag: string;
+  topic: string;
+  topicQuote: boolean; // topic is their words
+  context: string | null; // "in “The hardest part of…”"
+  fit: string | null; // "No paying customers yet · a reply is welcome"
   history: string | null; // "Talked twice · pricing"
   match: string | null; // "Strong match"
   // Stuck, asks and launched: the thread, with why Greer picked it.

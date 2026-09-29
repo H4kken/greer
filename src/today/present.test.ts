@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
 import type { Person } from "@/people/build";
 import type { TodayEntry } from "./build";
-import { eventLine, historyLine, matchLabel, summaryLine } from "./present";
+import {
+  eventLine,
+  historyLine,
+  matchLabel,
+  sourceTag,
+  summaryLine,
+  topicOf,
+} from "./present";
 
 const person = (over: Partial<Person> = {}): Person => ({
   handle: "ana_r",
@@ -54,6 +61,37 @@ describe("Today's words", () => {
     expect(eventLine({ kind: "asks" } as TodayEntry)).toBe(
       "asked something new",
     );
+  });
+
+  it("leads with the topic, the source as a tag", () => {
+    expect(topicOf("Ask HN: How do I find first users?")).toBe(
+      "How do I find first users?",
+    );
+    expect(topicOf("Show HN: KnowNote – A local workspace")).toBe(
+      "KnowNote – A local workspace",
+    );
+    expect(topicOf("Why pricing is hard")).toBe("Why pricing is hard");
+    expect(topicOf("Ask HN:")).toBe("Ask HN:");
+
+    const entry = (kind: TodayEntry["kind"]) => ({ kind }) as TodayEntry;
+    const story = (title: string) => ({ type: "story" as const, title });
+    expect(sourceTag(entry("stuck"), story("Ask HN: Pricing?"))).toBe("Ask HN");
+    expect(sourceTag(entry("asks"), story("Show HN: Thing"))).toBe("Show HN");
+    expect(sourceTag(entry("stuck"), story("Distribution is hard"))).toBe(
+      "Post",
+    );
+    expect(
+      sourceTag(entry("stuck"), { type: "comment", title: "Ask HN: x" }),
+    ).toBe("Comment");
+    expect(sourceTag(entry("launched"))).toBe("Show HN");
+    expect(sourceTag(entry("launch"))).toBe("Show HN");
+    expect(
+      sourceTag({
+        kind: "answer",
+        answer: { tone: "thanks", open: false },
+        launch: {},
+      } as TodayEntry),
+    ).toBe("Thanked you");
   });
 
   it("turns a score into words", () => {

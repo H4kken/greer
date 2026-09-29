@@ -321,12 +321,12 @@ test.describe("as the owner", () => {
     await expect(feed.getByRole("button")).toHaveCount(3);
     await expect(page.getByText("3 people could use your help.")).toBeVisible();
     await expect(
-      feed.getByRole("button", { name: /Show HN: My first SaaS/ }),
-    ).toContainText("launched something and asks for feedback");
+      feed.getByRole("button", { name: /My first SaaS/ }),
+    ).toContainText("Show HN");
     // One card per person: maker0's second thread rides along.
     await expect(
       feed.getByRole("button", { name: /Zero paying customers/ }),
-    ).toContainText("+1 more thread from maker0");
+    ).toContainText("+1 more thread");
     await expect(
       page.getByRole("heading", { level: 2, name: "Your people" }),
     ).toBeVisible();
@@ -461,7 +461,8 @@ test.describe("as the owner", () => {
     const feed = page.getByRole("list", { name: "Today's people" });
     const first = feed.getByRole("button").first();
     await expect(first).toContainText("Someone you know");
-    await expect(first).toContainText("devon_b asked you a follow-up");
+    await expect(first).toContainText("Asked you a follow-up");
+    await expect(first).toContainText("devon_b");
     // The linked account is established, so its pace allows all 5 new
     // people (4 stuck, 1 launch).
     await expect(

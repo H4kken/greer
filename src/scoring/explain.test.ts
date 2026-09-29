@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { explainCriteria, intentLabel } from "./explain";
+import { explainCriteria, fitLine, intentLabel } from "./explain";
 
 describe("explainCriteria", () => {
   it("names the matched problem from the builder's list", () => {
@@ -51,5 +51,51 @@ describe("explainCriteria", () => {
   it("labels intents, falling back to the raw value", () => {
     expect(intentLabel("describing_pain")).toBe("Describing a problem");
     expect(intentLabel("new_intent")).toBe("new_intent");
+  });
+});
+
+describe("fitLine", () => {
+  const problems = ["No paying customers yet", "pricing"];
+
+  it("says which of your problems they have, and if a reply is welcome", () => {
+    expect(
+      fitLine(
+        "help",
+        { problem_match: "clear", matched_problem: 1, reply_welcome: true },
+        problems,
+      ),
+    ).toBe("No paying customers yet · a reply is welcome");
+    expect(
+      fitLine(
+        "help",
+        { problem_match: "weak", matched_problem: 2, own_situation: true },
+        problems,
+      ),
+    ).toBe("Pricing · their own situation");
+  });
+
+  it("leaves out a problem that didn't match", () => {
+    expect(
+      fitLine(
+        "help",
+        { problem_match: "none", matched_problem: 1, reply_welcome: true },
+        problems,
+      ),
+    ).toBe("A reply is welcome");
+  });
+
+  it("describes a launch", () => {
+    expect(
+      fitLine(
+        "feedback",
+        { early_stage: true, asks_for_feedback: true, maker_in_audience: true },
+        [],
+      ),
+    ).toBe("Early stage · asks for feedback");
+  });
+
+  it("is null when the criteria say nothing", () => {
+    expect(fitLine("help", null, problems)).toBeNull();
+    expect(fitLine("feedback", { early_stage: false }, [])).toBeNull();
   });
 });

@@ -30,6 +30,10 @@ function isTyping(target: EventTarget | null): boolean {
 // The last card taken off Today, and its threads, for undo.
 type SetAside = { entry: EntryView; ids: string[] };
 
+// The card's last line: how you know someone, else why they fit. "You
+// replied once, no answer yet" would only repeat the tag.
+const foot = (e: EntryView) => (e.known && !e.waiting ? e.history : e.fit);
+
 // Where "o" and the card's main button go.
 const linkOf = (e: EntryView) =>
   e.thread?.url ?? e.answer?.url ?? e.launch?.url ?? null;
@@ -261,56 +265,67 @@ export function TodayView({
             else cardRefs.current.delete(e.key);
           }}
           aria-current={active ? "true" : undefined}
-          // The headline is clamped to three lines: the full text on hover.
-          title={e.quote ? `“${e.headline}”` : e.headline}
+          // The topic is clamped to three lines: the full text on hover.
+          title={e.topicQuote ? `“${e.topic}”` : e.topic}
           onClick={() => select(active ? null : e.key, false)}
           className={cn(
-            "flex w-full gap-3 rounded-2xl border bg-card p-4 text-left outline-none hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring/50",
+            "flex w-full flex-col gap-2 rounded-2xl border bg-card p-4 text-left outline-none hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring/50",
             active && "border-primary ring-1 ring-primary",
           )}
         >
+          <span className="flex items-center gap-1.5">
+            <span
+              className={cn(
+                "rounded-full border px-2 py-px text-xs font-medium whitespace-nowrap",
+                e.kind === "answer"
+                  ? "border-transparent bg-primary-soft text-primary-soft-foreground"
+                  : "border-input",
+              )}
+            >
+              {e.tag}
+            </span>
+            <PersonTag entry={e} />
+            <span className="ml-auto truncate pl-2 text-xs whitespace-nowrap text-muted-foreground">
+              {e.handle} ·{" "}
+              <time title={e.whenTitle} className="font-mono">
+                {e.when}
+              </time>
+            </span>
+          </span>
           <span
-            aria-hidden
             className={cn(
-              "flex size-9 shrink-0 items-center justify-center rounded-full text-sm font-medium",
-              e.known
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-foreground",
+              "line-clamp-3 font-heading text-lg leading-snug",
+              e.topicQuote && "italic",
             )}
           >
-            {e.handle.charAt(0).toUpperCase()}
+            {e.topicQuote ? `“${e.topic}”` : e.topic}
           </span>
-          <span className="flex min-w-0 flex-1 flex-col gap-1">
-            <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
-              <PersonTag entry={e} />
-              <time title={e.whenTitle}>{e.when}</time>
-              {e.match && (
-                <span className="font-medium text-primary-soft-foreground">
-                  · {e.match}
+          {e.context && (
+            <span className="line-clamp-1 text-sm text-muted-foreground">
+              {e.context}
+            </span>
+          )}
+          {(foot(e) || e.also.length > 0) && (
+            <span className="flex items-baseline gap-3 text-sm">
+              {foot(e) && (
+                <span
+                  className={cn(
+                    e.known && !e.waiting
+                      ? "text-muted-foreground"
+                      : "text-primary-soft-foreground",
+                  )}
+                >
+                  {foot(e)}
+                </span>
+              )}
+              {e.also.length > 0 && (
+                <span className="ml-auto text-xs whitespace-nowrap text-muted-foreground">
+                  +{e.also.length} more{" "}
+                  {e.also.length === 1 ? "thread" : "threads"}
                 </span>
               )}
             </span>
-            <span>
-              <span className="font-medium">{e.handle}</span> {e.event}
-            </span>
-            <span
-              className={cn(
-                "line-clamp-3 font-heading text-[1.0625rem] leading-snug text-foreground/85",
-                e.quote && "italic",
-              )}
-            >
-              {e.quote ? `“${e.headline}”` : e.headline}
-            </span>
-            {e.also.length > 0 && (
-              <span className="text-sm text-muted-foreground">
-                +{e.also.length} more{" "}
-                {e.also.length === 1 ? "thread" : "threads"} from {e.handle}
-              </span>
-            )}
-            {e.history && (
-              <span className="text-sm text-muted-foreground">{e.history}</span>
-            )}
-          </span>
+          )}
         </button>
       </li>
     );

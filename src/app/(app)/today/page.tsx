@@ -22,14 +22,16 @@ import { requireWorkspace } from "@/lib/session";
 import { formatAbsolute, formatRelative } from "@/lib/time";
 import { getWorkerHealth } from "@/lib/health";
 import { getAiStatus } from "@/llm/settings";
-import { explainCriteria } from "@/scoring/explain";
+import { explainCriteria, fitLine } from "@/scoring/explain";
 import type { TodayEntry } from "@/today/build";
 import { sameDayAs, TIME_ZONE_COOKIE } from "@/today/progress";
 import {
   eventLine,
   historyLine,
   matchLabel,
+  sourceTag,
   summaryLine,
+  topicOf,
 } from "@/today/present";
 import {
   hnReach,
@@ -81,6 +83,7 @@ export default async function TodayPage({ searchParams }: PageProps<"/today">) {
     const person = "person" in e ? e.person : null;
     const launch =
       e.kind === "launch" ? e.launch : e.kind === "answer" ? e.launch : null;
+    const comment = thread?.type === "comment" && !!thread.text;
     return {
       key: e.key,
       kind: e.kind,
@@ -97,6 +100,30 @@ export default async function TodayPage({ searchParams }: PageProps<"/today">) {
             ? e.launch.title
             : thread!.title || "(untitled)",
       quote: e.kind === "answer",
+      tag: sourceTag(e, thread ?? undefined),
+      // The card leads with the topic: their words for an answer or a
+      // comment, else the title without its "Ask HN:".
+      topic:
+        e.kind === "answer"
+          ? e.answer.text
+          : comment
+            ? thread!.text
+            : topicOf(
+                e.kind === "launch"
+                  ? e.launch.title
+                  : thread!.title || "(untitled)",
+              ),
+      topicQuote: e.kind === "answer" || comment,
+      context:
+        e.kind === "answer"
+          ? `on “${topicOf(e.answer.threadTitle || "(untitled)")}”${e.launch ? " · launched something too" : ""}`
+          : comment
+            ? `in “${topicOf(thread!.title || "(untitled)")}”`
+            : null,
+      fit: thread
+        ? (fitLine(thread.category, thread.criteria, problems) ??
+          matchLabel(thread.score))
+        : null,
       history: person
         ? historyLine(
             person,

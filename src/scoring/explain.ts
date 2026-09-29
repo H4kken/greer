@@ -87,6 +87,36 @@ export function explainCriteria(
   return lines;
 }
 
+// The one line on a Today card saying why this person fits, from the same
+// criteria: "No paying customers yet · a reply is welcome". Null when
+// nothing in the criteria says so (older scores): the card falls back to
+// the match in words.
+export function fitLine(
+  category: "help" | "feedback",
+  criteria: unknown,
+  problems: string[],
+): string | null {
+  const parts: string[] = [];
+  if (category === "feedback") {
+    const c = launchCriteria.safeParse(criteria).data ?? {};
+    if (c.early_stage) parts.push("Early stage");
+    if (c.asks_for_feedback) parts.push("asks for feedback");
+    if (c.maker_in_audience && parts.length < 2) parts.push("a maker");
+  } else {
+    const c = helpCriteria.safeParse(criteria).data ?? {};
+    const problem =
+      c.problem_match && c.problem_match !== "none" && c.matched_problem != null
+        ? problems[c.matched_problem - 1]?.trim()
+        : undefined;
+    if (problem) parts.push(problem);
+    if (c.reply_welcome) parts.push("a reply is welcome");
+    else if (c.own_situation) parts.push("their own situation");
+  }
+  if (!parts.length) return null;
+  const line = parts.join(" · ");
+  return line.charAt(0).toUpperCase() + line.slice(1);
+}
+
 const INTENT_LABELS: Record<string, string> = {
   asking_for_help: "Asking for help",
   describing_pain: "Describing a problem",
