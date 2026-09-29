@@ -299,12 +299,9 @@ export function PeopleView({
       >
         <div
           ref={orbitBox}
-          className={cn(
-            // Leaves room for the title above and the cards below; moves
-            // aside for the picked person so the card hides nobody.
-            "absolute inset-x-0 top-24 bottom-16 transition-[right] duration-300 motion-reduce:transition-none",
-            person && "lg:right-[26rem]",
-          )}
+          // Leaves room for the title above and the cards below. The picked
+          // person's card slides over the map, which stays as it is.
+          className="absolute inset-x-0 top-24 bottom-16"
         >
           <svg
             aria-hidden
@@ -312,20 +309,6 @@ export function PeopleView({
             preserveAspectRatio="none"
             className="absolute inset-0 size-full overflow-visible"
           >
-            {/* How close: one ring per tier of conversations. */}
-            {[18, 29, 39].map((r) => (
-              <ellipse
-                key={r}
-                cx="50"
-                cy="50"
-                rx={r}
-                ry={r}
-                fill="none"
-                vectorEffect="non-scaling-stroke"
-                strokeDasharray="3 6"
-                className="stroke-border"
-              />
-            ))}
             {placed.map((p, i) => (
               <line
                 key={p.handle}
@@ -437,7 +420,7 @@ export function PeopleView({
         {person && wide && (
           <section
             aria-labelledby="person-heading"
-            className="absolute inset-y-4 right-4 flex w-[calc(100%-2rem)] max-w-[25rem] flex-col overflow-y-auto overscroll-contain rounded-3xl border bg-card p-6"
+            className="absolute inset-y-4 right-4 flex w-[calc(100%-2rem)] max-w-[25rem] animate-in flex-col overflow-y-auto overscroll-contain rounded-3xl border bg-card p-6 duration-300 fade-in-0 slide-in-from-right-8 motion-reduce:animate-none"
           >
             <Button
               type="button"
