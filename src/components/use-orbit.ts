@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 // One person on a network map, placed in % of the box around "You" (50, 50).
 export type OrbitNode = { x: number; y: number; size: number; turn: number };
@@ -15,6 +15,13 @@ const SLOWEST = 0.04;
 // How fast a dot's speed follows its target, per second: it eases, never
 // jumps.
 const EASE = 5;
+
+// Zoom, from the whole map (1) to this much closer.
+const MAX_ZOOM = 4;
+// How much one wheel notch (100 px of deltaY) zooms: about 16%.
+const ZOOM_PER_PX = 0.0015;
+// How fast the view follows a zoom, per second: smooth, not stepped.
+const ZOOM_EASE = 12;
 
 // 0 at `near` and closer, 1 at `far` and further, smooth in between.
 function smoothstep(near: number, far: number, d: number) {
@@ -31,14 +38,31 @@ function smoothstep(near: number, far: number, d: number) {
 // you with `data-orbit-line={i}`, inside the element given `ref={box}`.
 // Dots near the pointer slow right down, each at its own pace, and the
 // whole map holds still while keyboard focus is inside it.
-export function useOrbit(nodes: OrbitNode[]) {
+// With `zoomable`, the wheel zooms in and out around the pointer: people
+// spread apart while dots and names keep their size. Mark "You" with
+// `data-orbit-center` so it follows. `onZoom` hears whether the map is
+// zoomed in; `reset` (returned) zooms back out.
+export function useOrbit(
+  nodes: OrbitNode[],
+  {
+    zoomable = false,
+    onZoom,
+  }: { zoomable?: boolean; onZoom?: (zoomed: boolean) => void } = {},
+) {
   const box = useRef<HTMLDivElement>(null);
+  const resetRef = useRef(() => {});
+  const onZoomRef = useRef(onZoom);
   const key = nodes.map((n) => `${n.x},${n.y},${n.size},${n.turn}`).join();
 
   useEffect(() => {
+    onZoomRef.current = onZoom;
+  });
+
+  useEffect(() => {
     const el = box.current;
-    if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches)
-      return;
+    const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    // Reduced motion keeps the resting layout, zoom aside.
+    if (!el || (still && !zoomable)) return;
     const layout = nodes.map((n, i) => ({
       r: Math.hypot(n.x - 50, n.y - 50),
       angle: Math.atan2(n.y - 50, n.x - 50),
@@ -70,6 +94,44 @@ export function useOrbit(nodes: OrbitNode[]) {
     ];
     for (const [type, fn] of listeners) el.addEventListener(type, fn);
 
+    // The view: screen = world × zoom + shift (px). The target moves at once
+    // on a wheel; the view eases after it.
+    const view = { zoom: 1, x: 0, y: 0 };
+    const target = { ...view };
+    let zoomed = false;
+    // Keeps the zoomed-in map covering the box: no empty edges.
+    const clampTarget = () => {
+      target.x = Math.min(0, Math.max(width * (1 - target.zoom), target.x));
+      target.y = Math.min(0, Math.max(height * (1 - target.zoom), target.y));
+    };
+    const tellZoomed = () => {
+      const now = target.zoom > 1.001;
+      if (now !== zoomed) onZoomRef.current?.((zoomed = now));
+    };
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const rect = el.getBoundingClientRect();
+      const px = e.clientX - rect.left;
+      const py = e.clientY - rect.top;
+      const lines = e.deltaMode === 1 ? 16 : 1; // Firefox scrolls in lines
+      const zoom = Math.min(
+        MAX_ZOOM,
+        Math.max(1, target.zoom * Math.exp(-e.deltaY * lines * ZOOM_PER_PX)),
+      );
+      // The point under the pointer stays under the pointer.
+      target.x = px - ((px - target.x) * zoom) / target.zoom;
+      target.y = py - ((py - target.y) * zoom) / target.zoom;
+      target.zoom = zoom;
+      clampTarget();
+      tellZoomed();
+    };
+    if (zoomable) el.addEventListener("wheel", onWheel, { passive: false });
+    resetRef.current = () => {
+      Object.assign(target, { zoom: 1, x: 0, y: 0 });
+      tellZoomed();
+    };
+    const center = el.querySelector<HTMLElement>("[data-orbit-center]");
+
     const dots = nodes.map((_, i) =>
       el.querySelector<HTMLElement>(`[data-orbit-dot="${i}"]`),
     );
@@ -87,40 +149,61 @@ export function useOrbit(nodes: OrbitNode[]) {
     let last: number | null = null;
     // Each dot keeps its own clock (seconds of motion) and speed (0 to 1).
     const clocks = layout.map(() => 0);
-    const speeds = layout.map(() => 1);
+    const speeds = layout.map(() => (still ? 0 : 1));
     const tick = (ms: number) => {
       const dt = last === null ? 0 : Math.min(0.1, (ms - last) / 1000);
       last = ms;
+      const follow = still ? 1 : Math.min(1, dt * ZOOM_EASE);
+      view.zoom += (target.zoom - view.zoom) * follow;
+      view.x += (target.x - view.x) * follow;
+      view.y += (target.y - view.y) * follow;
+      // World (% of the box) to screen: px and % of the box.
+      const sx = (x: number) => (x / 100) * width * view.zoom + view.x;
+      const sy = (y: number) => (y / 100) * height * view.zoom + view.y;
+      const cx = sx(50);
+      const cy = sy(50);
+      center?.style.setProperty(
+        "transform",
+        `translate3d(${cx - width / 2}px, ${cy - height / 2}px, 0)`,
+      );
       layout.forEach((l, i) => {
         const t = clocks[i]!;
         const angle = l.angle + (2 * Math.PI * t) / l.turn;
         const r = l.r + DRIFT * Math.sin((2 * Math.PI * t) / l.breath + i);
         const x = 50 + r * Math.cos(angle);
         const y = 50 + r * Math.sin(angle);
-        const left = (x / 100) * width - l.size / 2;
-        const top = (y / 100) * height;
+        const left = sx(x) - l.size / 2;
+        const top = sy(y);
         dots[i]?.style.setProperty(
           "transform",
           `translate3d(${left}px, ${top}px, 0) translateY(-50%)`,
         );
-        lines[i]?.setAttribute("x2", x.toFixed(3));
-        lines[i]?.setAttribute("y2", y.toFixed(3));
+        const line = lines[i];
+        if (line) {
+          line.setAttribute("x1", ((cx / width) * 100).toFixed(3));
+          line.setAttribute("y1", ((cy / height) * 100).toFixed(3));
+          line.setAttribute(
+            "x2",
+            (((left + l.size / 2) / width) * 100).toFixed(3),
+          );
+          line.setAttribute("y2", ((top / height) * 100).toFixed(3));
+        }
 
         // Distance from the pointer to the dot and its name.
-        let target = 1;
-        if (focused) target = 0;
-        else if (pointer) {
+        let goal = still ? 0 : 1;
+        if (focused) goal = 0;
+        else if (pointer && !still) {
           const dx = Math.max(
             left - pointer.x,
             0,
             pointer.x - left - widths[i]!,
           );
           const dy = pointer.y - top;
-          target =
+          goal =
             SLOWEST +
             (1 - SLOWEST) * smoothstep(NEAR_PX, FAR_PX, Math.hypot(dx, dy));
         }
-        speeds[i]! += (target - speeds[i]!) * Math.min(1, dt * EASE);
+        speeds[i]! += (goal - speeds[i]!) * Math.min(1, dt * EASE);
         clocks[i]! += dt * speeds[i]!;
       });
       frame = requestAnimationFrame(tick);
@@ -130,10 +213,13 @@ export function useOrbit(nodes: OrbitNode[]) {
       cancelAnimationFrame(frame);
       resized.disconnect();
       for (const [type, fn] of listeners) el.removeEventListener(type, fn);
+      el.removeEventListener("wheel", onWheel);
+      resetRef.current = () => {};
     };
     // The motion only changes when the people do.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key]);
+  }, [key, zoomable]);
 
-  return box;
+  const reset = useCallback(() => resetRef.current(), []);
+  return { box, reset };
 }

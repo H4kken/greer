@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowUpRightIcon, XIcon } from "lucide-react";
+import { ArrowUpRightIcon, XIcon, ZoomOutIcon } from "lucide-react";
 import {
   useEffect,
   useState,
@@ -153,7 +153,11 @@ export function PeopleView({
   const person = people.find((p) => p.handle === selected) ?? null;
   const waiting = people.filter((p) => p.openQuestion);
   const placed = placePeople(people);
-  const orbitBox = useOrbit(placed.map((p) => ({ ...p, turn: TURN_S })));
+  const [zoomed, setZoomed] = useState(false);
+  const { box: orbitBox, reset: zoomOut } = useOrbit(
+    placed.map((p) => ({ ...p, turn: TURN_S })),
+    { zoomable: true, onZoom: setZoomed },
+  );
   const path = {
     ...initialPath,
     tried: people.filter((p) => p.tried).length,
@@ -333,6 +337,7 @@ export function PeopleView({
           </svg>
           <span
             aria-hidden
+            data-orbit-center
             className="absolute top-1/2 left-1/2 flex size-12 -translate-1/2 items-center justify-center rounded-full bg-foreground text-sm font-medium text-background"
           >
             You
@@ -361,7 +366,7 @@ export function PeopleView({
                     aria-pressed={picked}
                     aria-label={`${p.handle}, ${p.summary}, ${KIND_LABEL[p.kind]}${p.openQuestion ? ", asked you something" : ""}${p.tried ? `, tried ${productName}` : ""}`}
                     className={cn(
-                      "flex items-center gap-2 rounded-full pr-2 outline-offset-4 focus-visible:outline-2 focus-visible:outline-ring",
+                      "flex cursor-pointer items-center gap-2 rounded-full pr-2 outline-offset-4 focus-visible:outline-2 focus-visible:outline-ring",
                       picked && "outline-2 outline-foreground",
                     )}
                   >
@@ -408,6 +413,9 @@ export function PeopleView({
             <PathCard path={path} productName={productName} />
             <div className="flex flex-col gap-1 rounded-2xl bg-background/90 px-3 py-2">
               <Legend productName={productName} />
+              <p className="text-xs text-muted-foreground">
+                Scroll to zoom in and out.
+              </p>
               {people.length > placed.length && (
                 <p className="text-xs text-muted-foreground">
                   Showing the {placed.length} people you talked with most.
@@ -417,6 +425,20 @@ export function PeopleView({
           </div>
         </div>
 
+        {zoomed && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={zoomOut}
+            className={cn(
+              "absolute right-6 bottom-6 bg-card",
+              person && "lg:right-[27rem]",
+            )}
+          >
+            <ZoomOutIcon aria-hidden /> Zoom out
+          </Button>
+        )}
         {person && wide && (
           <section
             aria-labelledby="person-heading"

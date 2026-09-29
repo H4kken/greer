@@ -566,6 +566,17 @@ test.describe("as the owner", () => {
     await topics.getByRole("button", { name: "Everyone" }).click();
     await expect(line).toBeHidden();
 
+    // The wheel zooms in around the pointer; one click zooms back out.
+    const map = page.getByRole("region", {
+      name: "Everyone you've talked with",
+    });
+    const box = (await map.boundingBox())!;
+    await page.mouse.move(box.x + box.width / 3, box.y + box.height / 2);
+    await page.mouse.wheel(0, -400);
+    const zoomOut = page.getByRole("button", { name: "Zoom out" });
+    await zoomOut.click();
+    await expect(zoomOut).toBeHidden();
+
     // Escape puts the picked person away.
     await page.keyboard.press("Escape");
     await expect(page.getByRole("region", { name: "sarahk" })).toHaveCount(0);

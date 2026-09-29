@@ -46,7 +46,7 @@ export function PeopleNetwork({
 }) {
   const placed = place(people);
   const knownCount = people.filter((p) => p.kind !== "new").length;
-  const orbitBox = useOrbit(
+  const { box: orbitBox } = useOrbit(
     placed.map((p) => ({ ...p, turn: p.kind === "new" ? NEW_TURN_S : TURN_S })),
   );
 
