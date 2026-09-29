@@ -5,18 +5,21 @@ const SEEDS = {
   carrot: {
     Icon: CarrotIcon,
     label: "Could become a user",
+    short: "Potential user",
     note: "One of your audience, facing this themselves. A conversation worth having one to one, and following up.",
   },
   dandelion: {
     Icon: Flower2Icon,
     label: "Help in public",
+    short: "Help in public",
     note: "The thread's readers are your audience too: a complete answer helps everyone who finds it.",
   },
 } as const;
 
 // What kind of conversation a card is: a carrot (someone who could become a
 // user) or a dandelion (help that spreads to everyone reading). With
-// `explained`, one line on why and what fits.
+// `explained`, one line on why and what fits; without, a short prefix for
+// the card's "why it fits" line.
 export function SeedTag({
   seed,
   explained = false,
@@ -24,7 +27,7 @@ export function SeedTag({
   seed: Seed;
   explained?: boolean;
 }) {
-  const { Icon, label, note } = SEEDS[seed];
+  const { Icon, label, short, note } = SEEDS[seed];
   if (explained) {
     return (
       <p className="flex items-start gap-2 text-sm">
@@ -36,10 +39,11 @@ export function SeedTag({
       </p>
     );
   }
+  // On a card: before the "why", in its colour. The full label on hover.
   return (
-    <span className="flex items-center gap-1 text-xs whitespace-nowrap text-muted-foreground">
-      <Icon aria-hidden className="size-3.5 text-primary" />
-      {label}
+    <span title={label} className="font-medium">
+      <Icon aria-hidden className="mr-1 inline size-4 align-[-3px]" />
+      {short} ·{" "}
     </span>
   );
 }

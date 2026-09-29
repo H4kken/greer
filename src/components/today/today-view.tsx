@@ -37,10 +37,6 @@ function isTyping(target: EventTarget | null): boolean {
 // The last card taken off Today, and its threads, for undo.
 type SetAside = { entry: EntryView; ids: string[] };
 
-// The card's last line: how you know someone, else why they fit. "You
-// replied once, no answer yet" would only repeat the tag.
-const foot = (e: EntryView) => (e.known && !e.waiting ? e.history : e.fit);
-
 // How long a card is open before its news counts as read.
 const SEEN_AFTER_MS = 1500;
 
@@ -305,10 +301,10 @@ export function TodayView({
             active && "border-primary ring-1 ring-primary",
           )}
         >
-          <span className="flex flex-wrap items-center gap-1.5">
+          <span className="flex items-center gap-1.5">
             <span
               className={cn(
-                "rounded-full border px-2 py-px text-xs font-medium whitespace-nowrap",
+                "shrink-0 rounded-full border px-2 py-px text-xs font-medium whitespace-nowrap",
                 e.kind === "answer"
                   ? "border-transparent bg-primary-soft text-primary-soft-foreground"
                   : "border-input",
@@ -317,8 +313,7 @@ export function TodayView({
               {e.tag}
             </span>
             <PersonTag entry={e} />
-            {e.seed && <SeedTag seed={e.seed} />}
-            <span className="ml-auto truncate pl-2 text-xs whitespace-nowrap text-muted-foreground">
+            <span className="ml-auto min-w-0 truncate pl-2 text-xs text-muted-foreground">
               {e.handle} ·{" "}
               <time title={e.whenTitle} className="font-mono">
                 {e.when}
@@ -338,27 +333,31 @@ export function TodayView({
               {e.context}
             </span>
           )}
-          {e.activity && (
-            <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <MessagesSquareIcon aria-hidden className="size-3.5 shrink-0" />
-              {e.activity}
-            </span>
-          )}
-          {(foot(e) || e.also.length > 0) && (
-            <span className="flex items-baseline gap-3 text-sm">
-              {foot(e) && (
-                <span
-                  className={cn(
-                    e.known && !e.waiting
-                      ? "text-muted-foreground"
-                      : "text-primary-soft-foreground",
-                  )}
-                >
-                  {foot(e)}
+          {e.known && !e.waiting
+            ? e.history && (
+                <span className="text-sm text-muted-foreground">
+                  {e.history}
+                </span>
+              )
+            : e.fit && (
+                <span className="text-sm text-primary-soft-foreground">
+                  {e.seed && <SeedTag seed={e.seed} />}
+                  {e.fit}
+                </span>
+              )}
+          {(e.activity || e.also.length > 0) && (
+            <span className="flex items-center gap-3 text-xs text-muted-foreground">
+              {e.activity && (
+                <span className="flex items-center gap-1.5">
+                  <MessagesSquareIcon
+                    aria-hidden
+                    className="size-3.5 shrink-0"
+                  />
+                  {e.activity}
                 </span>
               )}
               {e.also.length > 0 && (
-                <span className="ml-auto text-xs whitespace-nowrap text-muted-foreground">
+                <span className="ml-auto whitespace-nowrap">
                   +{e.also.length} more{" "}
                   {e.also.length === 1 ? "thread" : "threads"}
                 </span>

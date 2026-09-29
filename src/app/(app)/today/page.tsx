@@ -121,10 +121,13 @@ export default async function TodayPage({ searchParams }: PageProps<"/today">) {
           : comment
             ? `in “${topicOf(thread!.title || "(untitled)")}”`
             : null,
-      fit: thread
-        ? (fitLine(thread.category, thread.criteria, problems) ??
-          matchLabel(thread.score))
-        : null,
+      // Launches only reach Today when they'd all say the same ("early
+      // stage · asks for feedback", a maker in your audience): no line.
+      fit:
+        thread && thread.category === "help"
+          ? (fitLine(thread.category, thread.criteria, problems) ??
+            matchLabel(thread.score))
+          : null,
       seen: seenSubjectsOf(e),
       seed: thread ? seedOf(thread.category, thread.criteria) : null,
       activity: thread
