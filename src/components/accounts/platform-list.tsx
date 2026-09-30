@@ -20,8 +20,7 @@ import {
 } from "@/workspace/actions";
 import { PLATFORMS } from "@/workspace/platforms";
 
-// Every platform as a card: the ones Greer supports can be connected, the
-// others say they're coming. Used by onboarding and the Accounts page.
+// Every platform as a card to connect. Used by onboarding and the Accounts page.
 // What Greer found from the account so far, as text ready to show.
 export type ReplyStatus = string | null;
 
@@ -38,17 +37,13 @@ export function PlatformList({
     <ul className="flex flex-col gap-3">
       {PLATFORMS.map((p) => (
         <li key={p.id}>
-          {p.id === "hn" ? (
-            <HnCard
-              name={p.name}
-              about={p.about}
-              initial={hn}
-              replies={hnReplies}
-              onChange={(account) => onChange?.("hn", account)}
-            />
-          ) : (
-            <LaterCard name={p.name} about={p.about} />
-          )}
+          <HnCard
+            name={p.name}
+            about={p.about}
+            initial={hn}
+            replies={hnReplies}
+            onChange={(account) => onChange?.("hn", account)}
+          />
         </li>
       ))}
     </ul>
@@ -225,31 +220,6 @@ function HnCard({
       </div>
 
       <HnGuide />
-    </section>
-  );
-}
-
-function LaterCard({ name, about }: { name: string; about: string }) {
-  const id = useId();
-  return (
-    <section
-      aria-labelledby={`${id}-name`}
-      className="rounded-2xl border border-dashed p-6"
-    >
-      <CardHeader
-        id={`${id}-name`}
-        logo={
-          <span
-            aria-hidden
-            className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted font-medium text-muted-foreground"
-          >
-            {name.charAt(0)}
-          </span>
-        }
-        name={name}
-        about={about}
-        badge={<Badge variant="outline">Coming later</Badge>}
-      />
     </section>
   );
 }

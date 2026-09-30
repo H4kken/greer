@@ -185,8 +185,6 @@ test.describe("as the owner", () => {
     await expect(
       page.getByRole("link", { name: /Create one on Hacker News/ }),
     ).toHaveAttribute("href", "https://news.ycombinator.com/login");
-    const reddit = page.getByRole("region", { name: "Reddit" });
-    await expect(reddit.getByText("Coming later")).toBeVisible();
     await expectNoSeriousA11yViolations(page);
   });
 

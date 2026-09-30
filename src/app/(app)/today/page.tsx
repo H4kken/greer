@@ -311,7 +311,7 @@ export default async function TodayPage({ searchParams }: PageProps<"/today">) {
               : `${reach.people} ${reach.people === 1 ? "person" : "people"}`}{" "}
             in the last {reach.days} days. That&apos;s normal for a focused
             product: Greer only shows people who fit, and your audience may
-            mostly be elsewhere (Reddit comes next). Meanwhile, you can{" "}
+            mostly be elsewhere. Meanwhile, you can{" "}
             <Link href="/settings#keywords">try other keywords</Link>.
           </p>
         )}

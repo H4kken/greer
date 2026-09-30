@@ -29,7 +29,7 @@ export default async function KeywordsStepPage() {
           Where should Greer listen?
         </h1>
         <p className="mt-1 text-muted-foreground">
-          Hacker News for now. Reddit comes next.
+          On Hacker News, for the keywords you pick.
         </p>
       </div>
 
