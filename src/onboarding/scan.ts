@@ -1,7 +1,7 @@
-import { and, count, countDistinct, desc, eq, gte, sql } from "drizzle-orm";
+import { and, count, countDistinct, desc, eq, sql } from "drizzle-orm";
 import type { Db } from "@/db";
 import { item, itemScore, sourceQuery, workspace } from "@/db/schema";
-import { MIN_SCORE } from "@/today/queries";
+import { worthAReply } from "@/today/queries";
 import { syncHnQueries } from "@/workspace/keywords";
 import type { FirstScanInput } from "@/workspace/schemas";
 import type { ScanProgress } from "./scan-copy";
@@ -62,10 +62,7 @@ export async function getScanProgress(
     .leftJoin(itemScore, eq(itemScore.itemId, item.id))
     .where(eq(item.workspaceId, workspaceId));
 
-  const worthIt = and(
-    eq(itemScore.workspaceId, workspaceId),
-    gte(itemScore.score, MIN_SCORE),
-  );
+  const worthIt = and(eq(itemScore.workspaceId, workspaceId), worthAReply());
   const [people] = await db
     .select({ n: countDistinct(item.author) })
     .from(itemScore)

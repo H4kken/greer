@@ -47,7 +47,7 @@ async function addItem(
     score: over.score ?? 80,
     criteriaMet: 4,
     criteriaTotal: 5,
-    criteria: {},
+    criteria: { problem_match: "clear", matched_problem: 1 },
     intent: "asking_for_help",
     reason: "",
     promptVersion: "v",

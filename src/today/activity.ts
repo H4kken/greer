@@ -6,7 +6,7 @@ import { and, desc, eq, gte, isNull, lt, or, sql } from "drizzle-orm";
 import type { Db } from "@/db";
 import { item, itemScore } from "@/db/schema";
 import type { Platform, Source } from "@/sources/types";
-import { FRESH_HOURS, MIN_SCORE } from "./queries";
+import { FRESH_HOURS, worthAReply } from "./queries";
 
 export const CHECK_EVERY_MINUTES = 30;
 // Per sweep (every 15 minutes): the best threads first, so the cards people
@@ -32,7 +32,7 @@ export async function activityCandidates(db: Db, now = new Date()) {
         and(
           eq(item.filterStatus, "kept"),
           eq(item.triageStatus, "new"),
-          gte(itemScore.score, MIN_SCORE),
+          worthAReply(),
           gte(
             item.postedAt,
             new Date(now.getTime() - FRESH_HOURS * 60 * MINUTE),

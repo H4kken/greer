@@ -57,31 +57,28 @@ describe("explainCriteria", () => {
 describe("fitLine", () => {
   const problems = ["No paying customers yet", "pricing"];
 
-  it("says which of your problems they have, and if a reply is welcome", () => {
+  it("names the problem of theirs you know", () => {
     expect(
       fitLine(
         "help",
         { problem_match: "clear", matched_problem: 1, reply_welcome: true },
         problems,
       ),
-    ).toBe("No paying customers yet · a reply is welcome");
+    ).toBe("No paying customers yet");
     expect(
-      fitLine(
-        "help",
-        { problem_match: "weak", matched_problem: 2, own_situation: true },
-        problems,
-      ),
-    ).toBe("Pricing · their own situation");
+      fitLine("help", { problem_match: "weak", matched_problem: 2 }, problems),
+    ).toBe("Pricing");
   });
 
-  it("leaves out a problem that didn't match", () => {
+  it("is null without a matched problem", () => {
     expect(
       fitLine(
         "help",
         { problem_match: "none", matched_problem: 1, reply_welcome: true },
         problems,
       ),
-    ).toBe("A reply is welcome");
+    ).toBeNull();
+    expect(fitLine("help", null, problems)).toBeNull();
   });
 
   it("describes a launch", () => {
@@ -92,10 +89,6 @@ describe("fitLine", () => {
         [],
       ),
     ).toBe("Early stage · asks for feedback");
-  });
-
-  it("is null when the criteria say nothing", () => {
-    expect(fitLine("help", null, problems)).toBeNull();
     expect(fitLine("feedback", { early_stage: false }, [])).toBeNull();
   });
 });

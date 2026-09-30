@@ -31,6 +31,20 @@ import { buildToday } from "./build";
 
 // Below this, a thread isn't worth a reply: it never shows on Today.
 export const MIN_SCORE = 50;
+
+// Worth a reply: a good score, and for help threads, one of the builder's
+// problems at least loosely matched. A clear, detailed question about
+// something else scores well but isn't someone this builder can help
+// (precision beats volume). Launches are judged on their own criteria.
+// Needs item and item_score in the query.
+export const worthAReply = (): SQL =>
+  and(
+    gte(itemScore.score, MIN_SCORE),
+    or(
+      eq(item.category, "feedback"),
+      sql`${itemScore.criteria}->>'problem_match' in ('weak', 'clear', 'strong')`,
+    ),
+  )!;
 // Older threads rarely need a reply anymore; 72 hours, not 48, so a
 // weekend away doesn't hide Friday's threads.
 export const FRESH_HOURS = 72;
@@ -95,7 +109,7 @@ export async function loadToday(
           // Help threads, and launches themselves (not comments under them).
           or(eq(item.category, "help"), eq(item.type, "story")),
           active(now),
-          gte(itemScore.score, MIN_SCORE),
+          worthAReply(),
           gte(item.postedAt, new Date(now.getTime() - FRESH_HOURS * HOUR)),
         ),
       )
@@ -286,7 +300,7 @@ export async function hnReach(
         eq(item.workspaceId, workspaceId),
         eq(item.platform, "hn"),
         eq(item.filterStatus, "kept"),
-        gte(itemScore.score, MIN_SCORE),
+        worthAReply(),
         gte(item.postedAt, new Date(now.getTime() - REACH_DAYS * DAY)),
       ),
     );

@@ -9,7 +9,7 @@ export type ScanProgress = {
   // Distinct authors of threads worth your time: one person with a post and a
   // comment counts once.
   people: number;
-  // The best threads worth your time (score >= MIN_SCORE), best first.
+  // The best threads worth your time (worthAReply), best first.
   top: {
     id: string;
     title: string;

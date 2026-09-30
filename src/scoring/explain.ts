@@ -114,7 +114,7 @@ export function seedOf(
 }
 
 // The one line on a Today card saying why this person fits, from the same
-// criteria: "No paying customers yet · a reply is welcome". Null when
+// criteria: the problem of theirs you know ("No paying customers yet"). Null when
 // nothing in the criteria says so (older scores): the card falls back to
 // the match in words.
 export function fitLine(
@@ -135,8 +135,6 @@ export function fitLine(
         ? problems[c.matched_problem - 1]?.trim()
         : undefined;
     if (problem) parts.push(problem);
-    if (c.reply_welcome) parts.push("a reply is welcome");
-    else if (c.own_situation) parts.push("their own situation");
   }
   if (!parts.length) return null;
   const line = parts.join(" · ");

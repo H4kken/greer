@@ -40,6 +40,8 @@ async function addItem(
   over: {
     score?: number | null;
     category?: "help" | "feedback";
+    // How the thread matches the builder's problems (help threads).
+    match?: "none" | "weak" | "clear" | "strong";
     author?: string;
     title?: string;
     postedAt?: Date;
@@ -75,7 +77,7 @@ async function addItem(
       score: over.score ?? 80,
       criteriaMet: 4,
       criteriaTotal: 5,
-      criteria: {},
+      criteria: { problem_match: over.match ?? "clear", matched_problem: 1 },
       intent: "asking_for_help",
       reason: "r",
       promptVersion: "v",
@@ -94,6 +96,15 @@ describe("Today", () => {
   beforeEach(async () => {
     await truncateAll();
     ws = await createWorkspace();
+  });
+
+  it("leaves out help threads that match none of the builder's problems", async () => {
+    const loose = await addItem({ match: "weak" });
+    await addItem({ match: "none", score: 90 }); // clear, detailed, off-topic
+    await addItem({ category: "feedback" }); // launches: their own criteria
+    const { entries, more } = await load(10);
+    expect([...entries, ...more].map((e) => e.key)).toHaveLength(2);
+    expect(entries.map((e) => e.key)).toContain(`item:${loose}`);
   });
 
   it("picks the best scored, kept help threads, up to the pace", async () => {

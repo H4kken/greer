@@ -230,7 +230,7 @@ describe("onboarding", () => {
       score: value,
       criteriaMet: 3,
       criteriaTotal: 5,
-      criteria: {},
+      criteria: { problem_match: "clear", matched_problem: 1 },
       intent: "asking_for_help",
       reason: "r",
       promptVersion: "v",
