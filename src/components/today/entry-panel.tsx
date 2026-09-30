@@ -90,7 +90,13 @@ export function EntryPanel({
         {entry.history && (
           <p className="text-sm text-muted-foreground">{entry.history}</p>
         )}
-        {entry.seed && <SeedTag seed={entry.seed} explained />}
+        {entry.seed && (
+          <SeedTag
+            seed={entry.seed}
+            explained
+            launch={entry.thread?.category === "feedback"}
+          />
+        )}
         {entry.activity && (
           <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
             <MessagesSquareIcon aria-hidden className="size-4 shrink-0" />

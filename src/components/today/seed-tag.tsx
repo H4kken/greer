@@ -16,6 +16,13 @@ const SEEDS = {
   },
 } as const;
 
+const LAUNCH_NOTES = {
+  carrot:
+    "A maker in your audience. Useful feedback now can start a conversation, and they may try what you make too.",
+  dandelion:
+    "Feedback in public: other makers reading the thread learn from it too.",
+} as const;
+
 // What kind of conversation a card is: a carrot (someone who could become a
 // user) or a dandelion (help that spreads to everyone reading). With
 // `explained`, one line on why and what fits; without, a short prefix for
@@ -23,11 +30,15 @@ const SEEDS = {
 export function SeedTag({
   seed,
   explained = false,
+  launch = false,
 }: {
   seed: Seed;
   explained?: boolean;
+  // A maker showing their product rather than someone stuck.
+  launch?: boolean;
 }) {
-  const { Icon, label, short, note } = SEEDS[seed];
+  const { Icon, label, short } = SEEDS[seed];
+  const note = launch ? LAUNCH_NOTES[seed] : SEEDS[seed].note;
   if (explained) {
     return (
       <p className="flex items-start gap-2 text-sm">
@@ -43,7 +54,8 @@ export function SeedTag({
   return (
     <span title={label} className="font-medium">
       <Icon aria-hidden className="mr-1 inline size-4 align-[-3px]" />
-      {short} ·{" "}
+      {short}
+      {!launch && " · "}
     </span>
   );
 }

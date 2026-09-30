@@ -323,6 +323,9 @@ test.describe("as the owner", () => {
     await expect(
       feed.getByRole("button", { name: /My first SaaS/ }),
     ).toContainText("Show HN");
+    await expect(
+      feed.getByRole("button", { name: /My first SaaS/ }),
+    ).toContainText("Potential user");
     // One card per person: maker0's second thread rides along.
     await expect(
       feed.getByRole("button", { name: /Zero paying customers/ }),

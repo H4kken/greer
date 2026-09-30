@@ -339,9 +339,9 @@ export function TodayView({
                   {e.history}
                 </span>
               )
-            : e.fit && (
+            : (e.fit || e.seed) && (
                 <span className="text-sm text-primary-soft-foreground">
-                  {e.seed && <SeedTag seed={e.seed} />}
+                  {e.seed && <SeedTag seed={e.seed} launch={!e.fit} />}
                   {e.fit}
                 </span>
               )}
