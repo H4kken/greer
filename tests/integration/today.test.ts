@@ -189,7 +189,7 @@ describe("Today", () => {
     expect(await restoreItem(db, ws, a)).toBe(true);
   });
 
-  it("offers only the room left in today's pace, the rest behind Show more", async () => {
+  it("offers only the room left in today's pace, the rest past it", async () => {
     await saveAccount(db, ws, "hn", {
       handle: "mathisg",
       createdAt: new Date("2020-01-01T00:00:00Z"),

@@ -48,7 +48,7 @@ export const worthAReply = (): SQL =>
 // Older threads rarely need a reply anymore; 72 hours, not 48, so a
 // weekend away doesn't hide Friday's threads.
 export const FRESH_HOURS = 72;
-// More than a day's worth: "Show more" opens them.
+// More than a day's worth: past the pace, and on Explore.
 const THREAD_LIMIT = 60;
 const LAUNCH_DAYS = 7;
 const LAUNCH_LIMIT = 16;
@@ -214,8 +214,8 @@ export async function loadToday(
       )
       .map((a) => ({ at: a.postedAt, author: a.author })),
   };
-  // New people offered today: only the room left in the pace. The rest wait
-  // behind "Show more", like everything past the pace.
+  // New people within today's pace: only the room left in it. The others
+  // come after, past the pace.
   const { room } = dayProgress({
     replies: day.replies,
     answers: [],

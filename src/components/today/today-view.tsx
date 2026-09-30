@@ -12,7 +12,6 @@ import {
   useTransition,
 } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/kbd";
 import {
   dismissAction,
@@ -47,6 +46,7 @@ const linkOf = (e: EntryView) =>
 export function TodayView({
   entries,
   more,
+  onExplore,
   pace,
   initialKey,
   mentionAdvice,
@@ -54,7 +54,10 @@ export function TodayView({
   aside,
 }: {
   entries: EntryView[];
+  // New people past today's pace: in view, after a note.
   more: EntryView[];
+  // New people beyond Today's list, waiting on Explore.
+  onExplore: number;
   pace: number;
   initialKey: string | null;
   mentionAdvice: string;
@@ -66,17 +69,13 @@ export function TodayView({
   const router = useRouter();
   const [, startTransition] = useTransition();
   const [hidden, setHidden] = useState<Set<string>>(new Set());
-  const [showMore, setShowMore] = useState(
-    !!initialKey && more.some((e) => e.key === initialKey),
-  );
   const [selectedKey, setSelectedKey] = useState(initialKey);
   const lastSetAside = useRef<SetAside | null>(null);
   const cardRefs = useRef(new Map<string, HTMLButtonElement>());
 
   const visible = useMemo(
-    () =>
-      [...entries, ...(showMore ? more : [])].filter((e) => !hidden.has(e.key)),
-    [entries, more, showMore, hidden],
+    () => [...entries, ...more].filter((e) => !hidden.has(e.key)),
+    [entries, more, hidden],
   );
   const selected = visible.find((e) => e.key === selectedKey) ?? null;
   const panelRef = useRef<HTMLDivElement>(null);
@@ -117,7 +116,7 @@ export function TodayView({
       el.style.maxHeight = "";
     };
   }, [picked]);
-  const extra = showMore ? more.filter((e) => !hidden.has(e.key)) : [];
+  const extra = more.filter((e) => !hidden.has(e.key));
 
   // News from someone you know is read once its card has been open a
   // moment (not while skimming with j/k): next visit, it isn't news anymore.
@@ -369,7 +368,7 @@ export function TodayView({
     );
   };
 
-  if (!visible.length && !(more.length && !showMore)) {
+  if (!visible.length) {
     return (
       <div className="grid gap-6 lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] xl:grid-cols-[minmax(0,28rem)_minmax(0,1fr)]">
         <div>{empty}</div>
@@ -391,26 +390,21 @@ export function TodayView({
         </ul>
         {extra.length > 0 && (
           <>
-            <p className="text-sm text-muted-foreground">
-              You&apos;re past today&apos;s pace of {pace}. Fine to read;
-              replying tomorrow is fine too.
+            <p className="mt-2 border-t pt-4 text-sm text-muted-foreground">
+              Past today&apos;s pace of {pace}. Replying to more is fine; spread
+              them out through the day.
             </p>
-            <ul aria-label="More people" className="flex flex-col gap-2">
+            <ul aria-label="Past today's pace" className="flex flex-col gap-2">
               {extra.map(card)}
             </ul>
           </>
         )}
         <div className="flex flex-wrap items-center justify-between gap-2">
-          {more.length > 0 && !showMore ? (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setShowMore(true)}
-            >
-              Show {more.length} more new{" "}
-              {more.length === 1 ? "person" : "people"}
-            </Button>
+          {onExplore > 0 ? (
+            <Link href="/explore" className="text-sm">
+              {onExplore} more new {onExplore === 1 ? "person" : "people"} on
+              Explore
+            </Link>
           ) : (
             <span />
           )}

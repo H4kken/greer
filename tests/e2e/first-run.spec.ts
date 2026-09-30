@@ -386,12 +386,9 @@ test.describe("as the owner", () => {
       page.getByRole("heading", { level: 2, name: "Your people" }),
     ).toBeVisible();
 
-    // Past the pace is one click away, with a gentle note.
-    await page.getByRole("button", { name: "Show 2 more new people" }).click();
-    await expect(
-      page.getByText("You're past today's pace of 3."),
-    ).toBeVisible();
-    const more = page.getByRole("list", { name: "More people" });
+    // Past the pace stays in view, after a gentle note.
+    await expect(page.getByText("Past today's pace of 3.")).toBeVisible();
+    const more = page.getByRole("list", { name: "Past today's pace" });
     await expect(more.getByRole("button")).toHaveCount(2);
 
     // Hidden threads bring one back for good.
@@ -414,7 +411,6 @@ test.describe("as the owner", () => {
     // The row hides right away; the toast means the server has it.
     await expect(page.getByText(/^Back on Today:/)).toBeVisible();
     await page.goto("/today");
-    await page.getByRole("button", { name: "Show 2 more new people" }).click();
     await expect(
       more.getByRole("button", { name: /beta testers/ }),
     ).toBeVisible();
@@ -448,6 +444,58 @@ test.describe("as the owner", () => {
     await expectNoSeriousA11yViolations(page);
     await page.getByRole("button", { name: "Back to today" }).click();
     await expect(feed).toBeVisible();
+  });
+
+  test("explore lists everything found, searchable, with no pace", async ({
+    page,
+  }) => {
+    await page.goto("/today");
+    await page.getByRole("link", { name: "Explore" }).click();
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Explore" }),
+    ).toBeVisible();
+    const list = page.getByRole("list", { name: "Threads" });
+    await expect(
+      list.getByRole("link", { name: /Pricing a tool for developers/ }),
+    ).toBeVisible();
+    // Weaker matches wait behind a filter.
+    await expect(list.getByText("A barely related thread")).toBeHidden();
+    await expectNoSeriousA11yViolations(page);
+
+    await page.getByRole("searchbox", { name: "Search threads" }).fill("spam");
+    await page.getByRole("button", { name: "Search" }).click();
+    await expect(page).toHaveURL(/q=spam/);
+    await expect(list.getByRole("listitem")).toHaveCount(1);
+
+    await page.getByRole("link", { name: "Launches" }).click();
+    await expect(
+      page.getByRole("heading", { name: "Nothing here" }),
+    ).toBeVisible();
+    await page.goto("/explore?kind=launches");
+    await expect(
+      list.getByRole("link", { name: /My first SaaS/ }),
+    ).toBeVisible();
+
+    await page.goto("/explore?weaker=1");
+    await expect(list.getByText("A barely related thread")).toBeVisible();
+
+    // "I replied" works here too, with undo.
+    await page.goto("/explore");
+    await page
+      .getByRole("button", { name: /^I replied to / })
+      .first()
+      .click();
+    await expect(page.getByText(/counts in today's progress/)).toBeVisible();
+    await expect(list.getByText("You replied")).toBeVisible();
+    await page.getByRole("button", { name: "Undo" }).click();
+    await expect(list.getByText("You replied")).toBeHidden();
+
+    await page.setViewportSize({ width: 375, height: 800 });
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+    ).toBe(true);
   });
 
   test("today shows people the owner knows when they have news", async ({

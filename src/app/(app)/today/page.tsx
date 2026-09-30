@@ -358,6 +358,7 @@ export default async function TodayPage({ searchParams }: PageProps<"/today">) {
         <TodayView
           entries={entries}
           more={more}
+          onExplore={today.onExplore}
           pace={pace}
           initialKey={typeof p === "string" ? p : null}
           mentionAdvice={MATURITY_ADVICE[tier].productMentions}

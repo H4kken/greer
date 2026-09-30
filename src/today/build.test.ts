@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { type AnswerFact, buildPeople, type ReplyFact } from "@/people/build";
 import {
+  NEW_PEOPLE_ON_TODAY,
   buildToday,
   type HelpThread,
   type Launch,
@@ -96,7 +97,7 @@ const summary = (entries: { kind: string; handle: string }[]) =>
   entries.map((e) => `${e.kind}:${e.handle}`);
 
 describe("buildToday", () => {
-  it("caps new people at the pace, keeping the rest for Show more", () => {
+  it("paces new people, keeping the rest in view past the pace", () => {
     const { entries, more } = today({
       threads: ["a", "b", "c", "d", "e"].map((x) => thread(x, `new_${x}`)),
     });
@@ -106,6 +107,16 @@ describe("buildToday", () => {
       "stuck:new_c",
     ]);
     expect(summary(more)).toEqual(["stuck:new_d", "stuck:new_e"]);
+  });
+
+  it("leaves new people past a dozen to Explore", () => {
+    const names = Array.from({ length: 15 }, (_, i) => `p${i}`);
+    const { entries, more, onExplore } = today({
+      threads: names.map((x) => thread(x, `new_${x}`)),
+    });
+    expect(entries).toHaveLength(3);
+    expect(more).toHaveLength(NEW_PEOPLE_ON_TODAY - 3);
+    expect(onExplore).toBe(15 - NEW_PEOPLE_ON_TODAY);
   });
 
   it("never caps people you know: their threads are tagged, not counted", () => {

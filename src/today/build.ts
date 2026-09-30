@@ -9,6 +9,9 @@ const DAY = 24 * 60 * 60 * 1000;
 export const NEWS_DAYS = 3;
 export const QUESTION_DAYS = 14;
 const WEEK_DAYS = 7;
+// New people on Today, within the pace and past it. Past the pace they stay
+// in view with a note (it warns, never hides); beyond this, Explore has them.
+export const NEW_PEOPLE_ON_TODAY = 12;
 
 // A scored thread worth a reply: someone asking for help, or a maker
 // launching and asking for feedback.
@@ -138,7 +141,12 @@ export function buildToday({
   // New people a day, from the account's maturity.
   pace: number;
   now?: Date;
-}): { entries: TodayEntry[]; more: TodayEntry[]; week: WeekCounts } {
+}): {
+  entries: TodayEntry[];
+  more: TodayEntry[];
+  onExplore: number;
+  week: WeekCounts;
+} {
   const lower = (h: string) => h.toLowerCase();
   const isMe = (h: string) => !!me && lower(h) === lower(me);
   const known = new Map(people.map((p) => [lower(p.handle), p]));
@@ -268,8 +276,8 @@ export function buildToday({
     ),
   ];
   // Launches are plentiful on HN and people who are stuck are rare, so a
-  // launch takes at most one new-person slot in three; the rest wait behind
-  // Show more with everyone past the pace.
+  // launch takes at most one new-person slot in three; the rest come after,
+  // past the pace, with everyone else past it.
   const room = Math.max(0, pace);
   const launchSlots = Math.ceil(room / 3);
   const picks: TodayEntry[] = [];
@@ -289,7 +297,8 @@ export function buildToday({
   const distinct = (xs: string[]) => new Set(xs.map(lower)).size;
   return {
     entries: [...questions, ...alternate(picks, others)],
-    more: waiting,
+    more: waiting.slice(0, Math.max(0, NEW_PEOPLE_ON_TODAY - picks.length)),
+    onExplore: Math.max(0, waiting.length + picks.length - NEW_PEOPLE_ON_TODAY),
     week: {
       thanked: distinct(
         recentAnswers.filter((a) => a.tone === "thanks").map((a) => a.author),
