@@ -7,7 +7,7 @@
 | Question         | Decision                                                                                                                                                                                                                                                                                                                   |
 | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Scope            | **Listen + engage.** Find relevant conversations, score them, give you a reply brief (ideas, not text), track what you engaged with. No community hosting, no full CRM.                                                                                                                                                    |
-| Platforms        | **v0.1: Hacker News** (free, official APIs). **v0.2: Reddit**, with the user's own approved API credentials plus a "bring a thread" fallback. Every platform sits behind a source-adapter interface.                                                                                                                       |
+| Platforms        | **Hacker News only (decided Sep 2026).** Finish HN end to end, dogfood it, then decide what's next. Reddit and X are parked: see [Other platforms (parked)](#other-platforms-parked). Every platform still sits behind a source-adapter interface.                                                                         |
 | Data access      | **Official APIs only.** No scraping services, proxies or logged-in sessions (see [Data access policy](#data-access-policy)).                                                                                                                                                                                               |
 | Automation       | **Human-in-the-loop.** The tool finds threads and suggests ideas. You write the reply, open the thread and post it yourself. The tool never posts and never writes the reply.                                                                                                                                              |
 | Account safety   | **Account-aware guardrails.** Pacing, product mentions and eligibility depend on your account's age and karma and on each community's requirements.                                                                                                                                                                        |
@@ -67,7 +67,6 @@ Most bans come from behavior, not tools: too much self-promotion, a burst of rep
 **Your account profile** (`platform_account`)
 
 - HN: age and karma are fetched from the official user API and refreshed daily.
-- Reddit (v0.2): read from the API when credentials exist, otherwise entered by hand.
 - **Maturity tier** (thresholds configurable per platform):
   - **New:** e.g. < 30 days or < 100 karma.
   - **Growing.**
@@ -89,7 +88,7 @@ The limits are warnings, not locks: you're the one posting, so Greer advises.
 - **Where it comes from, with its source kept:**
   - _stated_: the LLM extracts it from the published rules text;
   - _user_: you enter or correct it;
-  - _learned_: after a removal, Greer asks "was your comment removed? why?" and records the answer. Many subreddits hide their karma and age thresholds in AutoModerator, so this matters for Reddit.
+  - _learned_: after a removal, Greer asks "was your comment removed? why?" and records the answer.
 - **In the inbox:** threads in communities you can't post in yet are hidden, or marked "You can't comment here yet (needs 100 karma)".
 - **HN specifics:**
   - HN's guidelines and Show HN rules come bundled as the community rules.
@@ -98,25 +97,16 @@ The limits are warnings, not locks: you're the one posting, so Greer advises.
 
 **Outcome signals**
 
-- If your comments get killed or removed repeatedly (HN `dead` flag, or Reddit removals you report), Greer warns that the account may be flagged and pauses product-mention suggestions.
+- If your comments get killed repeatedly (HN `dead` flag), Greer warns that the account may be flagged and pauses product-mention suggestions.
 - The dashboard shows removal rate per community, so you can see where you're not landing well.
 
 ## Data access policy
 
 Greer uses **official, permitted APIs only**.
 
-| Platform               | Access                                                                                                                                                                                                                                                          | Notes                                                                                         |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| **Hacker News (v0.1)** | [Algolia HN Search API](https://hn.algolia.com/api) for keyword search across stories _and_ comments; [official Firebase API](https://github.com/HackerNews/API) for threads, user profiles (age, karma) and `dead`/`deleted` flags                             | Free, no key, generous limits. Verified working.                                              |
-| **Reddit (v0.2)**      | The user's own approved API credentials under Reddit's [Responsible Builder Policy](https://support.reddithelp.com/hc/en-us/articles/42728983564564-Responsible-Builder-Policy); Greer's docs include a template for requesting personal, non-commercial access | Approval is manual and [often denied](https://www.redditapis.com/blogs/reddit-data-api-2026). |
-| **Reddit fallback**    | "Bring a thread": a bookmarklet sends the thread you're reading (from your own browser) to Greer for a brief and a reply check                                                                                                                                  | No server-side requests to Reddit. Reply tracking is manual in this mode.                     |
-
-**What we tested (Sep 2026):**
-
-- Reddit's `robots.txt` disallows all crawlers (`User-agent: * / Disallow: /`) and points to its Public Content Policy.
-- Unauthenticated RSS requests were rate-limited (`429`) almost immediately.
-- `.json` requests returned `403`, and a spoofed browser User-Agent was blocked outright.
-- RSS polling is therefore not a viable default.
+| Platform        | Access                                                                                                                                                                                                                              | Notes                                            |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| **Hacker News** | [Algolia HN Search API](https://hn.algolia.com/api) for keyword search across stories _and_ comments; [official Firebase API](https://github.com/HackerNews/API) for threads, user profiles (age, karma) and `dead`/`deleted` flags | Free, no key, generous limits. Verified working. |
 
 **Not allowed, even as an optional adapter:**
 
@@ -125,6 +115,28 @@ Greer uses **official, permitted APIs only**.
   - The legal and ToS risk would land on each self-hoster, and on the project's reputation.
 - **Using the user's logged-in session or cookies** to fetch data. That would link automated traffic to the user's account, which is the ban risk Greer exists to avoid.
 - The exception would be a data provider with an actual license from the platform. Evaluate case by case.
+
+### Other platforms (parked)
+
+Researched in Sep 2026 from each platform's own terms. Kept here so the decision can be revisited once HN is done and dogfooded.
+
+**Reddit: parked, mostly closed.**
+
+- Since the [Responsible Builder Policy](https://support.reddithelp.com/hc/en-us/articles/42728983564564-Responsible-Builder-Policy) (Nov 2025), every API client needs manual approval, personal projects included. Reports describe weeks-long waits, template denials with no reason, and requests that never get an answer.
+- The free tier (100 requests/min) is non-commercial. The [Developer Terms](https://redditinc.com/policies/developer-terms) (4.1) forbid, without a separate agreement, access "by or on behalf of a business or as part of a service or product that is monetized", which plausibly covers a founder looking for customers. Commercial access is a separate agreement (about $0.24 per 1,000 calls).
+- The terms ban training models on Reddit content; they don't mention scoring or other inference.
+- Anonymous `.json` returns `403` (since May 2026). RSS still answers `200`, but `robots.txt` says `Disallow: /` for every bot, so a polling job can't use it.
+- **If revisited:** a links-only mode (suggested subreddits, their rules, a pace, ready-made search links the user opens in their own browser; no Reddit data enters Greer), plus the API for users who get approved, with a setup guide that is honest about the commercial clause. A "save this page" browser button would touch the logged-in-session rule and needs an explicit decision first.
+
+**X: possible, paid, optional.**
+
+- The API is [pay-per-use only](https://docs.x.com/x-api/getting-started/pricing): $0.005 per post read, $0.01 per user read, no free tier. The same post read twice in one UTC day is charged once. X has a built-in monthly spending limit.
+- Recent search (last 7 days, 100 posts per request, 512-character queries) works on pay-per-use. It covers keyword searches ("looking for a tool to…"), a short list of accounts (`from:a OR from:b`, about 20–25 per query) and the replies under a post (`conversation_id:`). The filtered stream needs Pro/Enterprise, and full-archive search needs an upgrade.
+- Commercial use is fine on the self-serve plans. The [Developer Agreement](https://developer.x.com/en/developer-terms/agreement) only bans fine-tuning or training a foundation model, so scoring is fine.
+- Constraints: a hosted service may not ask users for their API keys (self-hosters entering their own is fine); linking an X account to someone's HN account needs their opt-in or public evidence (same handle, their bio); deleted posts must leave Greer within 24 hours of a request.
+- Rough cost for one user: $15–30 a month for a well-filtered keyword or account list.
+
+**Free and open:** Bluesky, Stack Exchange, Discourse forums, Lobsters, Dev.to. **Not possible:** LinkedIn, Indie Hackers (no usable read API).
 
 ## Architecture
 
@@ -226,7 +238,7 @@ The product is a daily habit tool (a 10–15 min triage session), so UX is about
 ## Coolify / self-hosting
 
 - `docker-compose.yml` with `web`, `worker` and `postgres`, plus a named volume.
-- Required env: `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`. Optional: `ALLOW_REGISTRATION` (default `false`: registration closes once the first account exists; when `true`, each new account gets its own workspace), `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` / `OPENAI_BASE_URL`. v0.2 adds `REDDIT_CLIENT_ID/SECRET`.
+- Required env: `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`. Optional: `ALLOW_REGISTRATION` (default `false`: registration closes once the first account exists; when `true`, each new account gets its own workspace), `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` / `OPENAI_BASE_URL`.
 - HN needs no credentials, so a fresh install works with just a database and an LLM key.
 - `/api/health` for Coolify health checks.
 - Publish the image to GHCR on tag, so users can pin versions.
@@ -246,9 +258,9 @@ The product is a daily habit tool (a 10–15 min triage session), so UX is about
 
 ## People and progress (added Sep 2026)
 
-Built ahead of Milestone 3, from principle 7:
+Built ahead of the reply brief, from principle 7:
 
-- **Accounts:** a page listing every platform (HN connectable; Reddit and X shown as coming later), also an optional onboarding step.
+- **Accounts:** a page to connect the HN account, also an optional onboarding step.
 - **Replies and answers:** Greer finds the user's own HN comments, watches the direct answers for 14 days and tags them (thanks, question, disagreement, neutral). The inbox shows "They answered you".
 - **Your people:** a map of everyone the user talked with, the person panel (open questions first), a "they tried the product" mark, and the long-game path (talked with → answered → came back → tried).
 - **Topics:** "What you help people with", named per reply and reused; each grows (planted → growing → rooted) only from what people do back.
@@ -257,30 +269,32 @@ Built ahead of Milestone 3, from principle 7:
   - **One feed of people**, each card tagged **Someone you know** or **Someone new**. Known people appear when they have news: an open question to you (until you answer it, up to 14 days), another answer in the last 3 days, a new help thread of theirs that Greer found, or a Show HN they posted. New people are the best-scored help threads by someone you haven't talked with yet.
   - **The pace caps new people only**: as many picks a day as the account's safe pace (3, 5 or 10 by maturity). "Show more" opens the rest with a gentle "past today's pace" note; it warns, never blocks. People you know are never capped.
   - Order: open questions first, then new and known people alternate.
-  - **Beside the feed:** nothing picked shows your people as a slowly moving network (who has news today glows, today's new people wait at the edge). Picking someone shows their thread and, later, the reply brief (Milestone 3), or your history with them.
+  - **Beside the feed:** nothing picked shows your people as a slowly moving network (who has news today glows, today's new people wait at the edge). Picking someone shows their thread and, later, the reply brief (Milestone 4), or your history with them.
   - **Launches are people too:** a well-scored Show HN (the maker asks for feedback you can give) joins the feed as a new person, "launched something and asks for feedback", within the same pace. A "Meanwhile, people are building" strip was tried first and dropped: nice to look at, but nothing to act on.
   - **One card per person:** someone's best thread leads, their other threads come along ("+2 more threads"); the pace counts people. Only threads from the last 72 hours show (not 48, so a weekend away doesn't hide Friday's threads).
   - **After you reply to someone**, their threads and launches from before that leave Today (they were already in front of you), and the same post made twice counts as one thread. What they post afterwards is news again. The day's pace counts people, not replies, and the feed offers only the room left today. Launches take at most one new-person slot in three: HN has hundreds of Show HNs a week and few Ask HNs about being stuck, so without a cap the feed was almost only launches. People stuck mostly say so in comments, so keyword suggestions now lead with specific first-person comment phrases ("no paying customers", "zero signups"), with a couple of broad Ask HN words. Someone you replied to is "You replied to them" until they answer; only then are they someone you know.
   - **"I replied"** (or `r`) takes a card off, counts it in the day's progress at once and starts a reply check right away; Greer confirms it with the reply it finds, counted once. If a marked reply still isn't found 2 hours later (with a check run since), Today asks quietly: "It's there, look again" or "Forget it" (the mark stops counting), so the progress stays honest and nobody is silently lost.
   - "Not for me" hides a person's threads, with undo; **Hidden threads** lists them to bring one back. Snooze, tabs, keyword filters and the lower-matches toggle are gone. `/inbox` redirects to Today.
-  - Deferred: watching known people's own new posts beyond what keyword searches find (one Algolia call per person), and a "seen" marker so news from people you know leaves once read.
+  - News from people you know is read once (open for a moment), then leaves Today; open questions stay until answered.
+  - Deferred: watching known people's own new posts beyond what keyword searches find (one Algolia call per person).
 
-**Focused communities are the norm.** Greer is for meeting the people who fit a product, not everyone: a niche product may get a few people a week on HN, or none, and that's correct. So precision beats volume (don't lower the bar to fill the feed), Show HN is off unless makers are the audience (keyword suggestions decide and say why), and after the first week Today says honestly when HN brought 3 people or fewer in 14 days, pointing to other keywords and to other platforms coming next.
+**Focused communities are the norm.** Greer is for meeting the people who fit a product, not everyone: a niche product may get a few people a week on HN, or none, and that's correct. So precision beats volume (don't lower the bar to fill the feed), Show HN is off unless makers are the audience (keyword suggestions decide and say why), and after the first week Today says honestly when HN brought 3 people or fewer in 14 days, pointing to other keywords.
 
 Out of scope for now: **product mentions** (searching HN for the product's name). Mentions can take months to appear, and other features matter more first.
 
 ## Milestones
 
-| #   | Milestone              | Outcome                                                                                                                                                                                                                                                                                                                        |
-| --- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 0   | **Spike (2–3 days)**   | Script: pull the last 30 days of HN stories + comments for your SaaS keywords (Algolia), score them with an LLM, print the top 20. Is it useful for _your_ product? Tune the keywords and scoring prompt. **Done.** Its code was removed after Milestone 2 (it's in git history); its threads live on as the scoring eval set. |
-| 1   | **Skeleton**           | Next.js + Tailwind v4 + shadcn/ui + Drizzle + Better Auth + pg-boss, compose file, deploys on Coolify, health check. Prettier/ESLint/git hooks, Vitest + Playwright set up, mock LLM provider, CI pipeline green. Make the commands in `CLAUDE.md` real.                                                                       |
-| 2   | **Ingest + inbox**     | Wireframes of the 3 core screens first. Onboarding (product profile, HN username, keywords), HN source adapter, prefilter, LLM scoring, keyboard-driven ranked inbox with undo. Recorded HN fixtures, first eval set for scoring, E2E for onboarding → inbox.                                                                  |
-| 3   | **Brief + engage**     | Founder context notes, reply brief, editor with autosave, "Check my reply", rules panel (HN guidelines), copy + open-thread flow, "I replied" with auto-detection of your comment. Eval sets for briefs (no paste-ready text) and reply check, E2E for brief → write → replied.                                                |
-| 4   | **Track + guardrails** | Reply tracking, dead/deleted detection, person timeline, account profile + maturity tiers, pacing/promo/cooldown warnings, account-health indicator, daily email/webhook digest. Integration tests for tracking jobs and guardrail math.                                                                                       |
-| 5   | **Public v0.1 (HN)**   | UX polish pass (all states, a11y audit, mobile), self-host upgrade test in CI, README, Coolify guide, demo GIF, GHCR images, CONTRIBUTING.md (contributions licensed under AGPL-3.0). Launch as a Show HN (dogfood the tool for its own launch) and on r/selfhosted.                                                           |
-| 6   | **v0.2 (Reddit)**      | Reddit adapter with the user's approved API credentials + access-request template, "bring a thread" bookmarklet, community requirements (stated/user/learned), removal reporting, feedback-tuned scoring.                                                                                                                      |
-| 7   | **Later**              | More official-API sources based on demand (Bluesky, GitHub Discussions, Lobsters, Stack Exchange), pgvector semantic matching.                                                                                                                                                                                                 |
+| #   | Milestone            | Outcome                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| --- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0   | **Spike (2–3 days)** | Script: pull the last 30 days of HN stories + comments for your SaaS keywords (Algolia), score them with an LLM, print the top 20. Is it useful for _your_ product? Tune the keywords and scoring prompt. **Done.** Its code was removed after Milestone 2 (it's in git history); its threads live on as the scoring eval set.                                                                                                                        |
+| 1   | **Skeleton**         | Next.js + Tailwind v4 + shadcn/ui + Drizzle + Better Auth + pg-boss, compose file, deploys on Coolify, health check. Prettier/ESLint/git hooks, Vitest + Playwright set up, mock LLM provider, CI pipeline green. Make the commands in `CLAUDE.md` real.                                                                                                                                                                                              |
+| 2   | **Ingest + inbox**   | Wireframes of the 3 core screens first. Onboarding (product profile, HN username, keywords), HN source adapter, prefilter, LLM scoring, keyboard-driven ranked inbox with undo. Recorded HN fixtures, first eval set for scoring, E2E for onboarding → inbox.                                                                                                                                                                                         |
+| 3   | **Today + Explore**  | Today stops folding people past the day's pace: they stay in the ranked list, with a calm note about the pace instead. A new **Explore** page holds everything on HN that passed the filter, sorted and searchable, with no pressure to act. Today is what to do now; Explore is for browsing.                                                                                                                                                        |
+| 4   | **Reply help**       | Founder notes, the reply brief (ideas, not text), HN guidelines beside it, optional "Check my reply" (flags problems, never rewrites). Eval sets for briefs (no paste-ready text) and the reply check.                                                                                                                                                                                                                                                |
+| 5   | **Garden**           | Three beds: dandelions (helping in public), carrots (people who could become users), oaks (your own Show HN and posts). Planted (your effort, capped by the pace, fading) vs grown (what people do back), with karma as the early signal. A path of steps that check themselves, nothing locked. A strip on Today, and a Today mix that leans toward the neglected bed. Mockup: [canvas](https://claude.ai/artifact/LFCw2xuBJiwThrGG39aVWq), private. |
+| 6   | **Account safety**   | Dead/deleted detection for your comments, product-mention count and advice by maturity, account-health indicator. Digest (email or webhook) if the open question below says so.                                                                                                                                                                                                                                                                       |
+| 7   | **Dogfood + v0.1**   | Use Greer for Vitryne for 2–3 weeks and count conversations, and people who came back or tried the product: that answers whether Greer is worth taking further. Then the polish pass (all states, a11y, mobile), self-host upgrade test in CI, README, Coolify guide, demo GIF, GHCR images, CONTRIBUTING.md, and a Show HN.                                                                                                                          |
+| 8   | **After v0.1**       | Decided from the dogfooding results. Options, from [Other platforms (parked)](#other-platforms-parked): open sources (Bluesky, Stack Exchange, Discourse forums), X as an optional paid source, a links-only Reddit mode. Or Greer stays an HN-only open-source project.                                                                                                                                                                              |
 
 ## Open questions
 

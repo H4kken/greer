@@ -2,13 +2,13 @@
 
 @AGENTS.md
 
-Open-source, self-hostable tool for small SaaS builders. It finds conversations (Hacker News first, Reddit next) where the builder can genuinely help, scores them, gives the builder a short reply brief (key ideas, angles, questions to ask), and tracks what they engaged with. The builder always writes the reply. See [PLAN.md](PLAN.md) for scope and milestones, and [ARCHITECTURE.md](ARCHITECTURE.md) for how the code fits together (keep it current when the structure changes).
+Open-source, self-hostable tool for small SaaS builders. It finds conversations on Hacker News (the only platform for now; see PLAN.md for why) where the builder can genuinely help, scores them, gives the builder a short reply brief (key ideas, angles, questions to ask), and tracks what they engaged with. The builder always writes the reply. See [PLAN.md](PLAN.md) for scope and milestones, and [ARCHITECTURE.md](ARCHITECTURE.md) for how the code fits together (keep it current when the structure changes).
 
 ## Hard rules
 
 - **Greer never posts, comments, votes or DMs on any platform.** It reads, suggests and tracks; the human posts. Don't add write-capable platform code, even behind a flag.
 - **Greer never writes replies for the user.** The LLM gives ideas as short notes (key points, angles, questions to ask back, whether a product mention fits), never paste-ready sentences or full drafts. "Check my reply" may flag problems, but never rewrites the user's text. Genuine words from the builder beat AI slop; don't add a "generate reply" or "rewrite" feature, even as an option.
-- **Official APIs only.** Sources use the platform's official or permitted APIs (HN: Algolia + Firebase; Reddit: the user's own approved credentials). Never add scraping services or proxy networks (Firecrawl, Apify, SerpApi, residential proxies, …), even as an optional adapter. Never use the user's logged-in session or cookies to fetch data. Every source call goes through that source's rate limiter with the shared honest User-Agent.
+- **Official APIs only.** Sources use the platform's official or permitted APIs (HN: Algolia + Firebase). Never add scraping services or proxy networks (Firecrawl, Apify, SerpApi, residential proxies, …), even as an optional adapter. Never use the user's logged-in session or cookies to fetch data. Every source call goes through that source's rate limiter with the shared honest User-Agent.
 - **Account safety is a feature.** Guardrails (pacing, product-mention advice, eligibility) take into account the user's account maturity (age, karma) and each community's requirements. They warn, never block, since the user is the one posting.
 - **Never publish the self-hosted database.** `docker-compose.yml` keeps Postgres internal and requires real secrets; only `docker-compose.dev.yml` publishes it, on 127.0.0.1.
 - **Postgres is the only infrastructure dependency.** Don't add Redis, S3, a search engine or other services without discussing it first; self-hosters on Coolify pay for every extra container.

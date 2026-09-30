@@ -14,17 +14,17 @@
 
 ## Why this exists
 
-If you're building a small SaaS, your first users rarely come from ads. They come from conversations: someone on Reddit asking how to solve exactly the problem you've been working on for months, and you showing up with a helpful answer.
+If you're building a small SaaS, your first users rarely come from ads. They come from conversations: someone on Hacker News asking how to solve exactly the problem you've been working on for months, and you showing up with a helpful answer.
 
-The problem is finding those conversations. It means hours of scrolling subreddits, running the same searches again and again, forgetting threads you meant to answer, and losing track of the people you've already helped.
+The problem is finding those conversations. It means hours of scrolling threads, running the same searches again and again, forgetting threads you meant to answer, and losing track of the people you've already helped.
 
-The tools that promise to fix this mostly make it worse. They generate AI replies, post automatically, and slip product links into every thread. Communities notice, accounts get banned, and "reply to Reddit posts" turns into spam.
+The tools that promise to fix this mostly make it worse. They generate AI replies, post automatically, and slip product links into every thread. Communities notice, accounts get banned, and "reply to posts" turns into spam.
 
 Greer takes the opposite approach. **It does the tedious part (finding, filtering, remembering) and leaves the human part to you.**
 
 ## What Greer does
 
-- **Watches the communities you care about.** It follows the keywords and communities where your future users talk about their problems. Hacker News comes first; Reddit follows.
+- **Watches the communities you care about.** It follows the keywords and communities where your future users talk about their problems, on Hacker News.
 - **Surfaces the threads worth your time.** An LLM scores each post for relevance and tells you _why_ it was surfaced, so you're not reading hundreds of posts.
 - **Gives you a calm daily page.** Today shows people you already know when they have news, and a few new people stuck on something you know about, paced to what's safe for your account.
 - **Helps you think, not write.** For each thread, a short _reply brief_:
@@ -59,7 +59,7 @@ Greer takes the opposite approach. **It does the tedious part (finding, filterin
 
 ```
 Pick keywords & communities → Greer finds and scores threads → you pick people on Today
-→ read the brief → write your own reply → post it on Reddit → Greer tracks the conversation
+→ read the brief → write your own reply → post it on HN → Greer tracks the conversation
 ```
 
 You start by describing your product, who it's for and the problems it solves. You also add a few notes about your own experience: what you've built, what broke, what you learned. Greer suggests communities to watch, and after that it's a short daily habit.
@@ -115,25 +115,24 @@ Instead of these variables, you can pick a model for each job in Settings → AI
 
 `GET /api/health` reports the database and the background worker; the web container's health check uses it.
 
-### Why Hacker News first, and what about Reddit?
+### Why only Hacker News?
 
 Hacker News has free, official APIs, so Greer works there out of the box.
 
-Reddit is harder:
+Other platforms are harder, and Greer only uses official APIs:
 
-- Since late 2025, new API credentials need manual approval.
-- Reddit blocks automated access without an agreement, and it is suing scraping services over it.
+- **Reddit** needs a manual approval for every API client since late 2025, and its free tier excludes use on behalf of a business. Scraping around that isn't an option: Reddit is suing scraping services over it.
+- **X** works, but only with a pay-per-use API (about $0.005 per post read).
 
-Greer won't work around that. For Reddit (v0.2), you'll use your own approved API credentials, and Greer's docs will help you request them. Without credentials, a "bring a thread" bookmarklet sends the thread you're reading to Greer for a brief and a reply check.
+So Greer does Hacker News well first. Other sources will be decided once it has been used for real; [PLAN.md](PLAN.md#other-platforms-parked) has the details.
 
 ## Roadmap
 
-| Stage     | Goal                                                                                                                                                      |
-| --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Spike** | Done: finding and scoring HN threads is useful. The script was retired once the app replaced it; its threads became the scoring eval set                  |
-| **v0.1**  | Hacker News monitoring, the Today page, reply briefs, reply check, conversation tracking, account-aware guardrails, one-step Coolify deploy               |
-| **v0.2**  | Reddit with your own API credentials, a "bring a thread" bookmarklet, per-community requirements (karma, account age), smarter scoring from your feedback |
-| **Later** | More official-API sources (Bluesky, GitHub Discussions, Lobsters, Stack Exchange…), based on what users ask for                                           |
+| Stage     | Goal                                                                                                                                        |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Spike** | Done: finding and scoring HN threads is useful. The script was retired once the app replaced it; its threads became the scoring eval set    |
+| **v0.1**  | Hacker News: the Today page, Explore, your people, reply briefs, reply check, the garden, account-aware guardrails, one-step Coolify deploy |
+| **Later** | Decided after real use: more official-API sources (Bluesky, Stack Exchange, Discourse forums), maybe X as an optional paid source           |
 
 ## Tech stack
 
