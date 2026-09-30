@@ -63,14 +63,19 @@ export function sourceTag(entry: TodayEntry, thread?: SourceThread): string {
       return "Show HN";
     case "asks":
     case "stuck":
-      if (thread?.type === "comment") return "Comment";
-      if (/^ask hn\b/i.test(thread?.title ?? "")) return "Ask HN";
-      if (/^show hn\b/i.test(thread?.title ?? "")) return "Show HN";
-      return "Post";
+      return thread ? threadTag(thread) : "Post";
   }
 }
 
 type SourceThread = { type: "story" | "comment"; title: string };
+
+// The kind of post, as a tag: "Ask HN", "Show HN", "Comment" or "Post".
+export function threadTag(thread: SourceThread): string {
+  if (thread.type === "comment") return "Comment";
+  if (/^ask hn\b/i.test(thread.title)) return "Ask HN";
+  if (/^show hn\b/i.test(thread.title)) return "Show HN";
+  return "Post";
+}
 
 // How well a thread fits, in words rather than a number.
 export function matchLabel(score: number): string {
